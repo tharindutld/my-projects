@@ -1,0 +1,407 @@
+/* Reset & base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  display: flex;
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Navbar */
+.navbar {
+  background: #2c3e50;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #34495e;
+  padding-top: 70px; /* space for navbar */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.sidebar ul li a {
+  display: block;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  transition: 0.3s;
+  font-size: 0.95rem;
+}
+
+.sidebar ul li a:hover {
+  background: #1abc9c;
+}
+
+/* Content wrapper */
+.content {
+  margin-left: 220px;
+  padding: 90px 30px 70px; /* leave room for navbar & footer */
+  flex: 1;
+}
+
+/* Dashboard cards */
+.cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1;
+  min-width: 200px;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2c3e50;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* Forms */
+form {
+  max-width: 500px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+form h3 {
+  margin-bottom: 15px;
+  text-align: center;
+  color: #2c3e50;
+}
+
+form label {
+  display: block;
+  margin: 10px 0 5px;
+  font-weight: bold;
+}
+
+form input, form select, form button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+form input:focus, form select:focus {
+  border-color: #1abc9c;
+  outline: none;
+}
+
+form button {
+  background: #1abc9c;
+  color: white;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+form button:hover {
+  background: #16a085;
+}
+
+/* Messages */
+.success {
+  color: #27ae60;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.error {
+  color: #e74c3c;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Tables */
+.styled-table {
+  border-collapse: collapse;
+  margin: 20px auto;
+  font-size: 1rem;
+  width: 95%;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.styled-table th, .styled-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.styled-table th {
+  background: #1abc9c;
+  color: white;
+  text-transform: uppercase;
+}
+
+.styled-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.styled-table tr:hover {
+  background: #eafaf7;
+}
+
+/* Footer */
+.footer {
+  background: #2c3e50;
+  color: white;
+  text-align: center;
+  padding: 12px;
+  position: fixed;
+  bottom: 0;
+  left: 220px; /* same as sidebar */
+  width: calc(100% - 220px);
+  font-size: 0.9rem;
+}
+
+/* =========================
+   Student Registration Form
+   ========================= */
+.student-form-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-form-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+.student-form-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  color: #2c3e50;
+  position: relative;
+}
+
+.student-form-container h2::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #1abc9c;
+  margin: 8px auto 0;
+  border-radius: 3px;
+}
+
+.student-form-container label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 600;
+  color: #34495e;
+}
+
+.student-form-container input,
+.student-form-container select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fdfdfd;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+.student-form-container input:focus,
+.student-form-container select:focus {
+  border-color: #1abc9c;
+  box-shadow: 0 0 5px rgba(26, 188, 156, 0.4);
+  outline: none;
+}
+
+.student-form-container button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.student-form-container button:hover {
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  transform: translateY(-2px);
+}
+
+/* Success & error messages */
+.student-form-container .success {
+  background: #eafaf1;
+  color: #27ae60;
+  padding: 10px;
+  border-left: 5px solid #27ae60;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.student-form-container .error {
+  background: #fdecea;
+  color: #e74c3c;
+  padding: 10px;
+  border-left: 5px solid #e74c3c;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+/* =========================
+   Course Registration Form
+   ========================= */
+.course-form-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-form-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+.course-form-container h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  color: #2c3e50;
+  position: relative;
+}
+
+.course-form-container h2::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #1abc9c;
+  margin: 8px auto 0;
+  border-radius: 3px;
+}
+
+.course-form-container label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 600;
+  color: #34495e;
+}
+
+.course-form-container input,
+.course-form-container textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fdfdfd;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+.course-form-container textarea {
+  min-height: 120px;      /* proper height for description */
+  resize: vertical;       /* allow vertical resize only */
+  line-height: 1.5;       /* improve readability */
+}
+
+.course-form-container input:focus,
+.course-form-container textarea:focus {
+  border-color: #1abc9c;
+  box-shadow: 0 0 5px rgba(26, 188, 156, 0.4);
+  outline: none;
+}
+
+.course-form-container button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.course-form-container button:hover {
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  transform: translateY(-2px);
+}
+
+/* Success & error messages */
+.course-form-container .success {
+  background: #eafaf1;
+  color: #27ae60;
+  padding: 10px;
+  border-left: 5px solid #27ae60;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.course-form-container .error {
+  background: #fdecea;
+  color: #e74c3c;
+  padding: 10px;
+  border-left: 5px solid #e74c3c;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+
+
