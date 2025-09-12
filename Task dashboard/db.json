@@ -1,0 +1,10 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Sample Task 1",
+      "description": "Example To Do task",
+      "status": "To Do"
+    }
+  ]
+}
