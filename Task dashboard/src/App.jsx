@@ -1,6 +1,6 @@
 import React from 'react'
 import './App.css'
-import TaskBoard from './Components/TaskBoard'
+import TaskBoard from './components/TaskBoard'
 
 function App() {
   

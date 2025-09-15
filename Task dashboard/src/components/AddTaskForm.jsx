@@ -16,16 +16,16 @@ export default function AddTaskForm({ onAdd }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-8 rounded-2xl shadow-xl max-w-lg mx-auto border border-gray-200"
+      className="bg-gray-50 p-8 rounded-2xl shadow-lg max-w-lg mx-auto border border-gray-200"
     >
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Add New Task
       </h2>
 
       <input
         type="text"
         placeholder="Enter task title"
-        className="w-full p-3 mb-4 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
+        className="w-full p-3 mb-4 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -33,14 +33,14 @@ export default function AddTaskForm({ onAdd }) {
       <textarea
         placeholder="Enter task description"
         rows={4}
-        className="w-full p-3 mb-4 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition resize-none"
+        className="w-full p-3 mb-4 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition resize-none"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
 
       <button
         type="submit"
-        className="w-full bg-indigo-500 text-white font-semibold py-3 rounded-lg hover:bg-indigo-600 transition transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+        className="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 transition transform hover:scale-[1.02] shadow-md hover:shadow-lg"
       >
         Add Task
       </button>
