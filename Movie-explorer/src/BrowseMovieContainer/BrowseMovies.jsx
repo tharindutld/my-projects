@@ -1,6 +1,8 @@
 // BrowseMovies.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import MovieDetailsModal from '../Components/MovieDetailsModal';
+import StarIcon from '@mui/icons-material/Star';
 
 const API_KEY = '936f445d12fc3638b712080e3f499f43'; // Replace with your TMDB API key
 const CATEGORY = 'popular'; // or 'top_rated', 'upcoming', etc.
@@ -10,6 +12,7 @@ const BrowseMovies = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedMovieId, setSelectedMovieId] = useState(null);
 
   const fetchMovies = async () => {
     setLoading(true);
@@ -41,12 +44,10 @@ const BrowseMovies = () => {
 
       <div className="movies-grid">
         {movies.map(movie => (
-          <a
+          <div
             key={movie.id}
-            href={`https://www.themoviedb.org/movie/${movie.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="movie-card"
+            onClick={() => setSelectedMovieId(movie.id)}
           >
             <img
               src={movie.poster_path
@@ -55,19 +56,34 @@ const BrowseMovies = () => {
               alt={movie.title}
               className="movie-poster"
             />
-            <div className="movie-info">
-              <h3>{movie.title}</h3>
-              <p>{movie.release_date?.slice(0, 4)} | ⭐ {movie.vote_average}</p>
+            <div className="movie-card-content">
+              <h3 className="movie-title">{movie.title}</h3>
+              <div className="movie-info">
+                <span>{movie.release_date?.slice(0, 4)}</span>
+                <span>•</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <StarIcon style={{ fontSize: '0.9rem', color: 'var(--star-color)' }} />
+                  {movie.vote_average?.toFixed(1)}
+                </span>
+              </div>
             </div>
-          </a>
+          </div>
         ))}
       </div>
 
-      {loading && <p className="loading">Loading...</p>}
+      {loading && <p className="browse-loading">Loading movies...</p>}
 
       <button className="load-more" onClick={() => setPage(prev => prev + 1)}>
         Load More
       </button>
+
+      {/* Details Modal */}
+      {selectedMovieId && (
+        <MovieDetailsModal
+          movieId={selectedMovieId}
+          onClose={() => setSelectedMovieId(null)}
+        />
+      )}
     </div>
   );
 };

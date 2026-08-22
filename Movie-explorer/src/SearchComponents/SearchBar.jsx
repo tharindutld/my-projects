@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import MovieDetailsModal from '../Components/MovieDetailsModal';
+import StarIcon from '@mui/icons-material/Star';
 
 const API_KEY = '936f445d12fc3638b712080e3f499f43'; // Replace with your TMDb key
 
@@ -7,14 +9,15 @@ function SearchBar() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(''); // New state to hold error message
+  const [error, setError] = useState('');
+  const [selectedMovieId, setSelectedMovieId] = useState(null);
 
   const searchMovies = async (e) => {
     e.preventDefault();
     if (!query) return;
 
     setLoading(true);
-    setError(''); // Reset error message before making the request
+    setError('');
 
     try {
       const response = await axios.get(
@@ -29,12 +32,13 @@ function SearchBar() {
 
       if (response.data.results.length === 0) {
         setError('No movies found for your search. Please try again!');
+        setResults([]);
       } else {
         setResults(response.data.results);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('Something went wrong. Please try again later.'); // Display error message
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Something went wrong. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -56,36 +60,48 @@ function SearchBar() {
         <div className="spinner"></div>
       ) : (
         <>
-          {error && <div className="error-message">{error}</div>} {/* Display error message */}
-          <ul className="results-list">
-            {results.map((movie) => (
-              <li className="result-item" key={movie.id}>
-                <a
-                  href={`https://www.themoviedb.org/movie/${movie.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="result-link"
+          {error && <div className="error-message">{error}</div>}
+          {results.length > 0 && (
+            <ul className="results-list">
+              {results.map((movie) => (
+                <li 
+                  className="result-item" 
+                  key={movie.id}
+                  onClick={() => setSelectedMovieId(movie.id)}
                 >
-                  <img
-                    src={
-                      movie.poster_path
-                        ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                        : 'https://via.placeholder.com/92x138?text=No+Image'
-                    }
-                    alt={movie.title}
-                    className="poster"
-                  />
-                  <div className="movie-info">
-                    <h3>{movie.title}</h3>
-                    <p>
-                      {movie.release_date?.substring(0, 4)} | ⭐ {movie.vote_average}
-                    </p>
+                  <div className="result-link">
+                    <img
+                      src={
+                        movie.poster_path
+                          ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
+                          : 'https://via.placeholder.com/92x138?text=No+Image'
+                      }
+                      alt={movie.title}
+                      className="poster"
+                    />
+                    <div className="movie-info">
+                      <h3>{movie.title}</h3>
+                      <p style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span>{movie.release_date?.substring(0, 4)}</span>
+                        <span>|</span>
+                        <StarIcon style={{ fontSize: '0.95rem', color: 'var(--star-color)' }} />
+                        <span>{movie.vote_average?.toFixed(1)}</span>
+                      </p>
+                    </div>
                   </div>
-                </a>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </>
+      )}
+
+      {/* Movie Details Modal */}
+      {selectedMovieId && (
+        <MovieDetailsModal
+          movieId={selectedMovieId}
+          onClose={() => setSelectedMovieId(null)}
+        />
       )}
     </div>
   );

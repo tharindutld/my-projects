@@ -1,6 +1,6 @@
 import React from 'react';
-import tld from '../images/tld.jpg'
-import amr from '../images/amr.jpg'
+import tld from '../images/tld.png'
+import amr from '../images/amr.png'
 import gayatra from '../images/gayatra.png'
 
 const team = [
