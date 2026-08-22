@@ -25,6 +25,27 @@ const RegisterCard = () => {
     e.preventDefault();
     setError('');
 
+    // Username validation: letters and spaces only (no numbers or special characters)
+    const usernameRegex = /^[a-zA-Z\s]+$/;
+    if (!usernameRegex.test(form.username.trim())) {
+      setError("Username can only contain letters and spaces (no numbers or special characters).");
+      return;
+    }
+
+    // Email validation: must contain exactly one '@' sign
+    const emailParts = form.email.split('@');
+    if (emailParts.length !== 2) {
+      setError("Email must contain exactly one '@' character.");
+      return;
+    }
+
+    // Standard email pattern check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
       return;

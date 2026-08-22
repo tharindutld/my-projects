@@ -43,14 +43,16 @@ app.post('/api/auth/register', async (req, res) => {
   }
 
   try {
-    // Check if user already exists
-    const [existingUsers] = await pool.query(
-      'SELECT id FROM users WHERE email = ? OR username = ?',
-      [email, username]
-    );
+    // Check if email already exists
+    const [existingEmail] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingEmail.length > 0) {
+      return res.status(400).json({ error: 'Email is already registered.' });
+    }
 
-    if (existingUsers.length > 0) {
-      return res.status(400).json({ error: 'Username or email already exists.' });
+    // Check if username already exists
+    const [existingUsername] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (existingUsername.length > 0) {
+      return res.status(400).json({ error: 'Username is already taken.' });
     }
 
     // Hash the password
@@ -120,6 +122,35 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in login: ', err);
+    res.status(500).json({ error: 'Server error. Please try again later.' });
+  }
+});
+
+// Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and new password are required.' });
+  }
+
+  try {
+    // Check if user exists
+    const [users] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'No user registered with this email address.' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Update in DB
+    await pool.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+    res.json({ message: 'Password reset successfully!' });
+  } catch (err) {
+    console.error('Error in password reset: ', err);
     res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 });

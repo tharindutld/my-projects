@@ -3,6 +3,7 @@ import { Container, TextField, Box, Typography, IconButton, InputAdornment, Form
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import api from '../utils/api';
 
 const LoginCard = () => {
   const { login } = useContext(AuthContext);
@@ -17,6 +18,8 @@ const LoginCard = () => {
   // View mode toggles between 'login' and 'forgot'
   const [viewMode, setViewMode] = useState('login');
   const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -50,15 +53,31 @@ const LoginCard = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Simulate API call for forgot password
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSuccess(`A password reset link has been sent to ${resetEmail}!`);
+      const res = await api.post('/auth/reset-password', {
+        email: resetEmail,
+        password: newPassword
+      });
+      setSuccess(res.data.message || 'Password reset successfully!');
       setResetEmail('');
+      setNewPassword('');
+      setConfirmNewPassword('');
     } catch (err) {
-      setError('Failed to send password reset link. Please try again.');
+      console.error('Password reset error:', err);
+      setError(err.response?.data?.error || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -186,7 +205,7 @@ const LoginCard = () => {
               Reset Password
             </Typography>
             <Typography variant="body2" color="var(--text-secondary)" align="center" mb={3}>
-              Enter your email address and we'll send you a link to reset your password.
+              Verify your registered email and enter your new password to reset it.
             </Typography>
 
             {error && (
@@ -203,7 +222,7 @@ const LoginCard = () => {
 
             <form onSubmit={handleResetSubmit}>
               <TextField
-                label="Email"
+                label="Registered Email"
                 type="email"
                 variant="outlined"
                 required
@@ -211,6 +230,37 @@ const LoginCard = () => {
                 margin="normal"
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
+                sx={textFieldStyle}
+              />
+              <TextField
+                label="New Password"
+                type={showPassword ? 'text' : 'password'}
+                variant="outlined"
+                required
+                fullWidth
+                margin="normal"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                sx={textFieldStyle}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePassword} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Confirm New Password"
+                type={showPassword ? 'text' : 'password'}
+                variant="outlined"
+                required
+                fullWidth
+                margin="normal"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
                 sx={textFieldStyle}
               />
 
@@ -229,7 +279,7 @@ const LoginCard = () => {
                   boxShadow: '0 4px 12px rgba(255, 62, 108, 0.2)'
                 }}
               >
-                {loading ? 'Sending link...' : 'Send Reset Link'}
+                {loading ? 'Resetting Password...' : 'Reset Password'}
               </Button>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
