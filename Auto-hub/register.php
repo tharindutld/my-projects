@@ -4,7 +4,7 @@ include 'db.php'; // Database connection
 $register_error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST['name']);
+    $name = trim($_POST['username']);
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             // Insert user
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $name, $email, $hashed_password);
             
             if ($stmt->execute()) {
@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <form method="POST" onsubmit="return validateRegistration()">
         <label>Name:</label>
-        <input type="text" name="name" id="name" placeholder="Enter your full name">
+        <input type="text" name="username" id="name" placeholder="Enter your full name">
 
         <label>Email:</label>
         <input type="email" name="email" id="email" placeholder="Enter your email">
@@ -206,7 +206,7 @@ function validateRegistration() {
     const password = document.getElementById("password").value.trim();
     const confirm_password = document.getElementById("confirm_password").value.trim();
 
-    if (!name) { showAlert("Validation Error", "Name is required."); return false; }
+    if (!username) { showAlert("Validation Error", "Name is required."); return false; }
     if (!email) { showAlert("Validation Error", "Email is required."); return false; }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) { showAlert("Validation Error", "Enter a valid email address."); return false; }

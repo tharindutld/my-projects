@@ -1,0 +1,39 @@
+.home-container {
+  padding: 30px;
+}
+.book-list {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.book-card {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.book-card:hover {
+  transform: scale(1.05);
+}
+
+.book-card img {
+  width: 100%;       /* make image fill the card width */
+  height: 300px;     /* fixed height for all books */
+  
+}
+
+.book-card h3 {
+  font-size: 16px;
+  margin: 10px 0 5px;
+}
+
+.book-card p {
+  margin: 2px 0;
+  font-size: 14px;
+  color: #555;
+}

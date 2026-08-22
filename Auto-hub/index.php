@@ -1,7 +1,6 @@
 <?php include 'navbar_home.php'; ?>
 <?php include 'footer.php'; ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

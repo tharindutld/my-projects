@@ -1,0 +1,22 @@
+export const books = [
+  { id: 1, title: "Harry Potter and the Sorcerer's Stone", author: "J.K. Rowling", price: 15.99, genre: "Fantasy", image: "https://images-na.ssl-images-amazon.com/images/I/81iqZ2HHD-L.jpg" },
+  { id: 2, title: "The Alchemist", author: "Paulo Coelho", price: 10.99, genre: "Fiction", image: "https://images-na.ssl-images-amazon.com/images/I/71aFt4+OTOL.jpg" },
+  { id: 3, title: "Clean Code", author: "Robert C. Martin", price: 25.99, genre: "Programming", image: "https://images-na.ssl-images-amazon.com/images/I/41xShlnTZTL._SX374_BO1,204,203,200_.jpg" },
+  { id: 4, title: "To Kill a Mockingbird", author: "Harper Lee", price: 12.99, genre: "Fiction", image: "https://images-na.ssl-images-amazon.com/images/I/81Otwki3IxL.jpg" },
+  { id: 5, title: "The Great Gatsby", author: "F. Scott Fitzgerald", price: 9.99, genre: "Classic", image: "https://images-na.ssl-images-amazon.com/images/I/71FTb9X6wsL.jpg" },
+  { id: 6, title: "1984", author: "George Orwell", price: 11.99, genre: "Dystopian", image: "https://images-na.ssl-images-amazon.com/images/I/71kxa1-0mfL.jpg" },
+  { id: 7, title: "The Hobbit", author: "J.R.R. Tolkien", price: 14.99, genre: "Fantasy", image: "https://images-na.ssl-images-amazon.com/images/I/91b0C2YNSrL.jpg" },
+  { id: 8, title: "Thinking, Fast and Slow", author: "Daniel Kahneman", price: 16.99, genre: "Self-Help", image: "https://images-na.ssl-images-amazon.com/images/I/41DMwK7tMyL._SX324_BO1,204,203,200_.jpg" },
+  { id: 9, title: "The Catcher in the Rye", author: "J.D. Salinger", price: 10.49, genre: "Classic", image: "https://images-na.ssl-images-amazon.com/images/I/71UypkUjStL.jpg" },
+  { id: 10, title: "The Lean Startup", author: "Eric Ries", price: 18.99, genre: "Business", image: "https://images-na.ssl-images-amazon.com/images/I/81-QB7nDh4L.jpg" },
+  { id: 11, title: "Pride and Prejudice", author: "Jane Austen", price: 8.99, genre: "Classic", image: "https://images-na.ssl-images-amazon.com/images/I/81vgXjQ7LaL.jpg" },
+  { id: 12, title: "The Subtle Art of Not Giving a F*ck", author: "Mark Manson", price: 13.99, genre: "Self-Help", image: "https://images-na.ssl-images-amazon.com/images/I/71QKQ9mwV7L.jpg" },
+  { id: 13, title: "Sapiens: A Brief History of Humankind", author: "Yuval Noah Harari", price: 19.99, genre: "History", image: "https://images-na.ssl-images-amazon.com/images/I/713jIoMO3UL.jpg" },
+  { id: 14, title: "The Road", author: "Cormac McCarthy", price: 12.49, genre: "Dystopian", image: "https://images-na.ssl-images-amazon.com/images/I/81t2CVWEsUL.jpg" },
+  { id: 15, title: "Educated", author: "Tara Westover", price: 14.49, genre: "Memoir", image: "https://images-na.ssl-images-amazon.com/images/I/81WojUxbbFL.jpg" },
+  { id: 16, title: "The Power of Habit", author: "Charles Duhigg", price: 15.49, genre: "Self-Help", image: "https://images-na.ssl-images-amazon.com/images/I/51ejXdSceNL._SX329_BO1,204,203,200_.jpg" },
+  { id: 17, title: "Moby Dick", author: "Herman Melville", price: 11.99, genre: "Classic", image: "https://images-na.ssl-images-amazon.com/images/I/81prVxHkP-L.jpg" },
+  { id: 18, title: "Brave New World", author: "Aldous Huxley", price: 10.99, genre: "Dystopian", image: "https://images-na.ssl-images-amazon.com/images/I/81WcnNQ-TBL.jpg" },
+  { id: 19, title: "Atomic Habits", author: "James Clear", price: 17.99, genre: "Self-Help", image: "https://images-na.ssl-images-amazon.com/images/I/51-nXsSRfZL._SX329_BO1,204,203,200_.jpg" },
+  { id: 20, title: "The Lord of the Rings", author: "J.R.R. Tolkien", price: 29.99, genre: "Fantasy", image: "https://images-na.ssl-images-amazon.com/images/I/91SZSW8qSsL.jpg" }
+];

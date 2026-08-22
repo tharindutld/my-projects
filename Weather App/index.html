@@ -3,83 +3,846 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
+    <title>Advanced Weather Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="card">
-        <div class="search">
-            <input type="text" placeholder="Enter City Name" spellcheck="false">
-            <button><img src="./images/search.png" alt="Search"></button>
-        </div>
-        <div class="error" style="display:none;">
-            <p>Invalid City Name</p>
-        </div>
-        <div class="weather" style="display:none;">
-            <img src="./images/cloudy.png" class="weather-icon" alt="Weather Icon">
-            <h1 class="temp">22°C</h1>
-            <h2 class="city">New York</h2>
-            <div class="details">
-                <div class="col">
-                    <img src="./images/humidity.png" class="humidity-icon" alt="Humidity">
-                    <div>
-                        <p class="humidity">50%</p>
-                        <p>Humidity</p>
-                    </div>
+    <div class="app-container">
+        <!-- Sidebar Panel for Favorites -->
+        <aside class="glass-card sidebar">
+            <div class="sidebar-title">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Saved Locations</span>
                 </div>
-                <div class="col">
-                    <img src="./images/wind.png" class="wind-icon" alt="Wind">
-                    <div>
-                        <p class="wind">15 km/h</p>
-                        <p>Wind Speed</p>
+            </div>
+            <div class="favorites-list" id="favorites-list">
+                <!-- Dynamically populated favorite items -->
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Section -->
+        <main class="dashboard-main">
+            <!-- Header search and configuration controls -->
+            <div class="header-controls">
+                <div class="search-bar-container">
+                    <input type="text" id="search-input" placeholder="Search city name..." spellcheck="false">
+                    <button class="search-btn" id="search-btn" title="Search">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="utility-buttons">
+                    <!-- Current Location Finder -->
+                    <button class="icon-btn" id="geo-btn" title="Detect Location">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                    </button>
+                    <!-- Favorite Toggle -->
+                    <button class="icon-btn" id="fav-btn" title="Save to Favorites">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </button>
+                    <!-- Unit switcher (Metric vs Imperial) -->
+                    <div class="unit-toggle" id="unit-toggle" title="Toggle Units">
+                        <span class="unit-option active" id="unit-metric">°C</span>
+                        <span class="unit-option" id="unit-imperial">°F</span>
+                        <div class="unit-slider"></div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Error Banner -->
+            <div class="error-banner" id="error-banner" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span id="error-text">Invalid City Name</span>
+            </div>
+
+            <!-- Loader Container -->
+            <div class="loader-container" id="loader-container" style="display: none;">
+                <div class="spinner"></div>
+                <p>Fetching weather data...</p>
+            </div>
+
+            <!-- Weather Grid Details -->
+            <div class="weather-grid" id="weather-grid" style="display: none;">
+                <!-- Main Current Weather Banner -->
+                <section class="glass-card hero-card">
+                    <div class="hero-main">
+                        <div class="hero-city-date">
+                            <h1 class="city-name" id="city-name">Colombo</h1>
+                            <p class="current-date" id="current-date">Saturday, August 22</p>
+                        </div>
+                        <div class="hero-weather-detail">
+                            <img src="./images/cloudy.png" class="hero-icon" id="hero-icon" alt="Weather Condition">
+                            <div class="hero-temp-container">
+                                <span class="temp-val" id="temp-val">22°C</span>
+                                <span class="weather-desc" id="weather-desc">Scattered Clouds</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Feels Like</span>
+                            <span class="meta-value" id="feels-like-val">20°C</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">High / Low</span>
+                            <span class="meta-value" id="high-low-val">24°C / 18°C</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hourly forecast list -->
+                <section class="glass-card hourly-card">
+                    <h3 class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Hourly Forecast (24 Hours)
+                    </h3>
+                    <div class="hourly-slider" id="hourly-slider">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Technical metrics grid -->
+                <div class="metrics-grid-wrapper">
+                    <!-- Air Pollution Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+                            </svg>
+                            Air Quality
+                        </div>
+                        <div class="metric-body">
+                            <span class="metric-value-large" id="aqi-val">2 - Fair</span>
+                            <span class="metric-subtext" id="aqi-desc">PM2.5: -- µg/m³</span>
+                        </div>
+                    </div>
+
+                    <!-- Wind Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+                            </svg>
+                            Wind
+                        </div>
+                        <div class="metric-body">
+                            <span class="metric-value-large" id="wind-val">12 km/h</span>
+                            <div class="wind-pointer-container">
+                                <svg class="wind-arrow" id="wind-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <polyline points="19 12 12 19 5 12"></polyline>
+                                </svg>
+                                <span class="metric-subtext" id="wind-dir-val">NE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Humidity Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                            </svg>
+                            Humidity
+                        </div>
+                        <div class="metric-body">
+                            <span class="metric-value-large" id="humidity-val">50%</span>
+                            <span class="metric-subtext" id="humidity-desc">Normal levels</span>
+                        </div>
+                    </div>
+
+                    <!-- Pressure Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            Pressure
+                        </div>
+                        <div class="metric-body">
+                            <span class="metric-value-large" id="pressure-val">1013 hPa</span>
+                            <span class="metric-subtext" id="pressure-desc">Stable pressure</span>
+                        </div>
+                    </div>
+
+                    <!-- Visibility Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Visibility
+                        </div>
+                        <div class="metric-body">
+                            <span class="metric-value-large" id="visibility-val">10 km</span>
+                            <span class="metric-subtext" id="visibility-desc">Clear vision</span>
+                        </div>
+                    </div>
+
+                    <!-- Sunrise/Sunset Widget -->
+                    <div class="metric-widget">
+                        <div class="metric-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 18a5 5 0 0 0-10 0"></path>
+                                <line x1="12" y1="2" x2="12" y2="9"></line>
+                                <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line>
+                                <line x1="1" y1="18" x2="3" y2="18"></line>
+                                <line x1="21" y1="18" x2="23" y2="18"></line>
+                                <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line>
+                                <line x1="23" y1="22" x2="1" y2="22"></line>
+                                <polyline points="8 6 12 2 16 6"></polyline>
+                            </svg>
+                            Sun Schedule
+                        </div>
+                        <div class="sun-schedule">
+                            <div class="sun-time">
+                                <span class="sun-label">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="5"></circle></svg>
+                                    Sunrise
+                                </span>
+                                <span class="sun-val" id="sunrise-val">--:-- AM</span>
+                            </div>
+                            <div class="sun-time">
+                                <span class="sun-label">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="5"></circle></svg>
+                                    Sunset
+                                </span>
+                                <span class="sun-val" id="sunset-val">--:-- PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Day forecast panel -->
+                <section class="glass-card forecast-card">
+                    <h3 class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        5-Day Forecast
+                    </h3>
+                    <div class="forecast-list" id="forecast-list">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
-    
+
     <script>
         const apiKey = "1ab7fa0f8533f3e542be599f2cbce230";
-        const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+        const apiBase = "https://api.openweathermap.org/data/2.5/";
 
-        const searchBox = document.querySelector(".search input");
-        const searchBtn = document.querySelector(".search button");
-        const weatherIcon = document.querySelector(".weather-icon");
+        // State Manager
+        let currentCity = "";
+        let units = "metric";
+        let favorites = [];
+        let weatherData = null;
 
-        async function checkWeather(city) {
-            const response = await fetch(apiUrl + city + `&appid=${apiKey}`);
+        // DOM elements
+        const searchInput = document.getElementById("search-input");
+        const searchBtn = document.getElementById("search-btn");
+        const geoBtn = document.getElementById("geo-btn");
+        const favBtn = document.getElementById("fav-btn");
+        const unitToggle = document.getElementById("unit-toggle");
+        
+        const errorBanner = document.getElementById("error-banner");
+        const errorText = document.getElementById("error-text");
+        const loaderContainer = document.getElementById("loader-container");
+        const weatherGrid = document.getElementById("weather-grid");
+        
+        const cityName = document.getElementById("city-name");
+        const currentDate = document.getElementById("current-date");
+        const heroIcon = document.getElementById("hero-icon");
+        const tempVal = document.getElementById("temp-val");
+        const weatherDesc = document.getElementById("weather-desc");
+        const feelsLikeVal = document.getElementById("feels-like-val");
+        const highLowVal = document.getElementById("high-low-val");
+        
+        const hourlySlider = document.getElementById("hourly-slider");
+        
+        const aqiVal = document.getElementById("aqi-val");
+        const aqiDesc = document.getElementById("aqi-desc");
+        const windVal = document.getElementById("wind-val");
+        const windArrow = document.getElementById("wind-arrow");
+        const windDirVal = document.getElementById("wind-dir-val");
+        const humidityVal = document.getElementById("humidity-val");
+        const humidityDesc = document.getElementById("humidity-desc");
+        const pressureVal = document.getElementById("pressure-val");
+        const pressureDesc = document.getElementById("pressure-desc");
+        const visibilityVal = document.getElementById("visibility-val");
+        const visibilityDesc = document.getElementById("visibility-desc");
+        const sunriseVal = document.getElementById("sunrise-val");
+        const sunsetVal = document.getElementById("sunset-val");
+        
+        const forecastList = document.getElementById("forecast-list");
+        const favoritesList = document.getElementById("favorites-list");
 
-            if (response.status === 404) {
-                document.querySelector(".error").style.display = "block";
-                document.querySelector(".weather").style.display = "none";
-            } else {
-                const data = await response.json();
+        // Air Quality Labels mapping
+        const aqiLabels = {
+            1: { text: "Good", desc: "Perfect air quality." },
+            2: { text: "Fair", desc: "Acceptable air quality." },
+            3: { text: "Moderate", desc: "Moderate air pollution." },
+            4: { text: "Poor", desc: "Air quality is poor." },
+            5: { text: "Very Poor", desc: "Hazardous conditions." }
+        };
 
-                document.querySelector(".city").innerHTML = data.name;
-                document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
-                document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-                document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
-
-                if (data.weather[0].main === "Clouds") {
-                    weatherIcon.src = "images/clouds.png";
-                } else if (data.weather[0].main === "Clear") {
-                    weatherIcon.src = "images/clear.png";
-                } else if (data.weather[0].main === "Rain") {
-                    weatherIcon.src = "images/rain.png";
-                } else if (data.weather[0].main === "Drizzle") {
-                    weatherIcon.src = "images/drizzle.png";
-                } else if (data.weather[0].main === "Mist") {
-                    weatherIcon.src = "images/mist.png";
-                }
-
-                document.querySelector(".weather").style.display = "block";
-                document.querySelector(".error").style.display = "none";
+        // Weather Icon mapping using existing local assets
+        function getWeatherIcon(mainCondition) {
+            switch (mainCondition) {
+                case "Clear":
+                    return "images/clear.png";
+                case "Clouds":
+                    return "images/clouds.png";
+                case "Rain":
+                case "Thunderstorm":
+                    return "images/rain.png";
+                case "Drizzle":
+                    return "images/drizzle.png";
+                case "Snow":
+                    return "images/snow.png";
+                case "Mist":
+                case "Haze":
+                case "Smoke":
+                case "Dust":
+                case "Fog":
+                case "Sand":
+                case "Ash":
+                case "Squall":
+                case "Tornado":
+                    return "images/mist.png";
+                default:
+                    return "images/cloudy.png";
             }
         }
 
+        // Setup theme dynamically on body
+        function updateTheme(condition) {
+            document.body.className = ""; // clear themes
+            const cond = condition.toLowerCase();
+            if (cond === "clear") {
+                document.body.classList.add("theme-clear");
+            } else if (cond === "clouds") {
+                document.body.classList.add("theme-clouds");
+            } else if (cond === "rain" || cond === "drizzle") {
+                document.body.classList.add("theme-rain");
+            } else if (cond === "snow") {
+                document.body.classList.add("theme-snow");
+            } else if (cond === "thunderstorm") {
+                document.body.classList.add("theme-thunderstorm");
+            } else if (["mist", "haze", "fog", "smoke", "dust", "sand", "ash", "squall", "tornado"].includes(cond)) {
+                document.body.classList.add("theme-mist");
+            } else {
+                document.body.classList.add("theme-clouds");
+            }
+        }
+
+        // Time Formatting using timezone offsets to show accurate local times
+        function formatLocalTime(dt, timezoneSeconds, format = 'full') {
+            const localTime = new Date((dt + timezoneSeconds) * 1000);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            if (format === 'full') {
+                const dayName = days[localTime.getUTCDay()];
+                const monthName = months[localTime.getUTCMonth()];
+                const date = localTime.getUTCDate();
+                return `${dayName}, ${monthName} ${date}`;
+            } else if (format === 'time') {
+                let hours = localTime.getUTCHours();
+                const minutes = localTime.getUTCMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                return `${hours}:${minutes} ${ampm}`;
+            } else if (format === 'hour') {
+                let hours = localTime.getUTCHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                return `${hours} ${ampm}`;
+            } else if (format === 'day') {
+                return days[localTime.getUTCDay()].substring(0, 3);
+            }
+        }
+
+        function getWindDirection(deg) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(deg / 22.5) % 16;
+            return directions[index];
+        }
+
+        // Show/Hide loaders, errors and dashboard grid
+        function showLoader() { loaderContainer.style.display = "flex"; }
+        function hideLoader() { loaderContainer.style.display = "none"; }
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorBanner.style.display = "flex";
+        }
+        function hideError() { errorBanner.style.display = "none"; }
+        function showGrid() { weatherGrid.style.display = "grid"; }
+        function hideGrid() { weatherGrid.style.display = "none"; }
+
+        // Fetch Weather Data (Coordinates or Query Name)
+        async function checkWeather(query, isCoords = false, lat = null, lon = null) {
+            showLoader();
+            hideError();
+            hideGrid();
+
+            try {
+                let currentUrl = "";
+                if (isCoords) {
+                    currentUrl = `${apiBase}weather?lat=${lat}&lon=${lon}&units=${units}&appid=${apiKey}`;
+                } else {
+                    currentUrl = `${apiBase}weather?q=${encodeURIComponent(query)}&units=${units}&appid=${apiKey}`;
+                }
+
+                const currentRes = await fetch(currentUrl);
+                if (!currentRes.ok) {
+                    if (currentRes.status === 404) {
+                        throw new Error("Invalid City Name. Please try again.");
+                    } else {
+                        throw new Error("Error fetching current weather.");
+                    }
+                }
+
+                const currentData = await currentRes.json();
+                const resolvedLat = currentData.coord.lat;
+                const resolvedLon = currentData.coord.lon;
+
+                // Load forecast and pollution data in parallel
+                const forecastUrl = `${apiBase}forecast?lat=${resolvedLat}&lon=${resolvedLon}&units=${units}&appid=${apiKey}`;
+                const pollutionUrl = `${apiBase}air_pollution?lat=${resolvedLat}&lon=${resolvedLon}&appid=${apiKey}`;
+
+                const [forecastRes, pollutionRes] = await Promise.all([
+                    fetch(forecastUrl).catch(() => null),
+                    fetch(pollutionUrl).catch(() => null)
+                ]);
+
+                let forecastData = null;
+                if (forecastRes && forecastRes.ok) {
+                    forecastData = await forecastRes.json();
+                }
+
+                let pollutionData = null;
+                if (pollutionRes && pollutionRes.ok) {
+                    pollutionData = await pollutionRes.json();
+                }
+
+                currentCity = currentData.name;
+                weatherData = { current: currentData, forecast: forecastData, pollution: pollutionData };
+
+                updateDashboard(currentData, forecastData, pollutionData);
+                updateFavoriteButtonState();
+                showGrid();
+            } catch (err) {
+                console.error(err);
+                showError(err.message || "Something went wrong.");
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // Render Dashboard Widgets
+        function updateDashboard(current, forecast, pollution) {
+            // Theme gradient change based on weather state
+            updateTheme(current.weather[0].main);
+
+            // 1. Current Weather Hero
+            cityName.textContent = current.name;
+            currentDate.textContent = formatLocalTime(current.dt, current.timezone, 'full');
+            heroIcon.src = getWeatherIcon(current.weather[0].main);
+            tempVal.textContent = `${Math.round(current.main.temp)}°${units === "metric" ? "C" : "F"}`;
+            weatherDesc.textContent = current.weather[0].description;
+            feelsLikeVal.textContent = `${Math.round(current.main.feels_like)}°${units === "metric" ? "C" : "F"}`;
+            highLowVal.textContent = `${Math.round(current.main.temp_max)}° / ${Math.round(current.main.temp_min)}°`;
+
+            // 2. Hourly Slider Forecast
+            hourlySlider.innerHTML = "";
+            if (forecast && forecast.list) {
+                // Slice first 8 records (representing the next 24 hours of 3-hour chunks)
+                const hourlyData = forecast.list.slice(0, 8);
+                hourlyData.forEach(hour => {
+                    const hourlyDiv = document.createElement("div");
+                    hourlyDiv.classList.add("hourly-item");
+
+                    const timeLabel = formatLocalTime(hour.dt, current.timezone, 'time');
+                    const iconSrc = getWeatherIcon(hour.weather[0].main);
+                    const temp = `${Math.round(hour.main.temp)}°`;
+
+                    hourlyDiv.innerHTML = `
+                        <span class="hourly-time">${timeLabel}</span>
+                        <img class="hourly-icon" src="${iconSrc}" alt="Weather">
+                        <span class="hourly-temp">${temp}</span>
+                    `;
+                    hourlySlider.appendChild(hourlyDiv);
+                });
+            }
+
+            // 3. Air Pollution (AQI) Metric
+            if (pollution && pollution.list && pollution.list[0]) {
+                const aqi = pollution.list[0].main.aqi;
+                const pm25 = pollution.list[0].components.pm2_5;
+                const aqiInfo = aqiLabels[aqi] || { text: "Unknown", desc: "N/A" };
+                
+                aqiVal.textContent = `${aqi} - ${aqiInfo.text}`;
+                aqiDesc.textContent = `PM2.5: ${Math.round(pm25)} µg/m³ - ${aqiInfo.desc}`;
+            } else {
+                aqiVal.textContent = "N/A";
+                aqiDesc.textContent = "Air pollution metrics unavailable";
+            }
+
+            // 4. Wind Speed & Direction pointer rotation
+            const speedUnit = units === "metric" ? "km/h" : "mph";
+            // OpenWeatherMap wind speed is in m/s for metric; let's convert to km/h by multiplying by 3.6
+            const rawWindSpeed = current.wind.speed;
+            const windSpeedCalculated = units === "metric" ? Math.round(rawWindSpeed * 3.6) : Math.round(rawWindSpeed);
+            
+            windVal.textContent = `${windSpeedCalculated} ${speedUnit}`;
+            if (current.wind.deg !== undefined) {
+                windArrow.style.transform = `rotate(${current.wind.deg}deg)`;
+                windDirVal.textContent = getWindDirection(current.wind.deg);
+            } else {
+                windArrow.style.transform = "rotate(0deg)";
+                windDirVal.textContent = "N/A";
+            }
+
+            // 5. Humidity
+            humidityVal.textContent = `${current.main.humidity}%`;
+            if (current.main.humidity > 60) {
+                humidityDesc.textContent = "High humidity level";
+            } else if (current.main.humidity < 35) {
+                humidityDesc.textContent = "Dry air conditions";
+            } else {
+                humidityDesc.textContent = "Comfortable humidity";
+            }
+
+            // 6. Barometric Pressure
+            pressureVal.textContent = `${current.main.pressure} hPa`;
+            if (current.main.pressure > 1013) {
+                pressureDesc.textContent = "High-pressure system";
+            } else if (current.main.pressure < 1009) {
+                pressureDesc.textContent = "Low-pressure system";
+            } else {
+                pressureDesc.textContent = "Normal barometric pressure";
+            }
+
+            // 7. Visibility conversion
+            const visibilityKm = current.visibility / 1000;
+            if (units === "metric") {
+                visibilityVal.textContent = `${visibilityKm.toFixed(1)} km`;
+                visibilityDesc.textContent = visibilityKm > 8 ? "Excellent visibility" : "Moderate mist/haze";
+            } else {
+                const visibilityMiles = visibilityKm * 0.621371;
+                visibilityVal.textContent = `${visibilityMiles.toFixed(1)} miles`;
+                visibilityDesc.textContent = visibilityMiles > 5 ? "Excellent visibility" : "Moderate visibility";
+            }
+
+            // 8. Sunrise and Sunset times
+            sunriseVal.textContent = formatLocalTime(current.sys.sunrise, current.timezone, 'time');
+            sunsetVal.textContent = formatLocalTime(current.sys.sunset, current.timezone, 'time');
+
+            // 9. 5-Day Forecast grouping
+            forecastList.innerHTML = "";
+            if (forecast && forecast.list) {
+                const parsedForecast = parseFiveDayForecast(forecast.list, current.timezone);
+                parsedForecast.forEach(day => {
+                    const forecastDiv = document.createElement("div");
+                    forecastDiv.classList.add("forecast-item");
+
+                    const weekday = day.dayName;
+                    const dateStr = day.dateString;
+                    const iconSrc = getWeatherIcon(day.condition);
+                    const desc = day.condition;
+                    const max = `${day.maxTemp}°`;
+                    const min = `${day.minTemp}°`;
+
+                    forecastDiv.innerHTML = `
+                        <span class="forecast-day">${weekday}</span>
+                        <span class="forecast-desc-label" style="font-size:12px; color: var(--text-secondary);">${dateStr}</span>
+                        <div class="forecast-icon-wrapper">
+                            <img class="forecast-icon" src="${iconSrc}" alt="Forecast">
+                        </div>
+                        <span class="forecast-desc-label">${desc}</span>
+                        <div class="forecast-range">
+                            <span class="forecast-max">${max}</span>
+                            <span class="forecast-min">${min}</span>
+                        </div>
+                    `;
+                    forecastList.appendChild(forecastDiv);
+                });
+            }
+        }
+
+        // Parse Forecast by grouping dates and extracting Min/Max/Dominant condition
+        function parseFiveDayForecast(list, timezoneSeconds) {
+            const daysData = {};
+            
+            list.forEach(item => {
+                const dateObj = new Date((item.dt + timezoneSeconds) * 1000);
+                // Grouping key is date (e.g., "Aug 22")
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const dateString = `${months[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}`;
+                const dayName = formatLocalTime(item.dt, timezoneSeconds, 'day');
+                
+                if (!daysData[dateString]) {
+                    daysData[dateString] = {
+                        dayName: dayName,
+                        dateString: dateString,
+                        temps: [],
+                        conditions: []
+                    };
+                }
+                
+                daysData[dateString].temps.push(item.main.temp);
+                daysData[dateString].conditions.push(item.weather[0].main);
+            });
+
+            const result = [];
+            Object.keys(daysData).forEach(key => {
+                const day = daysData[key];
+                const maxTemp = Math.round(Math.max(...day.temps));
+                const minTemp = Math.round(Math.min(...day.temps));
+                
+                // Find most common condition
+                const conditionCounts = {};
+                day.conditions.forEach(c => { conditionCounts[c] = (conditionCounts[c] || 0) + 1; });
+                const dominantCondition = Object.keys(conditionCounts).reduce((a, b) => conditionCounts[a] > conditionCounts[b] ? a : b);
+                
+                result.push({
+                    dayName: day.dayName,
+                    dateString: day.dateString,
+                    maxTemp: maxTemp,
+                    minTemp: minTemp,
+                    condition: dominantCondition
+                });
+            });
+            
+            // Return first 5 days
+            return result.slice(0, 5);
+        }
+
+        // ------------------ SAVED LOCATIONS / FAVORITES ------------------
+        function loadFavorites() {
+            const saved = localStorage.getItem("weather_favorites");
+            favorites = saved ? JSON.parse(saved) : ["New York", "London", "Tokyo"];
+            renderFavorites();
+        }
+
+        function saveFavorites() {
+            localStorage.setItem("weather_favorites", JSON.stringify(favorites));
+            renderFavorites();
+        }
+
+        async function renderFavorites() {
+            favoritesList.innerHTML = "";
+            
+            if (favorites.length === 0) {
+                favoritesList.innerHTML = `<p style="font-size:14px; color:var(--text-muted); text-align:center; padding: 20px 0;">No locations saved</p>`;
+                return;
+            }
+
+            // Create cards for all favorites. We can load their current temperatures in parallel!
+            const fetchPromises = favorites.map(async (city) => {
+                try {
+                    const res = await fetch(`${apiBase}weather?q=${encodeURIComponent(city)}&units=${units}&appid=${apiKey}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        return { city, success: true, temp: Math.round(data.main.temp), desc: data.weather[0].main };
+                    }
+                } catch (e) {
+                    console.error("Error loading favorite temp for " + city, e);
+                }
+                return { city, success: false };
+            });
+
+            const results = await Promise.all(fetchPromises);
+
+            results.forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.classList.add("favorite-item");
+                itemDiv.addEventListener("click", (e) => {
+                    // Prevent navigation click triggering delete
+                    if (e.target.closest('.delete-fav')) return;
+                    checkWeather(item.city);
+                });
+
+                const tempDisplay = item.success ? `${item.temp}°` : "--";
+                const descDisplay = item.success ? item.desc : "Error loading";
+
+                itemDiv.innerHTML = `
+                    <div class="favorite-item-info">
+                        <span class="favorite-name">${item.city}</span>
+                        <span class="favorite-desc">${descDisplay}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="favorite-temp">${tempDisplay}</span>
+                        <button class="delete-fav" title="Delete Location">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                // Wire up delete event listener
+                const deleteBtn = itemDiv.querySelector(".delete-fav");
+                deleteBtn.addEventListener("click", () => {
+                    removeFavorite(item.city);
+                });
+
+                favoritesList.appendChild(itemDiv);
+            });
+        }
+
+        function toggleFavorite() {
+            if (!currentCity) return;
+            const index = favorites.findIndex(c => c.toLowerCase() === currentCity.toLowerCase());
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(currentCity);
+            }
+            saveFavorites();
+            updateFavoriteButtonState();
+        }
+
+        function removeFavorite(city) {
+            favorites = favorites.filter(c => c.toLowerCase() !== city.toLowerCase());
+            saveFavorites();
+            updateFavoriteButtonState();
+        }
+
+        function updateFavoriteButtonState() {
+            if (!currentCity) {
+                favBtn.classList.remove("active-star");
+                return;
+            }
+            const isFav = favorites.some(c => c.toLowerCase() === currentCity.toLowerCase());
+            if (isFav) {
+                favBtn.classList.add("active-star");
+            } else {
+                favBtn.classList.remove("active-star");
+            }
+        }
+
+        // ------------------ EVENTS ------------------
         searchBtn.addEventListener("click", () => {
-            checkWeather(searchBox.value);
+            if (searchInput.value.trim()) {
+                checkWeather(searchInput.value.trim());
+                searchInput.value = "";
+            }
         });
+
+        searchInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && searchInput.value.trim()) {
+                checkWeather(searchInput.value.trim());
+                searchInput.value = "";
+            }
+        });
+
+        favBtn.addEventListener("click", toggleFavorite);
+
+        geoBtn.addEventListener("click", () => {
+            if (navigator.geolocation) {
+                showLoader();
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        checkWeather(null, true, position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        console.warn("Geolocation permission error: ", error.message);
+                        showError("Could not retrieve current coordinates. Check browser permissions.");
+                        hideLoader();
+                    }
+                );
+            } else {
+                showError("Geolocation is not supported by your browser.");
+            }
+        });
+
+        unitToggle.addEventListener("click", () => {
+            if (units === "metric") {
+                units = "imperial";
+                unitToggle.classList.add("imperial");
+                document.getElementById("unit-metric").classList.remove("active");
+                document.getElementById("unit-imperial").classList.add("active");
+            } else {
+                units = "metric";
+                unitToggle.classList.remove("imperial");
+                document.getElementById("unit-metric").classList.add("active");
+                document.getElementById("unit-imperial").classList.remove("active");
+            }
+            // Trigger refresh
+            if (currentCity) {
+                checkWeather(currentCity);
+            }
+            renderFavorites(); // update temperatures in sidebar too!
+        });
+
+        // Initialize App
+        function init() {
+            // Load saved settings
+            const savedUnits = localStorage.getItem("weather_units");
+            if (savedUnits) {
+                units = savedUnits;
+                if (units === "imperial") {
+                    unitToggle.classList.add("imperial");
+                    document.getElementById("unit-metric").classList.remove("active");
+                    document.getElementById("unit-imperial").classList.add("active");
+                }
+            }
+            
+            loadFavorites();
+
+            // Detect coordinates or fallback on London
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        checkWeather(null, true, position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        console.warn("GPS failed, falling back to default city");
+                        checkWeather("London");
+                    }
+                );
+            } else {
+                checkWeather("London");
+            }
+        }
+
+        // Store units on change
+        window.addEventListener("beforeunload", () => {
+            localStorage.setItem("weather_units", units);
+        });
+
+        init();
     </script>
 </body>
 </html>

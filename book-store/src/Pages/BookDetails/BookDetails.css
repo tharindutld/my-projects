@@ -1,0 +1,36 @@
+.details-container {
+  display: flex;
+  gap: 40px;
+  padding: 40px;
+}
+
+.details-image {
+  width: 350px;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.details-info {
+  max-width: 600px;
+}
+
+.price {
+  font-size: 22px;
+  font-weight: bold;
+  color: green;
+}
+
+.description {
+  margin: 20px 0;
+  line-height: 1.6;
+}
+
+.btn {
+  padding: 10px 18px;
+  background: black;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
