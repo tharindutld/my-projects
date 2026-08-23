@@ -1,0 +1,248 @@
+/* Global Storefront Button and Form Control Standardizations */
+.btn {
+    font-size: 13px !important;
+    padding: 6px 18px !important;
+    border-radius: 30px !important; /* Standardized round/pill buttons */
+    font-weight: 600 !important;
+    transition: all 0.25s ease-in-out !important;
+}
+.btn-sm {
+    font-size: 12px !important;
+    padding: 4px 12px !important;
+    border-radius: 25px !important;
+}
+.btn-lg {
+    font-size: 15px !important;
+    padding: 8px 24px !important;
+    border-radius: 30px !important;
+}
+.form-control, .form-select {
+    font-size: 13.5px !important;
+    padding: 7px 14px !important;
+    border-radius: 8px !important;
+}
+.form-control-sm, .form-select-sm {
+    font-size: 12.5px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+}
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15) !important;
+    border-color: #0d6efd !important;
+}
+
+/* Premium Pagination Styling */
+.pagination-custom .page-link {
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+}
+.pagination-custom .page-item.active .page-link {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15) !important;
+}
+.pagination-custom .page-item.disabled .page-link {
+    color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+}
+.pagination-custom .page-link:hover:not(.disabled) {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Header Search Bar Styling */
+.search-input-group {
+    position: relative;
+}
+.search-input-group .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8 !important;
+    z-index: 5;
+    pointer-events: none;
+    font-size: 13.5px;
+}
+.search-input-group .form-control {
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    padding-left: 40px !important;
+    padding-right: 16px !important;
+    font-size: 13.5px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+}
+.search-input-group .form-control:focus {
+    border-color: #0d6efd !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Header Navigation Utility Styling */
+.nav-icon-link {
+    color: #64748b !important;
+    transition: all 0.2s ease-in-out !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.nav-icon-link:hover {
+    color: #0d6efd !important;
+    transform: translateY(-1px);
+}
+.user-dropdown-btn {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}
+.user-dropdown-btn:hover, .user-dropdown-btn[aria-expanded="true"] {
+    background-color: #ffffff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.08) !important;
+}
+
+/* Page Specific Styles */
+:root {
+    --primary-color: #0d6efd;
+    --accent-color: #f8f9fa;
+    --text-dark: #212529;
+    --card-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #fcfcfc;
+    color: var(--text-dark);
+}
+
+/* Navbar Enhancements */
+.navbar-custom {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    font-weight: 500;
+}
+
+/* Hero Carousel Styling */
+.hero-section {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+}
+.carousel-item {
+    height: 450px;
+    background-size: cover;
+    background-position: center;
+}
+.carousel-caption-custom {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: 10px;
+    color: #333;
+    max-width: 400px;
+    text-align: left;
+    position: absolute;
+    left: 5%;
+    top: 20%;
+}
+
+/* Sidebar Brands */
+.brand-list-group .list-group-item {
+    border: none;
+    padding: 12px 20px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+.brand-list-group .list-group-item:hover {
+    background-color: var(--primary-color);
+    color: white !important;
+    padding-left: 30px;
+}
+
+/* Product Cards */
+.product-card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    background: #fff;
+    height: 100%;
+    position: relative;
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+.product-img-wrapper {
+    position: relative;
+    padding: 20px;
+    background: #fbfbfb;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+.product-img {
+    max-height: 200px;
+    object-fit: contain;
+    width: 100%;
+}
+.wishlist-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: #ff4757;
+    transition: 0.3s;
+    z-index: 10;
+}
+.wishlist-btn:hover {
+    background: #ff4757;
+    color: white;
+}
+
+/* Service Cards */
+.service-box {
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid #eee;
+    height: 100%;
+}
+.service-box i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+}

@@ -1,0 +1,439 @@
+body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; }
+
+/* Unified Premium Sidebar Sizing & Layout */
+.sidebar {
+    background-color: #111827 !important; /* Deep dark slate background */
+    min-height: 100vh;
+    color: #f3f4f6;
+    width: 260px !important;
+    max-width: 260px !important;
+    flex: 0 0 260px !important;
+    transition: all 0.3s;
+    border-right: 1px solid #1f2937;
+}
+
+/* Adjust layout column spacing to work beautifully with 260px sidebar */
+.col-md-10 {
+    width: calc(100% - 260px) !important;
+    flex: 0 0 calc(100% - 260px) !important;
+    max-width: calc(100% - 260px) !important;
+}
+.flex-grow-1 {
+    width: calc(100% - 260px) !important;
+    flex: 1 1 auto !important;
+}
+
+.sidebar a { 
+    color: #9ca3af !important; 
+    text-decoration: none; 
+    display: block; 
+    padding: 10px 16px; 
+    font-size: 13.5px; 
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.sidebar a:hover { 
+    color: #fff !important; 
+    background-color: rgba(255,255,255,0.05); 
+}
+
+/* Sidebar active link styling */
+.sidebar .bg-primary {
+    background-color: #0284c7 !important; /* Ocean blue active menu link */
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+    border-radius: 6px !important;
+}
+.sidebar .bg-primary > a {
+    color: #ffffff !important;
+}
+
+/* Sidebar Submenus */
+.sidebar .collapse a {
+    padding-left: 32px !important;
+    font-size: 12.5px !important;
+    color: #9ca3af !important;
+}
+.sidebar .collapse a:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ensure submenus inside active menu are clearly readable on blue background */
+.sidebar .bg-primary .collapse a {
+    color: #e0f2fe !important; /* Light blue-white for readable submenu text */
+}
+.sidebar .bg-primary .collapse a:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+.sidebar .bg-primary .collapse a.fw-bold {
+    color: #ffffff !important; /* Pure white for active sub-item (prevents vanishing) */
+    font-weight: 700 !important;
+    background-color: rgba(255, 255, 255, 0.15) !important; /* Highlight selection */
+}
+.sidebar .collapse a.fw-bold {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Logout Link Styles */
+.sidebar a.logout-link {
+    color: #f87171 !important;
+    font-weight: 700 !important;
+    margin-top: 10px !important;
+}
+.sidebar a.logout-link:hover {
+    color: #ffffff !important;
+    background-color: #dc2626 !important;
+}
+
+.sidebar .nav-category { font-size: 11px; text-transform: uppercase; color: #6c757d; margin: 20px 20px 10px; letter-spacing: 1px; }
+.card-header-dark { background-color: #1f2937; color: white; border-radius: 6px 6px 0 0 !important; }
+.form-label { font-size: 13.5px; font-weight: 600; color: #374151; }
+.required-asterisk { color: #dc3545; }
+
+/* Global Admin Button standardizations */
+.btn {
+    font-size: 13px !important;
+    padding: 6px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+.btn-sm {
+    font-size: 12px !important;
+    padding: 4px 12px !important;
+    border-radius: 4px !important;
+    height: 30px !important;
+}
+.btn-lg {
+    font-size: 14.5px !important;
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    height: 46px !important;
+}
+
+/* Unified Color Themes for Buttons */
+.btn-primary, .btn-success, .btn-dark, .btn-info {
+    background-color: #0284c7 !important; /* Unified Admin Primary Color */
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+.btn-primary:hover, .btn-success:hover, .btn-dark:hover, .btn-info:hover {
+    background-color: #0369a1 !important;
+    border-color: #0369a1 !important;
+    color: #ffffff !important;
+}
+
+.btn-secondary, .btn-light {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+.btn-secondary:hover, .btn-light:hover {
+    background-color: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.btn-danger {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+.btn-danger:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-primary, .btn-outline-success, .btn-outline-info, .btn-outline-dark {
+    color: #0284c7 !important;
+    border-color: #0284c7 !important;
+    background-color: transparent !important;
+}
+.btn-outline-primary:hover, .btn-outline-success:hover, .btn-outline-info:hover, .btn-outline-dark:hover {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #0284c7 !important;
+}
+
+/* Form Inputs standardizations */
+.form-control, .form-select {
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+}
+.form-control-sm, .form-select-sm {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+}
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.15) !important;
+    border-color: #0284c7 !important;
+}
+
+/* Prevent table Action column buttons from wrapping vertically */
+.table td:last-child, .table th:last-child {
+    white-space: nowrap !important;
+    width: 1% !important;
+}
+.table td:last-child .btn, .table td:last-child a {
+    margin: 0 2px !important;
+}
+
+/* Premium Pagination Styling */
+.pagination-custom .page-link {
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 50% !important;
+    width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+}
+.pagination-custom .page-item.active .page-link {
+    background-color: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15) !important;
+}
+.pagination-custom .page-item.disabled .page-link {
+    color: #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+.pagination-custom .page-link:hover:not(.disabled) {
+    background-color: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Modernized Global Table Customizations */
+.table {
+    border: none !important;
+    margin-bottom: 0 !important;
+}
+.table > :not(caption) > * > * {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+/* Style table header */
+.table thead th, .table thead tr th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 12px 16px !important;
+}
+/* Style table cells */
+.table tbody td {
+    color: #334155 !important;
+    font-size: 13px !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+/* Override Bootstrap striping and hover */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8fafc !important;
+}
+.table-hover tbody tr:hover {
+    background-color: #f1f5f9 !important;
+}
+/* Override Bootstrap border classes */
+.table-bordered, .table-bordered th, .table-bordered td {
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* Modern Outline Pill Button Overrides inside Table Cells */
+.table td .btn-primary, 
+.table td a[class*="btn-primary"] {
+    background-color: rgba(2, 132, 199, 0.08) !important;
+    border: 1px solid rgba(2, 132, 199, 0.2) !important;
+    color: #0284c7 !important;
+    border-radius: 30px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 4px 14px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.table td .btn-primary:hover, 
+.table td a[class*="btn-primary"]:hover {
+    background-color: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+.table td .btn-danger, 
+.table td a[class*="btn-danger"] {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+    color: #ef4444 !important;
+    border-radius: 30px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 4px 14px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.table td .btn-danger:hover, 
+.table td a[class*="btn-danger"]:hover {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.table td .btn-success, 
+.table td a[class*="btn-success"] {
+    background-color: rgba(22, 163, 74, 0.08) !important;
+    border: 1px solid rgba(22, 163, 74, 0.2) !important;
+    color: #16a34a !important;
+    border-radius: 30px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 4px 14px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.table td .btn-success:hover, 
+.table td a[class*="btn-success"]:hover {
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+}
+
+.table td .btn-warning, 
+.table td a[class*="btn-warning"] {
+    background-color: rgba(234, 179, 8, 0.08) !important;
+    border: 1px solid rgba(234, 179, 8, 0.2) !important;
+    color: #ca8a04 !important;
+    border-radius: 30px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 4px 14px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.table td .btn-warning:hover, 
+.table td a[class*="btn-warning"]:hover {
+    background-color: #ca8a04 !important;
+    border-color: #ca8a04 !important;
+    color: #ffffff !important;
+}
+
+.table td .btn-secondary,
+.table td .btn-outline-secondary,
+.table td .btn-info,
+.table td .btn-light,
+.table td a[class*="btn-secondary"],
+.table td a[class*="btn-info"],
+.table td a[class*="btn-light"] {
+    background-color: rgba(100, 116, 139, 0.08) !important;
+    border: 1px solid rgba(100, 116, 139, 0.2) !important;
+    color: #64748b !important;
+    border-radius: 30px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 4px 14px !important;
+    height: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.table td .btn-secondary:hover,
+.table td .btn-outline-secondary:hover,
+.table td .btn-info:hover,
+.table td .btn-light:hover,
+.table td a[class*="btn-secondary"]:hover,
+.table td a[class*="btn-info"]:hover,
+.table td a[class*="btn-light"]:hover {
+    background-color: #64748b !important;
+    border-color: #64748b !important;
+    color: #ffffff !important;
+}
+
+/* Modern opacity badges */
+.badge.bg-success {
+    background-color: rgba(22, 163, 74, 0.1) !important;
+    color: #16a34a !important;
+    border: 1px solid rgba(22, 163, 74, 0.2) !important;
+    font-weight: 600 !important;
+}
+.badge.bg-danger {
+    background-color: rgba(220, 38, 38, 0.1) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(220, 38, 38, 0.2) !important;
+    font-weight: 600 !important;
+}
+.badge.bg-warning {
+    background-color: rgba(234, 179, 8, 0.1) !important;
+    color: #ca8a04 !important;
+    border: 1px solid rgba(234, 179, 8, 0.2) !important;
+    font-weight: 600 !important;
+}
+.badge.bg-info {
+    background-color: rgba(14, 165, 233, 0.1) !important;
+    color: #0ea5e9 !important;
+    border: 1px solid rgba(14, 165, 233, 0.2) !important;
+    font-weight: 600 !important;
+}
+.badge.bg-secondary {
+    background-color: rgba(100, 116, 139, 0.1) !important;
+    color: #64748b !important;
+    border: 1px solid rgba(100, 116, 139, 0.2) !important;
+    font-weight: 600 !important;
+}
+
+/* Fixed width status/stock badges */
+.badge-fixed {
+    display: inline-block !important;
+    width: 105px !important;
+    text-align: center !important;
+    padding: 5px 0 !important;
+    white-space: nowrap !important;
+}
