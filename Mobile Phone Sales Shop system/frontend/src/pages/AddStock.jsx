@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Box, CheckCircle, AlertCircle, ArrowLeft, PlusCircle, RefreshCw, ShieldCheck, Truck, BarChart2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AddStock() {
   const { token, user, loading: authLoading, API_URL } = useAuth();
@@ -38,7 +39,9 @@ export default function AddStock() {
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -136,53 +139,82 @@ export default function AddStock() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitAttempt = (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    const errors = {};
+
+    if (!dealer) errors.dealer = 'Supplier / Dealer selection is required.';
+    if (!purchaseDate) errors.purchaseDate = 'Purchase Date is required.';
+    if (!brand) errors.brand = 'Brand selection is required.';
 
     const pattern = /^[a-zA-Z0-9\s\/]+$/;
     const colorPattern = /^[a-zA-Z\s\-\/]+$/;
 
-    if (!pattern.test(modelName)) {
-      setErrorMsg('Model Name cannot contain special characters, plus, minus, or decimals.');
-      return;
+    if (!modelName.trim()) {
+      errors.modelName = 'Model Name is required.';
+    } else if (!pattern.test(modelName.trim())) {
+      errors.modelName = 'Model Name cannot contain special characters, plus, minus, or decimals.';
+    } else if (!/[a-zA-Z]/.test(modelName.trim())) {
+      errors.modelName = 'Model Name must contain at least one letter.';
     }
-    if (!/[a-zA-Z]/.test(modelName)) {
-      setErrorMsg('Model Name must contain at least one letter.');
-      return;
+
+    if (!color.trim()) {
+      errors.color = 'Color is required.';
+    } else if (!colorPattern.test(color.trim())) {
+      errors.color = 'Color cannot contain numbers, minus numbers, or special characters.';
     }
-    if (!colorPattern.test(color)) {
-      setErrorMsg('Color cannot contain numbers, minus numbers, or special characters.');
-      return;
-    }
+
+    if (!ram) errors.ram = 'RAM selection is required.';
+    if (!storage) errors.storage = 'Storage (ROM) selection is required.';
 
     const cp = parseFloat(costPrice);
     const sp = parseFloat(sellingPrice);
-    if (cp <= 0 || sp <= 0) {
-      setErrorMsg('Cost price and selling price must be positive numbers.');
-      return;
+
+    if (isNaN(cp) || cp <= 0) {
+      errors.costPrice = 'Cost price must be a valid positive number.';
     }
-    if (sp < 10000) {
-      setErrorMsg('Selling price must be at least 10,000 LKR.');
-      return;
+
+    if (isNaN(sp) || sp <= 0) {
+      errors.sellingPrice = 'Selling price must be a valid positive number.';
+    } else if (sp < 10000) {
+      errors.sellingPrice = 'Selling price must be at least 10,000 LKR.';
+    } else if (!isNaN(cp) && sp <= cp) {
+      errors.sellingPrice = `Selling price (LKR ${sp}) must be greater than Cost price (LKR ${cp}).`;
     }
-    if (sp <= cp) {
-      setErrorMsg(`Selling price (LKR ${sp}) must be greater than Cost price (LKR ${cp}).`);
-      return;
+
+    if (!quantity || parseInt(quantity, 10) < 1) {
+      errors.quantity = 'Stock quantity must be at least 1 unit.';
     }
 
     // IMEI validation
     for (let i = 0; i < imeis.length; i++) {
       const im = imeis[i];
       if (im && (!/^\d{15}$/.test(im))) {
-        setErrorMsg(`IMEI #${i + 1} ("${im}") is invalid. IMEIs must be exactly 15 numeric digits.`);
-        return;
+        errors[`imei_${i}`] = `IMEI #${i + 1} must be exactly 15 numeric digits.`;
       }
     }
 
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg('Please fix the highlighted errors in the form.');
+      return;
+    }
+
+    setFieldErrors({});
+    setShowConfirmModal(true);
+  };
+
+  const executeSubmitBatch = async () => {
+    setShowConfirmModal(false);
+    setErrorMsg('');
+    setSuccessMsg('');
     setSubmitting(true);
     try {
+      const cp = parseFloat(costPrice);
+      const sp = parseFloat(sellingPrice);
+
       const res = await fetch(`${API_URL}/stock/batch`, {
         method: 'POST',
         headers: {
@@ -191,8 +223,8 @@ export default function AddStock() {
         },
         body: JSON.stringify({
           brand,
-          model_name: modelName,
-          color,
+          model_name: modelName.trim(),
+          color: color.trim(),
           ram,
           storage,
           simtype,
@@ -286,7 +318,15 @@ export default function AddStock() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          title="Confirm Stock Batch Submission"
+          message={`Please confirm that you want to receive stock batch ${batchNumber} with ${quantity} unit(s).`}
+          onConfirm={executeSubmitBatch}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+
+        <form noValidate onSubmit={handleSubmitAttempt} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Section 1: Batch & Supplier Info */}
           <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.75)' }}>
             <h5 style={{ fontSize: '15px', fontWeight: '800', color: 'var(--primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -296,10 +336,9 @@ export default function AddStock() {
               <div className="col-md-5">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Dealer / Supplier *</label>
                 <select
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.dealer ? 'border-danger' : ''}`}
                   value={dealer}
-                  onChange={e => setDealer(e.target.value)}
-                  required
+                  onChange={e => { setDealer(e.target.value); setFieldErrors(prev => ({ ...prev, dealer: '' })); }}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}
                 >
                   <option value="">Select Supplier...</option>
@@ -314,18 +353,19 @@ export default function AddStock() {
                     </>
                   )}
                 </select>
+                {fieldErrors.dealer && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.dealer}</div>}
               </div>
 
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Purchase Date *</label>
                 <input
                   type="date"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.purchaseDate ? 'border-danger' : ''}`}
                   value={purchaseDate}
-                  onChange={e => setPurchaseDate(e.target.value)}
-                  required
+                  onChange={e => { setPurchaseDate(e.target.value); setFieldErrors(prev => ({ ...prev, purchaseDate: '' })); }}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }}
                 />
+                {fieldErrors.purchaseDate && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.purchaseDate}</div>}
               </div>
 
               <div className="col-md-4">
@@ -368,36 +408,41 @@ export default function AddStock() {
             <div className="row g-3">
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Brand *</label>
-                <select className="glass-input" value={brand} onChange={e => setBrand(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.brand ? 'border-danger' : ''}`} value={brand} onChange={e => { setBrand(e.target.value); setFieldErrors(prev => ({ ...prev, brand: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select Brand...</option>
                   {brands.map(b => <option key={b.ID} value={b.BrandName}>{b.BrandName}</option>)}
                 </select>
+                {fieldErrors.brand && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.brand}</div>}
               </div>
 
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Model Name *</label>
-                <input type="text" className="glass-input" value={modelName} onChange={e => setModelName(e.target.value)} placeholder="e.g. Galaxy S26" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                <input type="text" className={`glass-input ${fieldErrors.modelName ? 'border-danger' : ''}`} value={modelName} onChange={e => { setModelName(e.target.value); setFieldErrors(prev => ({ ...prev, modelName: '' })); }} placeholder="e.g. Galaxy S26" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                {fieldErrors.modelName && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.modelName}</div>}
               </div>
 
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Color *</label>
-                <input type="text" className="glass-input" value={color} onChange={e => setColor(e.target.value)} placeholder="e.g. Titanium Gray" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                <input type="text" className={`glass-input ${fieldErrors.color ? 'border-danger' : ''}`} value={color} onChange={e => { setColor(e.target.value); setFieldErrors(prev => ({ ...prev, color: '' })); }} placeholder="e.g. Titanium Gray" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                {fieldErrors.color && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.color}</div>}
               </div>
 
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>RAM *</label>
-                <select className="glass-input" value={ram} onChange={e => setRam(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.ram ? 'border-danger' : ''}`} value={ram} onChange={e => { setRam(e.target.value); setFieldErrors(prev => ({ ...prev, ram: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select RAM...</option>
                   {['2GB', '3GB', '4GB', '6GB', '8GB', '12GB', '16GB', '24GB', '32GB'].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
+                {fieldErrors.ram && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.ram}</div>}
               </div>
 
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Storage (ROM) *</label>
-                <select className="glass-input" value={storage} onChange={e => setStorage(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.storage ? 'border-danger' : ''}`} value={storage} onChange={e => { setStorage(e.target.value); setFieldErrors(prev => ({ ...prev, storage: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select ROM...</option>
                   {['16GB', '32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB'].map(ro => <option key={ro} value={ro}>{ro}</option>)}
                 </select>
+                {fieldErrors.storage && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.storage}</div>}
               </div>
 
               <div className="col-md-3">
@@ -426,17 +471,20 @@ export default function AddStock() {
             <div className="row g-3">
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Cost Price (Per Unit LKR) *</label>
-                <input type="number" min="1" step="1" className="glass-input" value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="0" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                <input type="number" min="1" step="1" className={`glass-input ${fieldErrors.costPrice ? 'border-danger' : ''}`} value={costPrice} onChange={e => { setCostPrice(e.target.value); setFieldErrors(prev => ({ ...prev, costPrice: '' })); }} placeholder="0" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                {fieldErrors.costPrice && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.costPrice}</div>}
               </div>
 
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Retail Selling Price (LKR) *</label>
-                <input type="number" min="10000" step="1" className="glass-input" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} placeholder="0" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                <input type="number" min="10000" step="1" className={`glass-input ${fieldErrors.sellingPrice ? 'border-danger' : ''}`} value={sellingPrice} onChange={e => { setSellingPrice(e.target.value); setFieldErrors(prev => ({ ...prev, sellingPrice: '' })); }} placeholder="0" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px' }} />
+                {fieldErrors.sellingPrice && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.sellingPrice}</div>}
               </div>
 
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Received Stock Quantity (Units) *</label>
-                <input type="number" min="1" className="glass-input" value={quantity} onChange={e => setQuantity(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', fontWeight: '800', color: '#38bdf8' }} />
+                <input type="number" min="1" className={`glass-input ${fieldErrors.quantity ? 'border-danger' : ''}`} value={quantity} onChange={e => { setQuantity(e.target.value); setFieldErrors(prev => ({ ...prev, quantity: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '4px', fontWeight: '800', color: '#38bdf8' }} />
+                {fieldErrors.quantity && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.quantity}</div>}
               </div>
             </div>
           </div>
@@ -483,16 +531,21 @@ export default function AddStock() {
                         <input
                           type="text"
                           maxLength="15"
-                          className="glass-input"
+                          className={`glass-input ${fieldErrors[`imei_${isDualSim ? uIdx * 2 : uIdx}`] ? 'border-danger' : ''}`}
                           value={imeis[isDualSim ? uIdx * 2 : uIdx] || ''}
                           onChange={e => {
                             const updated = [...imeis];
-                            updated[isDualSim ? uIdx * 2 : uIdx] = e.target.value;
+                            const idx = isDualSim ? uIdx * 2 : uIdx;
+                            updated[idx] = e.target.value;
                             setImeis(updated);
+                            setFieldErrors(prev => ({ ...prev, [`imei_${idx}`]: '' }));
                           }}
                           placeholder="15-digit numeric IMEI"
                           style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', marginTop: '2px' }}
                         />
+                        {fieldErrors[`imei_${isDualSim ? uIdx * 2 : uIdx}`] && (
+                          <div className="text-danger small mt-1" style={{ fontSize: '11px' }}>{fieldErrors[`imei_${isDualSim ? uIdx * 2 : uIdx}`]}</div>
+                        )}
                       </div>
                     )}
 
@@ -502,16 +555,21 @@ export default function AddStock() {
                         <input
                           type="text"
                           maxLength="15"
-                          className="glass-input"
+                          className={`glass-input ${fieldErrors[`imei_${uIdx * 2 + 1}`] ? 'border-danger' : ''}`}
                           value={imeis[uIdx * 2 + 1] || ''}
                           onChange={e => {
                             const updated = [...imeis];
-                            updated[uIdx * 2 + 1] = e.target.value;
+                            const idx = uIdx * 2 + 1;
+                            updated[idx] = e.target.value;
                             setImeis(updated);
+                            setFieldErrors(prev => ({ ...prev, [`imei_${idx}`]: '' }));
                           }}
                           placeholder="15-digit numeric IMEI"
                           style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', marginTop: '2px' }}
                         />
+                        {fieldErrors[`imei_${uIdx * 2 + 1}`] && (
+                          <div className="text-danger small mt-1" style={{ fontSize: '11px' }}>{fieldErrors[`imei_${uIdx * 2 + 1}`]}</div>
+                        )}
                       </div>
                     )}
                   </div>

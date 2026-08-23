@@ -220,7 +220,7 @@ export default function EditRepair() {
             {loading ? (
               <div className="text-muted py-5 text-center">Loading repair details...</div>
             ) : (
-              <form onSubmit={handleSubmitAttempt}>
+              <form noValidate onSubmit={handleSubmitAttempt}>
                 {isTechnician ? (
                   <>
                     <div className="alert alert-info border-0 py-2 mb-4 small d-flex align-items-center gap-2">

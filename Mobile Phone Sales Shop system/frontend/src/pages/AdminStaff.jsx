@@ -26,6 +26,7 @@ export default function AdminStaff() {
   // Status indicators
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState({
@@ -70,20 +71,66 @@ export default function AdminStaff() {
     loadAccounts();
   }, [token, authLoading]);
 
-  const handleRegisterStaff = async (e) => {
+  const handleRegisterStaffAttempt = (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    const errors = {};
 
-    if (!firstName || !lastName || !email || !phone || !password || !role) {
-      setError('Please fill in all staff details.');
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    if (!firstName.trim()) {
+      errors.firstName = 'First Name is required.';
+    } else if (!nameRegex.test(firstName.trim()) || firstName.trim().length < 2 || firstName.trim().length > 50) {
+      errors.firstName = 'First name must contain only letters and spaces (2-50 characters).';
+    }
+
+    if (!lastName.trim()) {
+      errors.lastName = 'Last Name is required.';
+    } else if (!nameRegex.test(lastName.trim()) || lastName.trim().length < 2 || lastName.trim().length > 50) {
+      errors.lastName = 'Last name must contain only letters and spaces (2-50 characters).';
+    }
+
+    if (!email.trim()) {
+      errors.email = 'Email Address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    if (!phone.trim()) {
+      errors.phone = 'Phone Number is required.';
+    } else if (!/^0[0-9]{9}$/.test(phone.trim())) {
+      errors.phone = 'Phone number must be exactly 10 digits starting with 0.';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required.';
+    } else if (password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long.';
+    }
+
+    if (!role) {
+      errors.role = 'System role permissions selection is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the highlighted errors in the form.');
       return;
     }
 
-    if (!/^0[0-9]{9}$/.test(phone)) {
-      setError('Phone number must be exactly 10 digits starting with 0.');
-      return;
-    }
+    setFieldErrors({});
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Staff Registration',
+      message: `Are you sure you want to register ${firstName} ${lastName} as a ${role}?`,
+      onConfirm: executeRegisterStaff
+    });
+  };
+
+  const executeRegisterStaff = async () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    setError('');
+    setSuccess('');
 
     try {
       const res = await fetch(`${API_URL}/staff/register`, {
@@ -93,10 +140,10 @@ export default function AdminStaff() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          phone,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
           password,
           role
         })
@@ -110,6 +157,7 @@ export default function AdminStaff() {
         setEmail('');
         setPhone('');
         setPassword('');
+        setFieldErrors({});
         loadAccounts();
       } else {
         setError(data.message);
@@ -210,40 +258,80 @@ export default function AdminStaff() {
             <UserPlus size={22} className="text-primary" /> Register Staff Account
           </h2>
 
-          <form onSubmit={handleRegisterStaff} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <form noValidate onSubmit={handleRegisterStaffAttempt} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600' }}>First Name</label>
-                <input type="text" className="glass-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                <label style={{ fontSize: '13px', fontWeight: '600' }}>First Name <span className="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  className={`glass-input ${fieldErrors.firstName ? 'border-danger' : ''}`} 
+                  value={firstName} 
+                  onChange={(e) => { setFirstName(e.target.value); setFieldErrors(prev => ({ ...prev, firstName: '' })); }} 
+                  placeholder="e.g. Ruwan"
+                />
+                {fieldErrors.firstName && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.firstName}</div>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600' }}>Last Name</label>
-                <input type="text" className="glass-input" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                <label style={{ fontSize: '13px', fontWeight: '600' }}>Last Name <span className="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  className={`glass-input ${fieldErrors.lastName ? 'border-danger' : ''}`} 
+                  value={lastName} 
+                  onChange={(e) => { setLastName(e.target.value); setFieldErrors(prev => ({ ...prev, lastName: '' })); }} 
+                  placeholder="e.g. Perera"
+                />
+                {fieldErrors.lastName && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.lastName}</div>}
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600' }}>Email Address</label>
-              <input type="email" className="glass-input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <label style={{ fontSize: '13px', fontWeight: '600' }}>Email Address <span className="text-danger">*</span></label>
+              <input 
+                type="email" 
+                className={`glass-input ${fieldErrors.email ? 'border-danger' : ''}`} 
+                value={email} 
+                onChange={(e) => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: '' })); }} 
+                placeholder="staff@store.com"
+              />
+              {fieldErrors.email && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.email}</div>}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600' }}>Mobile Phone</label>
-              <input type="text" placeholder="e.g. 0771234567" className="glass-input" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+              <label style={{ fontSize: '13px', fontWeight: '600' }}>Mobile Phone <span className="text-danger">*</span></label>
+              <input 
+                type="text" 
+                placeholder="e.g. 0771234567" 
+                className={`glass-input ${fieldErrors.phone ? 'border-danger' : ''}`} 
+                value={phone} 
+                onChange={(e) => { setPhone(e.target.value); setFieldErrors(prev => ({ ...prev, phone: '' })); }} 
+              />
+              {fieldErrors.phone && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.phone}</div>}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600' }}>Password</label>
-              <input type="password" className="glass-input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <label style={{ fontSize: '13px', fontWeight: '600' }}>Password <span className="text-danger">*</span></label>
+              <input 
+                type="password" 
+                className={`glass-input ${fieldErrors.password ? 'border-danger' : ''}`} 
+                value={password} 
+                onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: '' })); }} 
+                placeholder="At least 8 characters"
+              />
+              {fieldErrors.password && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.password}</div>}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600' }}>System Role Permissions</label>
-              <select className="glass-input" value={role} onChange={(e) => setRole(e.target.value)}>
+              <label style={{ fontSize: '13px', fontWeight: '600' }}>System Role Permissions <span className="text-danger">*</span></label>
+              <select 
+                className={`glass-input ${fieldErrors.role ? 'border-danger' : ''}`} 
+                value={role} 
+                onChange={(e) => { setRole(e.target.value); setFieldErrors(prev => ({ ...prev, role: '' })); }}
+              >
                 <option value="Sales person">Sales person</option>
                 <option value="Technician">Technician</option>
                 <option value="Admin">Admin</option>
               </select>
+              {fieldErrors.role && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.role}</div>}
             </div>
 
             <button type="submit" className="glass-btn" style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ConfirmModal from './ConfirmModal';
 import {
   LayoutDashboard,
   Tag,
@@ -30,6 +31,7 @@ function AdminSidebar({ collapsed, setCollapsed }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const role = user?.role || '';
   const isAdmin = role === 'Admin';
@@ -50,8 +52,7 @@ function AdminSidebar({ collapsed, setCollapsed }) {
   const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase() || 'MM';
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    setShowLogoutModal(true);
   };
 
   const sidebarContent = (
@@ -383,7 +384,6 @@ function AdminSidebar({ collapsed, setCollapsed }) {
         />
       )}
 
-      {/* Fixed Fixed Sidebar */}
       <aside style={{
         position: 'fixed',
         top: 0,
@@ -400,6 +400,18 @@ function AdminSidebar({ collapsed, setCollapsed }) {
       }}>
         {sidebarContent}
       </aside>
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of the administration portal?"
+        onConfirm={() => {
+          setShowLogoutModal(false);
+          logout();
+          navigate('/');
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
 
       {/* CSS overrides for hiding scrollbar & responsive mode */}
       <style>{`

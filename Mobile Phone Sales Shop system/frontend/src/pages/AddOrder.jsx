@@ -318,7 +318,7 @@ export default function AddOrder() {
         />
 
         {/* Form Workspace */}
-        <form onSubmit={handleSubmitOrder}>
+        <form noValidate onSubmit={handleSubmitOrder}>
           <div className="row g-4">
             
             {/* Left Column: Customer & Products */}

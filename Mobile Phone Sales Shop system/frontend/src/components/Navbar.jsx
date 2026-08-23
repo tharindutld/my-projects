@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart, User, LogOut, Search, Menu, X, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import ConfirmModal from './ConfirmModal';
 
 export default function Navbar() {
   const { user, token, logout, API_URL } = useAuth();
@@ -11,6 +12,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   const fetchWishlistCount = async () => {
@@ -232,7 +234,7 @@ export default function Navbar() {
                       </Link>
                     )}
                     <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-                    <button onClick={() => { logout(); setDropdownOpen(false); navigate('/'); }} style={{
+                    <button onClick={() => { setDropdownOpen(false); setShowLogoutModal(true); }} style={{
                       padding: '8px',
                       borderRadius: '8px',
                       display: 'flex',
@@ -273,6 +275,18 @@ export default function Navbar() {
         </div>
       </div>
       
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your session?"
+        onConfirm={() => {
+          setShowLogoutModal(false);
+          logout();
+          navigate('/');
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
+
       {/* Mobile search bar style helper */}
       <style>{`
         @media (min-width: 768px) {

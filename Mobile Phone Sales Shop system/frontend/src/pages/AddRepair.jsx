@@ -414,7 +414,7 @@ export default function AddRepair() {
             </div>
 
             {/* Main Repair Form */}
-            <form onSubmit={handleSubmitAttempt}>
+            <form noValidate onSubmit={handleSubmitAttempt}>
               <div className="row g-3">
 
                 {/* Customer Name */}
