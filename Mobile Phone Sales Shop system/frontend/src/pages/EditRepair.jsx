@@ -40,6 +40,7 @@ export default function EditRepair() {
   // Alerts
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const isTechnician = user?.role === 'Technician';
@@ -147,28 +148,34 @@ export default function EditRepair() {
 
   const handleSubmitAttempt = (e) => {
     e.preventDefault();
+    setError('');
+    const errors = {};
+
     if (!isTechnician) {
-      if (!/^[a-zA-Z\s]+$/.test(customerName.trim())) {
-        setError('Customer Name can only contain letters and spaces.');
-        return;
+      if (!customerName.trim() || !/^[a-zA-Z\s]+$/.test(customerName.trim())) {
+        errors.customerName = 'Customer Name can only contain letters and spaces.';
       }
       if (!deviceName.trim()) {
-        setError('Device Name is required.');
-        return;
+        errors.deviceName = 'Device Name is required.';
       }
       if (!issue.trim()) {
-        setError('Issue description is required.');
-        return;
+        errors.issue = 'Issue description is required.';
       }
-      if (isNaN(cost) || parseFloat(cost) < 0) {
-        setError('Cost must be a valid positive number.');
-        return;
+      if (isNaN(cost) || cost === '' || parseFloat(cost) < 0) {
+        errors.cost = 'Cost must be a valid non-negative number.';
       }
-      if (isNaN(income) || parseFloat(income) < 0) {
-        setError('Income must be a valid positive number.');
-        return;
+      if (isNaN(income) || income === '' || parseFloat(income) < 0) {
+        errors.income = 'Income must be a valid non-negative number.';
       }
     }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the highlighted errors in the form.');
+      return;
+    }
+
+    setFieldErrors({});
     setShowConfirmModal(true);
   };
 
@@ -271,7 +278,17 @@ export default function EditRepair() {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label htmlFor="customer_name" className="form-label fw-semibold text-light">Customer Full Name <span className="text-danger">*</span></label>
-                      <input type="text" className="form-control custom-input" id="customer_name" value={customerName} onChange={e => setCustomerName(e.target.value)} required pattern="[a-zA-Z\s]+" placeholder="e.g. Ruwan Perera" />
+                      <input 
+                        type="text" 
+                        className={`form-control custom-input ${fieldErrors.customerName ? 'is-invalid border-danger' : ''}`}
+                        id="customer_name" 
+                        value={customerName} 
+                        onChange={e => { setCustomerName(e.target.value); setFieldErrors(prev => ({ ...prev, customerName: '' })); }} 
+                        required 
+                        pattern="[a-zA-Z\s]+" 
+                        placeholder="e.g. Ruwan Perera" 
+                      />
+                      {fieldErrors.customerName && <div className="text-danger extra-small mt-1">{fieldErrors.customerName}</div>}
                     </div>
 
                     <div className="col-md-6">
@@ -297,22 +314,60 @@ export default function EditRepair() {
 
                     <div className="col-12">
                       <label htmlFor="device_name" className="form-label fw-semibold text-light">Device Display Name <span className="text-danger">*</span></label>
-                      <input type="text" className="form-control custom-input" id="device_name" value={deviceName} onChange={e => setDeviceName(e.target.value)} required placeholder="e.g. iPhone 15 Pro" />
+                      <input 
+                        type="text" 
+                        className={`form-control custom-input ${fieldErrors.deviceName ? 'is-invalid border-danger' : ''}`}
+                        id="device_name" 
+                        value={deviceName} 
+                        onChange={e => { setDeviceName(e.target.value); setFieldErrors(prev => ({ ...prev, deviceName: '' })); }} 
+                        required 
+                        placeholder="e.g. iPhone 15 Pro" 
+                      />
+                      {fieldErrors.deviceName && <div className="text-danger extra-small mt-1">{fieldErrors.deviceName}</div>}
                     </div>
 
                     <div className="col-12">
                       <label htmlFor="issue" className="form-label fw-semibold text-light">Issue Details <span className="text-danger">*</span></label>
-                      <textarea className="form-control custom-input" id="issue" rows={3} value={issue} onChange={e => setIssue(e.target.value)} required placeholder="Describe fault..." />
+                      <textarea 
+                        className={`form-control custom-input ${fieldErrors.issue ? 'is-invalid border-danger' : ''}`}
+                        id="issue" 
+                        rows={3} 
+                        value={issue} 
+                        onChange={e => { setIssue(e.target.value); setFieldErrors(prev => ({ ...prev, issue: '' })); }} 
+                        required 
+                        placeholder="Describe fault..." 
+                      />
+                      {fieldErrors.issue && <div className="text-danger extra-small mt-1">{fieldErrors.issue}</div>}
                     </div>
 
                     <div className="col-md-6">
                       <label htmlFor="cost" className="form-label fw-semibold text-light">Estimated / Actual Cost (Rs.) <span className="text-danger">*</span></label>
-                      <input type="number" className="form-control custom-input" id="cost" step="0.01" min="0" value={cost} onChange={e => setCost(e.target.value)} required />
+                      <input 
+                        type="number" 
+                        className={`form-control custom-input ${fieldErrors.cost ? 'is-invalid border-danger' : ''}`}
+                        id="cost" 
+                        step="0.01" 
+                        min="0" 
+                        value={cost} 
+                        onChange={e => { setCost(e.target.value); setFieldErrors(prev => ({ ...prev, cost: '' })); }} 
+                        required 
+                      />
+                      {fieldErrors.cost && <div className="text-danger extra-small mt-1">{fieldErrors.cost}</div>}
                     </div>
 
                     <div className="col-md-6">
                       <label htmlFor="income" className="form-label fw-semibold text-light">Income Charged to Customer (Rs.) <span className="text-danger">*</span></label>
-                      <input type="number" className="form-control custom-input" id="income" step="0.01" min="0" value={income} onChange={e => setIncome(e.target.value)} required />
+                      <input 
+                        type="number" 
+                        className={`form-control custom-input ${fieldErrors.income ? 'is-invalid border-danger' : ''}`}
+                        id="income" 
+                        step="0.01" 
+                        min="0" 
+                        value={income} 
+                        onChange={e => { setIncome(e.target.value); setFieldErrors(prev => ({ ...prev, income: '' })); }} 
+                        required 
+                      />
+                      {fieldErrors.income && <div className="text-danger extra-small mt-1">{fieldErrors.income}</div>}
                     </div>
 
                     <div className="col-md-4">

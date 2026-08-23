@@ -164,7 +164,7 @@ export default function AdminUsers() {
                   <td style={{ padding: '14px 16px', fontSize: '13px' }}>{u.MobileNumber}</td>
                   <td style={{ padding: '14px 16px', textAlign: 'center', fontWeight: '700', color: 'var(--primary)' }}>{u.LoyaltyPoints || 0}</td>
                   <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {u.CreationDate ? new Date(u.CreationDate).toLocaleDateString('en-GB') : '—'}
+                    {(u.RegDate || u.CreationDate) ? new Date(u.RegDate || u.CreationDate).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     <span style={{

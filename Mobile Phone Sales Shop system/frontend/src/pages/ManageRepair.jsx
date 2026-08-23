@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ToastAlert from '../components/ToastAlert';
 import ConfirmModal from '../components/ConfirmModal';
+import { formatCurrency } from '../utils/format';
 import './ManageRepair.css';
 
 export default function ManageRepair() {
@@ -101,29 +102,37 @@ export default function ManageRepair() {
   };
 
   // Handle Inline Status Change (via PATCH /api/repairs/:id/status)
-  const handleStatusChange = async (repairId, newStatus) => {
-    try {
-      const res = await fetch(`${API_URL}/repairs/${repairId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
+  const handleStatusChange = (repairId, newStatus) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Change Repair Status',
+      message: `Are you sure you want to change repair status to "${newStatus}"?`,
+      variant: 'primary',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/repairs/${repairId}/status`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+          });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setToast({ type: 'success', message: data.message || `Status updated to "${newStatus}"` });
-        // Update local repairs state
-        setRepairs(prev => prev.map(r => r.ID === repairId ? { ...r, Status: newStatus } : r));
-      } else {
-        setToast({ type: 'error', message: data.message || 'Failed to update repair status' });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            setToast({ type: 'success', message: data.message || `Status updated to "${newStatus}"` });
+            setRepairs(prev => prev.map(r => r.ID === repairId ? { ...r, Status: newStatus } : r));
+          } else {
+            setToast({ type: 'error', message: data.message || 'Failed to update repair status' });
+          }
+        } catch (err) {
+          console.error(err);
+          setToast({ type: 'error', message: 'Network error updating repair status' });
+        }
       }
-    } catch (err) {
-      console.error(err);
-      setToast({ type: 'error', message: 'Network error updating repair status' });
-    }
+    });
   };
 
   // Handle Delete Repair (Admin only)
@@ -294,8 +303,8 @@ export default function ManageRepair() {
                           </td>
                           {!isTechnician && (
                             <td>
-                              <div className="text-danger small">Cost: Rs. {parseFloat(row.Cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                              <div className="text-success fw-semibold small">Income: Rs. {parseFloat(row.Income || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                              <div className="text-danger small">Cost: Rs. {formatCurrency(row.Cost)}</div>
+                              <div className="text-success fw-semibold small">Income: Rs. {formatCurrency(row.Income)}</div>
                             </td>
                           )}
                           <td>

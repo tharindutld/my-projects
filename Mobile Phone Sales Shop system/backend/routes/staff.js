@@ -136,13 +136,13 @@ router.get('/users', verifyStaff(['Admin', 'Sales person']), async (req, res) =>
   try {
     const [[{ total }]] = await pool.query(`SELECT COUNT(*) as total FROM tbluser ${whereClause}`, params);
     const [rows] = await pool.query(
-      `SELECT ID, FirstName, LastName, MobileNumber, Email, LoyaltyPoints, Status, CreationDate FROM tbluser ${whereClause} ORDER BY ID DESC LIMIT ? OFFSET ?`,
+      `SELECT ID, FirstName, LastName, MobileNumber, Email, LoyaltyPoints, Status, RegDate, RegDate AS CreationDate FROM tbluser ${whereClause} ORDER BY ID DESC LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), offset]
     );
     res.json({ users: rows, totalRows: total, totalPages: Math.ceil(total / parseInt(limit)), page: parseInt(page) });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

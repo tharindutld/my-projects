@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
+import { formatCurrency } from '../utils/format';
 import './AdminOrders.css';
 
 export default function AdminOrders() {
@@ -98,31 +99,40 @@ export default function AdminOrders() {
     });
   };
 
-  const handleUpdateDeliveryStatus = async (orderId, newDelivery) => {
-    setError('');
-    setSuccess('');
-    try {
-      const res = await fetch(`${API_URL}/orders/admin/${orderId}/delivery`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ delivery: newDelivery })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSuccess(data.message);
-        fetchOrders();
-        if (selectedOrder?.ID === orderId) {
-          setSelectedOrder(prev => ({ ...prev, DeliveryStatus: newDelivery }));
+  const handleUpdateDeliveryStatus = (orderId, newDelivery) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Update Delivery Status',
+      message: `Are you sure you want to set delivery status to: ${newDelivery}?`,
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setError('');
+        setSuccess('');
+        try {
+          const res = await fetch(`${API_URL}/orders/admin/${orderId}/delivery`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ delivery: newDelivery })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            fetchOrders();
+            if (selectedOrder?.ID === orderId) {
+              setSelectedOrder(prev => ({ ...prev, DeliveryStatus: newDelivery }));
+            }
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to update delivery status.');
         }
-      } else {
-        setError(data.message);
       }
-    } catch (err) {
-      setError('Failed to update delivery status.');
-    }
+    });
   };
 
   const handleDeleteOrder = (orderId) => {
@@ -216,7 +226,7 @@ export default function AdminOrders() {
                         Customer: {ord.BillingFirstName} {ord.BillingLastName} &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
                       </span>
                       <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Total Amount: <strong style={{ color: '#818cf8' }}>Rs. {parseFloat(ord.GrandTotal).toLocaleString()}</strong>
+                        Total Amount: <strong style={{ color: '#818cf8' }}>Rs. {formatCurrency(ord.GrandTotal)}</strong>
                       </span>
                       <div style={{ marginTop: '10px' }}>
                         <span className={`status-pill ${statusClass}`}>
@@ -278,7 +288,7 @@ export default function AdminOrders() {
                 <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Payment Info</strong>
                 <div style={{ color: '#e2e8f0' }}>Method: {selectedOrder.PaymentMethod} ({selectedOrder.PaymentStatus})</div>
                 <div style={{ fontSize: '18px', fontWeight: '800', color: '#818cf8', marginTop: '4px' }}>
-                  Grand Total: Rs. {parseFloat(selectedOrder.GrandTotal).toLocaleString()}
+                  Grand Total: Rs. {formatCurrency(selectedOrder.GrandTotal)}
                 </div>
               </div>
 

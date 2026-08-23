@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Smartphone, CheckCircle, AlertCircle, ArrowLeft, PlusCircle, Image as ImageIcon, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AddProduct() {
   const { token, user, loading: authLoading, API_URL } = useAuth();
@@ -41,7 +42,9 @@ export default function AddProduct() {
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -75,46 +78,73 @@ export default function AddProduct() {
   const isTablet = cname === 'Tablet';
   const showSimAndImei = !isTablet || (isTablet && tabletHasSim);
 
-  const handleSubmit = async (e) => {
+  const handleSubmitAttempt = (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    const errors = {};
 
     const pattern = /^[a-zA-Z0-9\s\/]+$/;
 
-    if (!pattern.test(pname)) {
-      setErrorMsg('Product Name cannot contain special characters, plus, minus, or decimals.');
-      return;
+    if (!pname.trim()) {
+      errors.pname = 'Product Name is required.';
+    } else if (!pattern.test(pname.trim())) {
+      errors.pname = 'Product Name cannot contain special characters, plus, minus, or decimals.';
+    } else if (!/[a-zA-Z]/.test(pname.trim())) {
+      errors.pname = 'Product Name must contain at least one letter.';
     }
-    if (!/[a-zA-Z]/.test(pname)) {
-      setErrorMsg('Product Name must contain at least one letter.');
-      return;
+
+    if (!bname) errors.bname = 'Brand selection is required.';
+    if (!cname) errors.cname = 'Category selection is required.';
+
+    if (!modelno.trim()) {
+      errors.modelno = 'Model Number is required.';
+    } else if (!pattern.test(modelno.trim())) {
+      errors.modelno = 'Model Number cannot contain special characters, plus, minus, or decimals.';
     }
-    if (!pattern.test(modelno)) {
-      setErrorMsg('Model Number cannot contain special characters, plus, minus, or decimals.');
-      return;
+
+    if (!price || isNaN(price) || parseFloat(price) < 10000) {
+      errors.price = 'Selling Price must be at least 10,000 LKR.';
     }
-    if (parseFloat(price) < 10000) {
-      setErrorMsg('Selling Price must be at least 10,000 LKR.');
-      return;
-    }
+
+    if (!color.trim()) errors.color = 'Product Color is required.';
+    if (!ram) errors.ram = 'RAM specification is required.';
+    if (!rom) errors.rom = 'Storage (ROM) specification is required.';
+    if (!fcamera.trim()) errors.fcamera = 'Front Camera details are required.';
+    if (!processor.trim()) errors.processor = 'Processor model is required.';
+    if (!display.trim()) errors.display = 'Display specification is required.';
+
     if (showSimAndImei) {
+      if (!simtype) errors.simtype = 'SIM Support Type is required.';
       if (!imei1 || imei1.length !== 15 || !/^\d{15}$/.test(imei1)) {
-        setErrorMsg('IMEI 1 must be exactly 15 numeric digits.');
-        return;
+        errors.imei1 = 'IMEI 1 must be exactly 15 numeric digits.';
       }
       if (isDualSim) {
         if (!imei2 || imei2.length !== 15 || !/^\d{15}$/.test(imei2)) {
-          setErrorMsg('IMEI 2 must be exactly 15 numeric digits for Dual SIM devices.');
-          return;
-        }
-        if (imei1 === imei2) {
-          setErrorMsg('IMEI 1 and IMEI 2 cannot be identical.');
-          return;
+          errors.imei2 = 'IMEI 2 must be exactly 15 numeric digits for Dual SIM devices.';
+        } else if (imei1 === imei2) {
+          errors.imei2 = 'IMEI 1 and IMEI 2 cannot be identical.';
         }
       }
     }
 
+    if (!kfeatures.trim()) errors.kfeatures = 'Key Features are required.';
+    if (!specification.trim()) errors.specification = 'Technical Specification is required.';
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg('Please fix the highlighted errors in the form.');
+      return;
+    }
+
+    setFieldErrors({});
+    setShowConfirmModal(true);
+  };
+
+  const executeAddProduct = async () => {
+    setShowConfirmModal(false);
+    setErrorMsg('');
+    setSuccessMsg('');
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/products`, {
@@ -124,17 +154,17 @@ export default function AddProduct() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ProductName: pname,
+          ProductName: pname.trim(),
           BrandName: bname,
           CategoryName: cname,
-          ModelNumber: modelno,
+          ModelNumber: modelno.trim(),
           Price: parseFloat(price),
           SimType: showSimAndImei ? simtype : 'None',
-          Display: display,
-          Processor: processor,
-          FrontCamera: fcamera,
-          KeyFeature: kfeatures,
-          Specification: specification,
+          Display: display.trim(),
+          Processor: processor.trim(),
+          FrontCamera: fcamera.trim(),
+          KeyFeature: kfeatures.trim(),
+          Specification: specification.trim(),
           Image1: image1,
           Image2: image2,
           Image3: image3,
@@ -144,7 +174,7 @@ export default function AddProduct() {
 
       const data = await res.json();
       if (res.ok) {
-        setSuccessMsg(`Product "${pname}" created successfully.`);
+        setSuccessMsg(`Product "${pname.trim()}" created successfully.`);
         setTimeout(() => navigate('/admin/manage-product'), 1200);
       } else {
         setErrorMsg(data.message || 'Failed to create product.');
@@ -216,9 +246,17 @@ export default function AddProduct() {
           </div>
         )}
 
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          title="Confirm New Product"
+          message={`Please confirm that you wish to register product "${pname.trim()}" in the inventory.`}
+          onConfirm={executeAddProduct}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+
         {/* Glass Form Panel */}
         <div className="glass-panel" style={{ padding: '32px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.75)' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form noValidate onSubmit={handleSubmitAttempt} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* General Info Row */}
             <div className="row g-3">
               <div className="col-md-6">
@@ -227,13 +265,13 @@ export default function AddProduct() {
                 </label>
                 <input
                   type="text"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.pname ? 'border-danger' : ''}`}
                   value={pname}
-                  onChange={e => setPname(e.target.value)}
+                  onChange={e => { setPname(e.target.value); setFieldErrors(prev => ({ ...prev, pname: '' })); }}
                   placeholder="e.g. iPhone 15 Pro Max"
-                  required
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }}
                 />
+                {fieldErrors.pname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.pname}</div>}
               </div>
 
               <div className="col-md-3">
@@ -241,10 +279,9 @@ export default function AddProduct() {
                   Brand <span style={{ color: 'var(--accent)' }}>*</span>
                 </label>
                 <select
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.bname ? 'border-danger' : ''}`}
                   value={bname}
-                  onChange={e => setBname(e.target.value)}
-                  required
+                  onChange={e => { setBname(e.target.value); setFieldErrors(prev => ({ ...prev, bname: '' })); }}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}
                 >
                   <option value="">Select Brand</option>
@@ -252,6 +289,7 @@ export default function AddProduct() {
                     <option key={b.ID} value={b.BrandName}>{b.BrandName}</option>
                   ))}
                 </select>
+                {fieldErrors.bname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.bname}</div>}
               </div>
 
               <div className="col-md-3">
@@ -259,10 +297,9 @@ export default function AddProduct() {
                   Category <span style={{ color: 'var(--accent)' }}>*</span>
                 </label>
                 <select
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.cname ? 'border-danger' : ''}`}
                   value={cname}
-                  onChange={e => setCname(e.target.value)}
-                  required
+                  onChange={e => { setCname(e.target.value); setFieldErrors(prev => ({ ...prev, cname: '' })); }}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}
                 >
                   <option value="">Select Category</option>
@@ -270,6 +307,7 @@ export default function AddProduct() {
                     <option key={c.ID} value={c.CategoryName}>{c.CategoryName}</option>
                   ))}
                 </select>
+                {fieldErrors.cname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.cname}</div>}
               </div>
             </div>
 
@@ -279,38 +317,38 @@ export default function AddProduct() {
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Model Number *</label>
                 <input
                   type="text"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.modelno ? 'border-danger' : ''}`}
                   value={modelno}
-                  onChange={e => setModelno(e.target.value)}
+                  onChange={e => { setModelno(e.target.value); setFieldErrors(prev => ({ ...prev, modelno: '' })); }}
                   placeholder="e.g. A3106"
-                  required
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }}
                 />
+                {fieldErrors.modelno && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.modelno}</div>}
               </div>
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Selling Price (LKR) *</label>
                 <input
                   type="number"
                   min="10000"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.price ? 'border-danger' : ''}`}
                   value={price}
-                  onChange={e => setPrice(e.target.value)}
+                  onChange={e => { setPrice(e.target.value); setFieldErrors(prev => ({ ...prev, price: '' })); }}
                   placeholder="min 10,000 LKR"
-                  required
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }}
                 />
+                {fieldErrors.price && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.price}</div>}
               </div>
               <div className="col-md-4">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Product Color *</label>
                 <input
                   type="text"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.color ? 'border-danger' : ''}`}
                   value={color}
-                  onChange={e => setColor(e.target.value)}
+                  onChange={e => { setColor(e.target.value); setFieldErrors(prev => ({ ...prev, color: '' })); }}
                   placeholder="e.g. Natural Titanium"
-                  required
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }}
                 />
+                {fieldErrors.color && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.color}</div>}
               </div>
             </div>
 
@@ -318,25 +356,29 @@ export default function AddProduct() {
             <div className="row g-3">
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>RAM *</label>
-                <select className="glass-input" value={ram} onChange={e => setRam(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.ram ? 'border-danger' : ''}`} value={ram} onChange={e => { setRam(e.target.value); setFieldErrors(prev => ({ ...prev, ram: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select RAM</option>
                   {['2GB', '3GB', '4GB', '6GB', '8GB', '12GB', '16GB', '24GB', '32GB'].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
+                {fieldErrors.ram && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.ram}</div>}
               </div>
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Storage (ROM) *</label>
-                <select className="glass-input" value={rom} onChange={e => setRom(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.rom ? 'border-danger' : ''}`} value={rom} onChange={e => { setRom(e.target.value); setFieldErrors(prev => ({ ...prev, rom: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select ROM</option>
                   {['16GB', '32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB'].map(ro => <option key={ro} value={ro}>{ro}</option>)}
                 </select>
+                {fieldErrors.rom && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.rom}</div>}
               </div>
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Front Camera *</label>
-                <input type="text" className="glass-input" value={fcamera} onChange={e => setFcamera(e.target.value)} placeholder="e.g. 12MP TrueDepth" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                <input type="text" className={`glass-input ${fieldErrors.fcamera ? 'border-danger' : ''}`} value={fcamera} onChange={e => { setFcamera(e.target.value); setFieldErrors(prev => ({ ...prev, fcamera: '' })); }} placeholder="e.g. 12MP TrueDepth" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                {fieldErrors.fcamera && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.fcamera}</div>}
               </div>
               <div className="col-md-3">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Processor *</label>
-                <input type="text" className="glass-input" value={processor} onChange={e => setProcessor(e.target.value)} placeholder="e.g. A17 Pro Bionic" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                <input type="text" className={`glass-input ${fieldErrors.processor ? 'border-danger' : ''}`} value={processor} onChange={e => { setProcessor(e.target.value); setFieldErrors(prev => ({ ...prev, processor: '' })); }} placeholder="e.g. A17 Pro Bionic" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                {fieldErrors.processor && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.processor}</div>}
               </div>
             </div>
 
@@ -344,14 +386,16 @@ export default function AddProduct() {
             <div className="row g-3">
               <div className="col-md-6">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Display *</label>
-                <input type="text" className="glass-input" value={display} onChange={e => setDisplay(e.target.value)} placeholder="e.g. 6.7-inch Super Retina XDR" required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                <input type="text" className={`glass-input ${fieldErrors.display ? 'border-danger' : ''}`} value={display} onChange={e => { setDisplay(e.target.value); setFieldErrors(prev => ({ ...prev, display: '' })); }} placeholder="e.g. 6.7-inch Super Retina XDR" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                {fieldErrors.display && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.display}</div>}
               </div>
               <div className="col-md-6">
                 <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>SIM Support Type *</label>
-                <select className="glass-input" value={simtype} onChange={e => setSimtype(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                <select className={`glass-input ${fieldErrors.simtype ? 'border-danger' : ''}`} value={simtype} onChange={e => { setSimtype(e.target.value); setFieldErrors(prev => ({ ...prev, simtype: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                   <option value="">Select SIM Support...</option>
                   {['Single SIM', 'Dual SIM', 'eSIM', 'Dual SIM (Nano-SIM + eSIM)'].map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
+                {fieldErrors.simtype && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.simtype}</div>}
               </div>
             </div>
 
@@ -374,12 +418,14 @@ export default function AddProduct() {
                 <div className="row g-3">
                   <div className={isDualSim ? 'col-md-6' : 'col-md-12'}>
                     <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>IMEI 1 (Primary SIM) *</label>
-                    <input type="text" maxLength="15" className="glass-input" value={imei1} onChange={e => setImei1(e.target.value)} placeholder="15-digit IMEI number" required style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', marginTop: '4px' }} />
+                    <input type="text" maxLength="15" className={`glass-input ${fieldErrors.imei1 ? 'border-danger' : ''}`} value={imei1} onChange={e => { setImei1(e.target.value); setFieldErrors(prev => ({ ...prev, imei1: '' })); }} placeholder="15-digit IMEI number" style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', marginTop: '4px' }} />
+                    {fieldErrors.imei1 && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.imei1}</div>}
                   </div>
                   {isDualSim && (
                     <div className="col-md-6">
                       <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>IMEI 2 (Secondary SIM) *</label>
-                      <input type="text" maxLength="15" className="glass-input" value={imei2} onChange={e => setImei2(e.target.value)} placeholder="15-digit IMEI number" required style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', marginTop: '4px' }} />
+                      <input type="text" maxLength="15" className={`glass-input ${fieldErrors.imei2 ? 'border-danger' : ''}`} value={imei2} onChange={e => { setImei2(e.target.value); setFieldErrors(prev => ({ ...prev, imei2: '' })); }} placeholder="15-digit IMEI number" style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', marginTop: '4px' }} />
+                      {fieldErrors.imei2 && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.imei2}</div>}
                     </div>
                   )}
                 </div>
@@ -389,12 +435,14 @@ export default function AddProduct() {
             {/* Features & Specification */}
             <div>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Key Features *</label>
-              <textarea className="glass-input" rows="2" value={kfeatures} onChange={e => setKfeatures(e.target.value)} placeholder="Highlight key features..." required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+              <textarea className={`glass-input ${fieldErrors.kfeatures ? 'border-danger' : ''}`} rows="2" value={kfeatures} onChange={e => { setKfeatures(e.target.value); setFieldErrors(prev => ({ ...prev, kfeatures: '' })); }} placeholder="Highlight key features..." style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+              {fieldErrors.kfeatures && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.kfeatures}</div>}
             </div>
 
             <div>
               <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Technical Specification *</label>
-              <textarea className="glass-input" rows="2" value={specification} onChange={e => setSpecification(e.target.value)} placeholder="Detailed specifications..." required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+              <textarea className={`glass-input ${fieldErrors.specification ? 'border-danger' : ''}`} rows="2" value={specification} onChange={e => { setSpecification(e.target.value); setFieldErrors(prev => ({ ...prev, specification: '' })); }} placeholder="Detailed specifications..." style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+              {fieldErrors.specification && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.specification}</div>}
             </div>
 
             {/* Active Toggle Switch */}

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Pencil, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function EditBrand() {
   const { id } = useParams();
@@ -14,7 +15,9 @@ export default function EditBrand() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -58,22 +61,38 @@ export default function EditBrand() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitAttempt = (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    const errors = {};
 
     const trimmed = brandName.trim();
-    if (!/^[a-zA-Z0-9\s]+$/.test(trimmed)) {
-      setErrorMsg('Brand name cannot contain special characters.');
-      return;
+    if (!trimmed) {
+      errors.brandName = 'Brand name is required.';
+    } else if (!/^[a-zA-Z0-9\s]+$/.test(trimmed)) {
+      errors.brandName = 'Brand name cannot contain special characters.';
+    } else if (!/[a-zA-Z]/.test(trimmed)) {
+      errors.brandName = 'Brand name cannot consist of only numbers.';
     }
-    if (!/[a-zA-Z]/.test(trimmed)) {
-      setErrorMsg('Brand name cannot consist of only numbers.');
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg('Please fix the highlighted errors in the form.');
       return;
     }
 
+    setFieldErrors({});
+    setShowConfirmModal(true);
+  };
+
+  const executeUpdateBrand = async () => {
+    setShowConfirmModal(false);
+    setErrorMsg('');
+    setSuccessMsg('');
     setSubmitting(true);
+
+    const trimmed = brandName.trim();
     try {
       const res = await fetch(`${API_URL}/products/brands/${id}`, {
         method: 'PUT',
@@ -161,6 +180,14 @@ export default function EditBrand() {
           </div>
         )}
 
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          title="Confirm Brand Update"
+          message={`Please confirm that you wish to update brand name to "${brandName.trim()}".`}
+          onConfirm={executeUpdateBrand}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+
         {/* Glass Form Panel */}
         <div className="glass-panel" style={{ padding: '32px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.75)' }}>
           {loading ? (
@@ -168,19 +195,16 @@ export default function EditBrand() {
               Loading brand details...
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <form noValidate onSubmit={handleSubmitAttempt} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>
                   Brand Name <span style={{ color: 'var(--accent)' }}>*</span>
                 </label>
                 <input
                   type="text"
-                  className="glass-input"
+                  className={`glass-input ${fieldErrors.brandName ? 'border-danger' : ''}`}
                   value={brandName}
-                  onChange={(e) => setBrandName(e.target.value)}
-                  required
-                  pattern="^(?=.*[a-zA-Z])[a-zA-Z0-9\s]+$"
-                  title="Brand name must contain letters and cannot contain special characters."
+                  onChange={(e) => { setBrandName(e.target.value); setFieldErrors(prev => ({ ...prev, brandName: '' })); }}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -188,6 +212,11 @@ export default function EditBrand() {
                     fontSize: '15px'
                   }}
                 />
+                {fieldErrors.brandName && (
+                  <span className="text-danger" style={{ fontSize: '13px', fontWeight: '600' }}>
+                    {fieldErrors.brandName}
+                  </span>
+                )}
               </div>
 
               {/* Status Switch */}

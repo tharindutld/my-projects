@@ -152,6 +152,11 @@ function AppContent() {
         <Route path="/admin/reports.php" element={<AdminReports />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users.php" element={<AdminUsers />} />
+        <Route path="/admin/reg-users" element={<AdminUsers />} />
+        <Route path="/admin/reg-users.php" element={<AdminUsers />} />
+        <Route path="/admin/reg_users.php" element={<AdminUsers />} />
+        <Route path="/admin/customers" element={<AdminUsers />} />
+        <Route path="/admin/customers.php" element={<AdminUsers />} />
 
         {/* Catch-all Fallback for Admin Routes */}
         <Route path="/admin/*" element={<AdminDashboard />} />

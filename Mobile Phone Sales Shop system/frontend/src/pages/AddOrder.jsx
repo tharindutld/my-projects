@@ -7,6 +7,8 @@ import {
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ToastAlert from '../components/ToastAlert';
+import ConfirmModal from '../components/ConfirmModal';
+import { formatCurrency } from '../utils/format';
 import './AddOrder.css';
 
 export default function AddOrder() {
@@ -44,6 +46,13 @@ export default function AddOrder() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const role = user?.role || '';
   const isAdmin = role === 'Admin';
@@ -161,59 +170,10 @@ export default function AddOrder() {
   const totalDiscount = cart.reduce((acc, item) => acc + (item.price * item.qty * (item.discount / 100)), 0);
   const grandTotal = subtotal - totalDiscount;
 
-  const handleSubmitOrder = async (e) => {
-    e.preventDefault();
+  const executeOrderSubmission = async () => {
+    setSubmitting(true);
     setError('');
     setSuccess('');
-
-    if (cart.length === 0) {
-      setError('Please search and add at least one product to the order before finalizing.');
-      return;
-    }
-
-    if (userType === 'registered') {
-      if (!selectedCustomer) {
-        setError('Please search and select a registered customer profile.');
-        return;
-      }
-    } else {
-      // Validate Walk-in fields
-      const name = walkinName.trim();
-      const phone = walkinPhone.trim();
-      const email = walkinEmail.trim();
-      const address = walkinAddress.trim();
-
-      if (!name || name.length < 2) {
-        setError('Customer Name is mandatory and must be at least 2 characters long.');
-        return;
-      }
-      if (!/^[a-zA-Z\s]+$/.test(name)) {
-        setError('Customer Name must contain only letters and spaces. Numbers, hyphens, and special characters are not allowed.');
-        return;
-      }
-      if (!phone || !/^0[0-9]{9}$/.test(phone)) {
-        setError('Phone Number is mandatory and must be a valid 10-digit Sri Lankan phone number starting with 0 (e.g., 0771234567).');
-        return;
-      }
-      if (!email) {
-        setError('Email Address is mandatory.');
-        return;
-      }
-      if ((email.match(/@/g) || []).length !== 1) {
-        setError('Email Address must contain exactly ONE "@" symbol (e.g. customer@domain.com).');
-        return;
-      }
-      if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-        setError('Please enter a valid single-@ email address.');
-        return;
-      }
-      if (!address || address.length < 3) {
-        setError('Location / Address is mandatory and must be at least 3 characters long.');
-        return;
-      }
-    }
-
-    setSubmitting(true);
 
     try {
       const payload = {
@@ -261,6 +221,69 @@ export default function AddOrder() {
     }
   };
 
+  const handleSubmitOrder = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    const errors = {};
+
+    if (cart.length === 0) {
+      setError('Please search and add at least one product item to the order.');
+      return;
+    }
+
+    if (userType === 'registered') {
+      if (!selectedCustomer) {
+        setError('Please search and select a registered customer profile.');
+        return;
+      }
+    } else {
+      const name = walkinName.trim();
+      const phone = walkinPhone.trim();
+      const email = walkinEmail.trim();
+      const address = walkinAddress.trim();
+
+      if (!name || name.length < 2) {
+        errors.walkinName = 'Customer Name is required (min 2 chars).';
+      } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+        errors.walkinName = 'Letters and spaces only.';
+      }
+
+      if (!phone || !/^0[0-9]{9}$/.test(phone)) {
+        errors.walkinPhone = 'Must be 10 digits starting with 0.';
+      }
+
+      if (!email) {
+        errors.walkinEmail = 'Email address is required.';
+      } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+        errors.walkinEmail = 'Valid email format required.';
+      }
+
+      if (!address || address.length < 3) {
+        errors.walkinAddress = 'Location / Address required (min 3 chars).';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the highlighted errors in the form.');
+      return;
+    }
+
+    setFieldErrors({});
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Finalize In-Store Order',
+      message: `Are you sure you want to process this order for Rs. ${formatCurrency(grandTotal)}?`,
+      variant: 'primary',
+      onConfirm: () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        executeOrderSubmission();
+      }
+    });
+  };
+
   return (
     <AdminLayout>
       <div className="add-order-container">
@@ -284,6 +307,15 @@ export default function AddOrder() {
             </button>
           </div>
         </div>
+
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          variant={confirmModal.variant || 'primary'}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
 
         {/* Form Workspace */}
         <form onSubmit={handleSubmitOrder}>
@@ -322,45 +354,49 @@ export default function AddOrder() {
                       <label className="form-label text-light small fw-semibold">Customer Name <span className="text-danger">*</span></label>
                       <input 
                         type="text" 
-                        className="form-control custom-input" 
+                        className={`form-control custom-input ${fieldErrors.walkinName ? 'is-invalid border-danger' : ''}`}
                         placeholder="e.g. Nimal Perera"
                         value={walkinName}
-                        onChange={e => setWalkinName(e.target.value)}
+                        onChange={e => { setWalkinName(e.target.value); setFieldErrors(prev => ({ ...prev, walkinName: '' })); }}
                         required
                       />
+                      {fieldErrors.walkinName && <div className="text-danger extra-small mt-1">{fieldErrors.walkinName}</div>}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label text-light small fw-semibold">Phone Number <span className="text-danger">*</span></label>
                       <input 
                         type="tel" 
-                        className="form-control custom-input" 
+                        className={`form-control custom-input ${fieldErrors.walkinPhone ? 'is-invalid border-danger' : ''}`}
                         placeholder="10-digit mobile (e.g. 0771234567)"
                         value={walkinPhone}
-                        onChange={e => setWalkinPhone(e.target.value)}
+                        onChange={e => { setWalkinPhone(e.target.value); setFieldErrors(prev => ({ ...prev, walkinPhone: '' })); }}
                         required
                       />
+                      {fieldErrors.walkinPhone && <div className="text-danger extra-small mt-1">{fieldErrors.walkinPhone}</div>}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label text-light small fw-semibold">Email Address <span className="text-danger">*</span></label>
                       <input 
                         type="email" 
-                        className="form-control custom-input" 
+                        className={`form-control custom-input ${fieldErrors.walkinEmail ? 'is-invalid border-danger' : ''}`}
                         placeholder="e.g. customer@gmail.com"
                         value={walkinEmail}
-                        onChange={e => setWalkinEmail(e.target.value)}
+                        onChange={e => { setWalkinEmail(e.target.value); setFieldErrors(prev => ({ ...prev, walkinEmail: '' })); }}
                         required
                       />
+                      {fieldErrors.walkinEmail && <div className="text-danger extra-small mt-1">{fieldErrors.walkinEmail}</div>}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label text-light small fw-semibold">Location / Address <span className="text-danger">*</span></label>
                       <input 
                         type="text" 
-                        className="form-control custom-input" 
+                        className={`form-control custom-input ${fieldErrors.walkinAddress ? 'is-invalid border-danger' : ''}`}
                         placeholder="e.g. Colombo 03"
                         value={walkinAddress}
-                        onChange={e => setWalkinAddress(e.target.value)}
+                        onChange={e => { setWalkinAddress(e.target.value); setFieldErrors(prev => ({ ...prev, walkinAddress: '' })); }}
                         required
                       />
+                      {fieldErrors.walkinAddress && <div className="text-danger extra-small mt-1">{fieldErrors.walkinAddress}</div>}
                     </div>
                   </div>
                 ) : (
@@ -445,7 +481,7 @@ export default function AddOrder() {
                             <div className="text-muted small">Brand: {prod.brand} &bull; Stock: <span className={prod.stock < 5 ? 'text-danger fw-bold' : 'text-success'}>{prod.stock}</span></div>
                           </div>
                           <div className="text-end fw-bold text-primary">
-                            Rs. {parseFloat(prod.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            Rs. {formatCurrency(prod.price)}
                           </div>
                         </div>
                       ))}
@@ -487,7 +523,7 @@ export default function AddOrder() {
                                 <div className="text-muted small">Model: {item.model} (In Stock: {item.stock})</div>
                               </td>
                               <td className="text-light">
-                                Rs. {item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                Rs. {formatCurrency(item.price)}
                               </td>
                               <td>
                                 <input 
@@ -515,7 +551,7 @@ export default function AddOrder() {
                                 </td>
                               )}
                               <td className="fw-bold text-primary">
-                                Rs. {itemTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                Rs. {formatCurrency(itemTotal)}
                               </td>
                               <td>
                                 <button 
@@ -547,16 +583,16 @@ export default function AddOrder() {
 
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-muted">Subtotal</span>
-                  <span className="fw-semibold text-light">Rs. {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="fw-semibold text-light">Rs. {formatCurrency(subtotal)}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-muted">Total Discount</span>
-                  <span className="fw-semibold text-danger">- Rs. {totalDiscount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="fw-semibold text-danger">- Rs. {formatCurrency(totalDiscount)}</span>
                 </div>
                 <hr className="border-secondary my-3" />
                 <div className="d-flex justify-content-between mb-4">
                   <span className="h6 fw-bold text-white mb-0">Grand Total</span>
-                  <span className="h5 fw-bold text-primary mb-0">Rs. {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="h5 fw-bold text-primary mb-0">Rs. {formatCurrency(grandTotal)}</span>
                 </div>
 
                 <h6 className="fw-bold text-light mb-3 d-flex align-items-center gap-2">

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Pencil, CheckCircle, AlertCircle, ArrowLeft, Plus, Save, Trash2, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -37,7 +38,9 @@ export default function EditProduct() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -100,11 +103,45 @@ export default function EditProduct() {
     }
   };
 
-  const handleUpdateGeneral = async (e) => {
+  const handleUpdateGeneralAttempt = (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    const errors = {};
 
+    const pattern = /^[a-zA-Z0-9\s\/]+$/;
+
+    if (!pname.trim()) {
+      errors.pname = 'Product Name is required.';
+    } else if (!pattern.test(pname.trim())) {
+      errors.pname = 'Product Name cannot contain special characters, plus, minus, or decimals.';
+    } else if (!/[a-zA-Z]/.test(pname.trim())) {
+      errors.pname = 'Product Name must contain at least one letter.';
+    }
+
+    if (!bname) errors.bname = 'Brand selection is required.';
+    if (!cname) errors.cname = 'Category selection is required.';
+
+    if (!modelno.trim()) {
+      errors.modelno = 'Model Number is required.';
+    } else if (!pattern.test(modelno.trim())) {
+      errors.modelno = 'Model Number cannot contain special characters, plus, minus, or decimals.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg('Please fix the highlighted errors in the form.');
+      return;
+    }
+
+    setFieldErrors({});
+    setShowConfirmModal(true);
+  };
+
+  const executeUpdateGeneral = async () => {
+    setShowConfirmModal(false);
+    setErrorMsg('');
+    setSuccessMsg('');
     setSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/products/${id}`, {
@@ -114,16 +151,16 @@ export default function EditProduct() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ProductName: pname,
+          ProductName: pname.trim(),
           BrandName: bname,
           CategoryName: cname,
-          ModelNumber: modelno,
+          ModelNumber: modelno.trim(),
           SimType: simtype,
-          Display: display,
-          Processor: processor,
-          FrontCamera: fcamera,
-          KeyFeature: kfeatures,
-          Specification: specification,
+          Display: display.trim(),
+          Processor: processor.trim(),
+          FrontCamera: fcamera.trim(),
+          KeyFeature: kfeatures.trim(),
+          Specification: specification.trim(),
           Status: status ? 1 : 0
         })
       });
@@ -201,6 +238,14 @@ export default function EditProduct() {
           </div>
         )}
 
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          title="Confirm Product Update"
+          message={`Please confirm that you wish to save changes for "${pname.trim()}".`}
+          onConfirm={executeUpdateGeneral}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+
         {/* General Details Panel */}
         <div className="glass-panel" style={{ padding: '32px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.75)', marginBottom: '28px' }}>
           {loading ? (
@@ -208,40 +253,45 @@ export default function EditProduct() {
               Loading product information...
             </div>
           ) : (
-            <form onSubmit={handleUpdateGeneral} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form noValidate onSubmit={handleUpdateGeneralAttempt} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <h5 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--primary)', margin: '0 0 8px 0' }}>General Details</h5>
 
               <div className="row g-3">
                 <div className="col-md-6">
                   <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Product Name *</label>
-                  <input type="text" className="glass-input" value={pname} onChange={e => setPname(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                  <input type="text" className={`glass-input ${fieldErrors.pname ? 'border-danger' : ''}`} value={pname} onChange={e => { setPname(e.target.value); setFieldErrors(prev => ({ ...prev, pname: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                  {fieldErrors.pname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.pname}</div>}
                 </div>
                 <div className="col-md-3">
                   <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Brand *</label>
-                  <select className="glass-input" value={bname} onChange={e => setBname(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                  <select className={`glass-input ${fieldErrors.bname ? 'border-danger' : ''}`} value={bname} onChange={e => { setBname(e.target.value); setFieldErrors(prev => ({ ...prev, bname: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                     <option value="">Select Brand</option>
                     {brands.map(b => <option key={b.ID} value={b.BrandName}>{b.BrandName}</option>)}
                   </select>
+                  {fieldErrors.bname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.bname}</div>}
                 </div>
                 <div className="col-md-3">
                   <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Category *</label>
-                  <select className="glass-input" value={cname} onChange={e => setCname(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                  <select className={`glass-input ${fieldErrors.cname ? 'border-danger' : ''}`} value={cname} onChange={e => { setCname(e.target.value); setFieldErrors(prev => ({ ...prev, cname: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                     <option value="">Select Category</option>
                     {categories.map(c => <option key={c.ID} value={c.CategoryName}>{c.CategoryName}</option>)}
                   </select>
+                  {fieldErrors.cname && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.cname}</div>}
                 </div>
               </div>
 
               <div className="row g-3">
                 <div className="col-md-6">
                   <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>Model Number *</label>
-                  <input type="text" className="glass-input" value={modelno} onChange={e => setModelno(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                  <input type="text" className={`glass-input ${fieldErrors.modelno ? 'border-danger' : ''}`} value={modelno} onChange={e => { setModelno(e.target.value); setFieldErrors(prev => ({ ...prev, modelno: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px' }} />
+                  {fieldErrors.modelno && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.modelno}</div>}
                 </div>
                 <div className="col-md-6">
                   <label style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>SIM Support *</label>
-                  <select className="glass-input" value={simtype} onChange={e => setSimtype(e.target.value)} required style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
+                  <select className={`glass-input ${fieldErrors.simtype ? 'border-danger' : ''}`} value={simtype} onChange={e => { setSimtype(e.target.value); setFieldErrors(prev => ({ ...prev, simtype: '' })); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', marginTop: '6px', background: 'rgba(15,23,42,0.9)' }}>
                     {['Single SIM', 'Dual SIM', 'eSIM', 'Dual SIM (Nano-SIM + eSIM)', 'None'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
+                  {fieldErrors.simtype && <div className="text-danger small mt-1" style={{ fontSize: '12px' }}>{fieldErrors.simtype}</div>}
                 </div>
               </div>
 

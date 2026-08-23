@@ -44,6 +44,7 @@ export default function AddRepair() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -291,42 +292,42 @@ export default function AddRepair() {
   const handleSubmitAttempt = (e) => {
     e.preventDefault();
     setError('');
+    const errors = {};
 
-    // Front-end validations mirroring legacy PHP
-    if (!/^[a-zA-Z\s]+$/.test(customerName.trim())) {
-      setError('Customer Name can only contain letters and spaces.');
-      return;
+    if (!customerName.trim() || !/^[a-zA-Z\s]+$/.test(customerName.trim())) {
+      errors.customerName = 'Customer Name can only contain letters and spaces.';
     }
     if (!deviceName.trim()) {
-      setError('Device Name & Model is required.');
-      return;
+      errors.deviceName = 'Device Name & Model is required.';
     }
     if (!issue.trim()) {
-      setError('Issue description is required.');
-      return;
+      errors.issue = 'Issue description is required.';
     }
-    if (isNaN(cost) || parseFloat(cost) < 0) {
-      setError('Cost must be a valid positive number.');
-      return;
+    if (isNaN(cost) || cost === '' || parseFloat(cost) < 0) {
+      errors.cost = 'Cost must be a valid non-negative number.';
     }
-    if (isNaN(income) || parseFloat(income) < 0) {
-      setError('Income must be a valid positive number.');
-      return;
+    if (isNaN(income) || income === '' || parseFloat(income) < 0) {
+      errors.income = 'Income must be a valid non-negative number.';
     }
     if (!technicianId) {
-      setError('Assigned Technician is required.');
-      return;
+      errors.technicianId = 'Assigned Technician is required.';
     }
     if (!repairDate) {
-      setError('Repair Date is required.');
-      return;
+      errors.repairDate = 'Repair Date is required.';
+    } else {
+      const today = new Date().toISOString().slice(0, 10);
+      if (repairDate > today) {
+        errors.repairDate = 'Repair Date cannot be in the future.';
+      }
     }
-    const today = new Date().toISOString().slice(0, 10);
-    if (repairDate > today) {
-      setError('Repair Date cannot be in the future.');
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fix the highlighted errors in the form.');
       return;
     }
 
+    setFieldErrors({});
     setShowConfirmModal(true);
   };
 
@@ -423,15 +424,16 @@ export default function AddRepair() {
                   </label>
                   <input 
                     type="text" 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.customerName ? 'is-invalid border-danger' : ''}`}
                     id="customer_name" 
                     value={customerName}
-                    onChange={e => setCustomerName(e.target.value)}
+                    onChange={e => { setCustomerName(e.target.value); setFieldErrors(prev => ({ ...prev, customerName: '' })); }}
                     required 
                     pattern="[a-zA-Z\s]+" 
                     title="Only letters and spaces are allowed." 
                     placeholder="e.g. Ruwan Perera"
                   />
+                  {fieldErrors.customerName && <div className="text-danger extra-small mt-1">{fieldErrors.customerName}</div>}
                 </div>
 
                 {/* Brand Name Selection */}
@@ -533,13 +535,14 @@ export default function AddRepair() {
                   </label>
                   <input 
                     type="text" 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.deviceName ? 'is-invalid border-danger' : ''}`}
                     id="device_name" 
                     value={deviceName}
-                    onChange={e => setDeviceName(e.target.value)}
+                    onChange={e => { setDeviceName(e.target.value); setFieldErrors(prev => ({ ...prev, deviceName: '' })); }}
                     required 
                     placeholder="e.g. Apple iPhone 15 Pro"
                   />
+                  {fieldErrors.deviceName && <div className="text-danger extra-small mt-1">{fieldErrors.deviceName}</div>}
                 </div>
 
                 {/* Issue Details */}
@@ -548,14 +551,15 @@ export default function AddRepair() {
                     Issue Details <span className="text-danger">*</span>
                   </label>
                   <textarea 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.issue ? 'is-invalid border-danger' : ''}`}
                     id="issue" 
                     rows={3} 
                     value={issue}
-                    onChange={e => setIssue(e.target.value)}
+                    onChange={e => { setIssue(e.target.value); setFieldErrors(prev => ({ ...prev, issue: '' })); }}
                     required 
                     placeholder="Describe the fault and work required..."
                   />
+                  {fieldErrors.issue && <div className="text-danger extra-small mt-1">{fieldErrors.issue}</div>}
                 </div>
 
                 {/* Cost & Income */}
@@ -565,15 +569,16 @@ export default function AddRepair() {
                   </label>
                   <input 
                     type="number" 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.cost ? 'is-invalid border-danger' : ''}`}
                     id="cost" 
                     step="0.01" 
                     min="0" 
                     value={cost}
-                    onChange={e => setCost(e.target.value)}
+                    onChange={e => { setCost(e.target.value); setFieldErrors(prev => ({ ...prev, cost: '' })); }}
                     required 
                     placeholder="e.g. 5000.00"
                   />
+                  {fieldErrors.cost && <div className="text-danger extra-small mt-1">{fieldErrors.cost}</div>}
                 </div>
                 <div className="col-md-6">
                   <label htmlFor="income" className="form-label fw-semibold text-light">
@@ -581,15 +586,16 @@ export default function AddRepair() {
                   </label>
                   <input 
                     type="number" 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.income ? 'is-invalid border-danger' : ''}`}
                     id="income" 
                     step="0.01" 
                     min="0" 
                     value={income}
-                    onChange={e => setIncome(e.target.value)}
+                    onChange={e => { setIncome(e.target.value); setFieldErrors(prev => ({ ...prev, income: '' })); }}
                     required 
                     placeholder="e.g. 9500.00"
                   />
+                  {fieldErrors.income && <div className="text-danger extra-small mt-1">{fieldErrors.income}</div>}
                 </div>
 
                 {/* Technician, Status, Date */}
@@ -598,10 +604,10 @@ export default function AddRepair() {
                     Assigned Technician / Staff <span className="text-danger">*</span>
                   </label>
                   <select 
-                    className="form-select custom-input" 
+                    className={`form-select custom-input ${fieldErrors.technicianId ? 'is-invalid border-danger' : ''}`}
                     id="technician_id" 
                     value={technicianId}
-                    onChange={e => setTechnicianId(e.target.value)}
+                    onChange={e => { setTechnicianId(e.target.value); setFieldErrors(prev => ({ ...prev, technicianId: '' })); }}
                     required
                   >
                     <option value="" disabled>Select technician...</option>
@@ -609,6 +615,7 @@ export default function AddRepair() {
                       <option key={t.id} value={t.id}>{t.first_name} {t.last_name} ({t.role})</option>
                     ))}
                   </select>
+                  {fieldErrors.technicianId && <div className="text-danger extra-small mt-1">{fieldErrors.technicianId}</div>}
                 </div>
 
                 <div className="col-md-4">
@@ -635,13 +642,14 @@ export default function AddRepair() {
                   </label>
                   <input 
                     type="date" 
-                    className="form-control custom-input" 
+                    className={`form-control custom-input ${fieldErrors.repairDate ? 'is-invalid border-danger' : ''}`}
                     id="repair_date" 
                     value={repairDate}
                     max={new Date().toISOString().slice(0, 10)}
-                    onChange={e => setRepairDate(e.target.value)}
+                    onChange={e => { setRepairDate(e.target.value); setFieldErrors(prev => ({ ...prev, repairDate: '' })); }}
                     required 
                   />
+                  {fieldErrors.repairDate && <div className="text-danger extra-small mt-1">{fieldErrors.repairDate}</div>}
                 </div>
 
               </div>
