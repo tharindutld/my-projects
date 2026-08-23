@@ -450,4 +450,311 @@ router.delete('/admin/:id', verifyStaff(['Admin']), async (req, res) => {
   }
 });
 
+// 8. ADMIN GET SPECIFIC USER ORDER HISTORY (For UserOrders page)
+router.get('/admin/user-history/:uid', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { uid } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  try {
+    const [userRows] = await pool.query(
+      'SELECT ID, FirstName, LastName, Email, MobileNumber, LoyaltyPoints, RegDate FROM tbluser WHERE ID = ?',
+      [uid]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = userRows[0];
+
+    const [countRows] = await pool.query(
+      'SELECT COUNT(*) as totalCount, SUM(CASE WHEN OrderStatus = "Completed" THEN TotalAmount ELSE 0 END) as totalSpend FROM tbl_order_master WHERE UserId = ?',
+      [uid]
+    );
+    const totalOrders = countRows[0].totalCount || 0;
+    const totalSpend = countRows[0].totalSpend || 0;
+
+    const [orders] = await pool.query(
+      `SELECT ID, OrderNumber, TotalAmount, PaymentMethod, TransactionDetails, OrderStatus, OrderDate, DeliveryStatus
+       FROM tbl_order_master
+       WHERE UserId = ?
+       ORDER BY OrderDate DESC
+       LIMIT ? OFFSET ?`,
+      [uid, parseInt(limit), offset]
+    );
+
+    res.json({
+      user,
+      stats: {
+        totalOrders,
+        totalSpend,
+        loyaltyPoints: user.LoyaltyPoints || 0
+      },
+      orders,
+      pagination: {
+        totalResults: totalOrders,
+        totalPages: Math.ceil(totalOrders / limit),
+        currentPage: parseInt(page)
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error fetching user order history' });
+  }
+});
+
+// 9. SEARCH CUSTOMERS FOR POS (Admin / Staff)
+router.get('/admin/customers/search', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim() === '') return res.json([]);
+
+  try {
+    const search = `%${q.trim()}%`;
+    const [rows] = await pool.query(
+      `SELECT ID as id, CONCAT(FirstName, ' ', LastName) as name, Email as email, MobileNumber as phone, LoyaltyPoints
+       FROM tbluser 
+       WHERE FirstName LIKE ? OR LastName LIKE ? OR Email LIKE ? OR MobileNumber LIKE ?
+       LIMIT 10`,
+      [search, search, search, search]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error searching customers' });
+  }
+});
+
+// 10. SEARCH PRODUCTS FOR POS (Admin / Staff)
+router.get('/admin/products/search', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim() === '') return res.json([]);
+
+  try {
+    const search = `%${q.trim()}%`;
+    const [rows] = await pool.query(
+      `SELECT v.ID as id, CONCAT(p.ProductName, ' (', v.Color, ' - ', v.RAM, '/', v.ROM, ')') as name, 
+              p.ModelNumber as model, p.BrandName as brand, v.Price as price, v.Stock as stock
+       FROM tblproduct_variants v
+       JOIN tblproducts p ON v.ProductId = p.ID
+       WHERE p.ProductName LIKE ? OR p.BrandName LIKE ? OR p.ModelNumber LIKE ? OR v.Color LIKE ?
+       LIMIT 15`,
+      [search, search, search, search]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error searching products' });
+  }
+});
+
+// 11. POS IN-STORE ORDER CREATION (Admin / Staff)
+router.post('/admin/pos', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const {
+    user_type = 'walkin',
+    customer_id,
+    walkin_name,
+    walkin_phone,
+    walkin_email,
+    walkin_address,
+    payment_method = 'Cash',
+    order_status = 'Completed',
+    custom_order_date,
+    transaction_details = '',
+    items = []
+  } = req.body;
+
+  if (items.length === 0) {
+    return res.status(400).json({ message: 'Cannot create empty order. Add at least one product.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    let finalCustomerId = 0;
+    let finalShippingName = '';
+    let finalShippingPhone = '';
+    let finalShippingAddress = '';
+
+    if (user_type === 'registered') {
+      if (!customer_id) {
+        await connection.rollback();
+        return res.status(400).json({ message: 'Registered customer is required.' });
+      }
+      const [uRows] = await connection.query('SELECT ID, FirstName, LastName, MobileNumber FROM tbluser WHERE ID = ?', [customer_id]);
+      if (uRows.length === 0) {
+        await connection.rollback();
+        return res.status(404).json({ message: 'Customer account not found.' });
+      }
+      finalCustomerId = uRows[0].ID;
+      finalShippingName = `${uRows[0].FirstName} ${uRows[0].LastName}`.trim();
+      finalShippingPhone = uRows[0].MobileNumber || '0000000000';
+      finalShippingAddress = 'Store Member Pick-up / Delivery';
+    } else {
+      if (!walkin_name || !walkin_phone || !walkin_email || !walkin_address) {
+        await connection.rollback();
+        return res.status(400).json({ message: 'All walk-in customer details are mandatory.' });
+      }
+
+      finalShippingName = walkin_name;
+      finalShippingPhone = walkin_phone;
+      finalShippingAddress = walkin_address;
+
+      const [existingUser] = await connection.query('SELECT ID FROM tbluser WHERE Email = ?', [walkin_email]);
+      if (existingUser.length > 0) {
+        finalCustomerId = existingUser[0].ID;
+      } else {
+        const bcrypt = require('bcryptjs');
+        const defaultPass = await bcrypt.hash('walkin_pass_123', 10);
+        const [newUser] = await connection.query(
+          'INSERT INTO tbluser (FirstName, LastName, Email, MobileNumber, Password, LoyaltyPoints) VALUES (?, "", ?, ?, ?, 0)',
+          [walkin_name, walkin_email, walkin_phone, defaultPass]
+        );
+        finalCustomerId = newUser.insertId;
+      }
+    }
+
+    // Process line items & stock verification
+    let grandTotal = 0;
+    const itemsToInsert = [];
+
+    for (const item of items) {
+      const vid = parseInt(item.product_id);
+      const qty = parseInt(item.qty);
+      const discount = parseFloat(item.discount || 0);
+
+      const [vRows] = await connection.query(
+        'SELECT v.Price, v.Stock, p.ProductName FROM tblproduct_variants v JOIN tblproducts p ON v.ProductId = p.ID WHERE v.ID = ?',
+        [vid]
+      );
+      if (vRows.length === 0) {
+        await connection.rollback();
+        return res.status(404).json({ message: `Product variant #${vid} not found.` });
+      }
+
+      const variant = vRows[0];
+      if (variant.Stock < qty) {
+        await connection.rollback();
+        return res.status(400).json({ message: `Insufficient stock for ${variant.ProductName}. Available: ${variant.Stock}` });
+      }
+
+      const basePrice = parseFloat(variant.Price);
+      // Staff role check: non-Admin staff cannot apply discount
+      const effectiveDiscount = (req.staff.role === 'Sales person') ? 0 : Math.min(100, Math.max(0, discount));
+      const unitPrice = basePrice * (1 - effectiveDiscount / 100);
+      const lineTotal = unitPrice * qty;
+
+      grandTotal += lineTotal;
+      itemsToInsert.push({
+        vid,
+        qty,
+        unitPrice,
+        baseStock: variant.Stock
+      });
+    }
+
+    const orderNumber = `ORD-INST-${Date.now().toString().slice(-6)}`;
+    const processedBy = req.staff.id;
+    const orderDateStr = custom_order_date ? `${custom_order_date} ${new Date().toISOString().slice(11, 19)}` : new Date();
+
+    // Insert tbl_order_master
+    const [masterResult] = await connection.query(
+      `INSERT INTO tbl_order_master 
+       (OrderNumber, UserId, ShippingName, ShippingPhone, ShippingCountry, ShippingAddress, ShippingPostalCode, 
+        BillingName, BillingPhone, BillingCountry, BillingAddress, BillingPostalCode, TotalAmount, 
+        PaymentMethod, TransactionDetails, OrderStatus, DeliveryStatus, ProcessedById, OrderDate) 
+       VALUES (?, ?, ?, ?, 'Sri Lanka', ?, '00000', ?, ?, 'Sri Lanka', ?, '00000', ?, ?, ?, ?, 'Delivered', ?, ?)`,
+      [
+        orderNumber,
+        finalCustomerId,
+        finalShippingName,
+        finalShippingPhone,
+        finalShippingAddress,
+        finalShippingName,
+        finalShippingPhone,
+        finalShippingAddress,
+        grandTotal,
+        payment_method,
+        transaction_details || 'In-store POS Order',
+        order_status,
+        processedBy,
+        orderDateStr
+      ]
+    );
+
+    const orderId = masterResult.insertId;
+
+    // Insert items & deduct stock
+    for (const item of itemsToInsert) {
+      await connection.query(
+        'INSERT INTO tbl_order_items (OrderMasterId, VariantId, ProductQty, ProductPrice) VALUES (?, ?, ?, ?)',
+        [orderId, item.vid, item.qty, item.unitPrice]
+      );
+
+      await connection.query(
+        'UPDATE tblproduct_variants SET Stock = GREATEST(0, Stock - ?) WHERE ID = ?',
+        [item.qty, item.vid]
+      );
+
+      await connection.query(
+        'INSERT INTO tbl_stock_log (VariantId, Quantity, MovementType, ReferenceInfo) VALUES (?, ?, "Sale", ?)',
+        [item.vid, -item.qty, `In-store POS Sale (Order: ${orderNumber})`]
+      );
+
+      await connection.query(
+        'INSERT INTO tblcart (VariantId, ProductQty) VALUES (?, ?)',
+        [item.vid, item.qty]
+      );
+    }
+
+    // Loyalty points if completed
+    if (order_status === 'Completed' && user_type === 'registered') {
+      const points = Math.floor(grandTotal / 1000);
+      if (points > 0) {
+        await connection.query('UPDATE tbluser SET LoyaltyPoints = LoyaltyPoints + ? WHERE ID = ?', [points, finalCustomerId]);
+        await connection.query('UPDATE tbl_order_master SET PointsAwarded = 1 WHERE ID = ?', [orderId]);
+      }
+    }
+
+    await connection.commit();
+    res.status(201).json({ message: `In-store order ${orderNumber} created successfully!`, orderNumber, orderId });
+  } catch (error) {
+    await connection.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Failed to process in-store order: ' + error.message });
+  } finally {
+    connection.release();
+  }
+});
+
+// 12. RATE ORDER (Customer endpoint)
+router.post('/rate', verifyToken, async (req, res) => {
+  const userid = req.user.id;
+  const { order_id, rating } = req.body;
+
+  const numRating = parseInt(rating);
+  if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+    return res.status(400).json({ message: 'Rating must be between 1 and 5 stars.' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT ID FROM tbl_order_master WHERE ID = ? AND UserId = ? AND OrderStatus = "Completed"',
+      [order_id, userid]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: 'Only completed orders can be rated.' });
+    }
+
+    await pool.query('UPDATE tbl_order_master SET OrderRating = ? WHERE ID = ?', [numRating, order_id]);
+    res.json({ success: true, message: 'Thank you for rating your order!', rating: numRating });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error rating order' });
+  }
+});
+
 module.exports = router;
+

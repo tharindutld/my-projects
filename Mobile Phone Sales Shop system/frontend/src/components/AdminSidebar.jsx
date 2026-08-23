@@ -34,6 +34,7 @@ function AdminSidebar({ collapsed, setCollapsed }) {
   const role = user?.role || '';
   const isAdmin = role === 'Admin';
   const isSales = role === 'Sales person';
+  const isTechnician = role === 'Technician';
   const isAdminOrSales = isAdmin || isSales;
 
   const path = location.pathname;
@@ -237,11 +238,12 @@ function AdminSidebar({ collapsed, setCollapsed }) {
               icon={<ShoppingCart size={18} />}
               label="Orders"
               collapsed={collapsed}
-              open={isOpen('orders', ['/admin/orders'])}
+              open={isOpen('orders', ['/admin/orders', '/admin/add-order', '/admin/add_order'])}
               onToggle={() => toggleMenu('orders')}
-              active={path === '/admin/orders'}
+              active={path.startsWith('/admin/orders') || path.startsWith('/admin/add-order') || path.startsWith('/admin/add_order')}
             >
-              <SubItem to="/admin/orders" label="Manage Orders" icon={<List size={13} />} active={path === '/admin/orders'} />
+              <SubItem to="/admin/add-order.php" label="Create Order" icon={<Plus size={13} />} active={path === '/admin/add-order' || path === '/admin/add-order.php'} />
+              <SubItem to="/admin/orders" label="Manage Orders" icon={<List size={13} />} active={path === '/admin/orders' || path === '/admin/orders.php' || path === '/admin/manage-orders'} />
             </SubMenu>
           </>
         )}
@@ -253,11 +255,14 @@ function AdminSidebar({ collapsed, setCollapsed }) {
           icon={<Wrench size={18} />}
           label="Repairs"
           collapsed={collapsed}
-          open={isOpen('repairs', ['/admin/repairs'])}
+          open={isOpen('repairs', ['/admin/repairs', '/admin/add-repair', '/admin/manage-repair', '/admin/manage-repairs'])}
           onToggle={() => toggleMenu('repairs')}
-          active={path === '/admin/repairs'}
+          active={path.startsWith('/admin/repairs') || path.startsWith('/admin/add-repair') || path.startsWith('/admin/manage-repair') || path.startsWith('/admin/manage-repairs')}
         >
-          <SubItem to="/admin/repairs" label="Manage Repairs" icon={<List size={13} />} active={path === '/admin/repairs'} />
+          {!isTechnician && (
+            <SubItem to="/admin/add-repair.php" label="Log Repair" icon={<Plus size={13} />} active={path === '/admin/add-repair' || path === '/admin/add-repair.php'} />
+          )}
+          <SubItem to="/admin/manage-repair.php" label="Manage Repairs" icon={<List size={13} />} active={path === '/admin/manage-repair' || path === '/admin/manage-repair.php' || path === '/admin/manage-repairs' || path === '/admin/manage-repairs.php' || path === '/admin/repairs'} />
         </SubMenu>
 
         {/* Customers */}

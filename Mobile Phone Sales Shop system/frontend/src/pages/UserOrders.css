@@ -1,0 +1,29 @@
+.user-orders-container {
+  color: #e2e8f0;
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.pagination-dark .page-link {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  border-radius: 8px;
+}
+
+.pagination-dark .page-item.active .page-link {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.pagination-dark .page-link:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #ffffff;
+}

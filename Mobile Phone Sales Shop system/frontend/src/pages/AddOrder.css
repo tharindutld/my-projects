@@ -1,0 +1,74 @@
+.add-order-container {
+  color: #f8fafc;
+  padding-bottom: 2rem;
+}
+
+.add-order-header {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 1.5rem 2rem;
+  backdrop-filter: blur(16px);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.custom-input {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+  background-color: rgba(15, 23, 42, 0.9) !important;
+}
+
+.custom-input option {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.search-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 0 0 14px 14px;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1050;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.search-dropdown-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-dropdown-item:hover {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.25), rgba(99, 102, 241, 0.15));
+  padding-left: 1.5rem !important;
+}
+
+.extra-small {
+  font-size: 11px;
+}

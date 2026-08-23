@@ -44,6 +44,17 @@ import Inventory from './pages/Inventory';
 import AddStock from './pages/AddStock';
 import StockList from './pages/StockList';
 
+// Order Pages
+import AddOrder from './pages/AddOrder';
+import UserOrders from './pages/UserOrders';
+import MyOrders from './pages/MyOrders';
+import ManageOrders from './pages/ManageOrders';
+
+// Repair Pages
+import AddRepair from './pages/AddRepair';
+import ManageRepair from './pages/ManageRepair';
+import EditRepair from './pages/EditRepair';
+
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -104,11 +115,34 @@ function AppContent() {
         <Route path="/admin/stock-list.php" element={<StockList />} />
         <Route path="/admin/stock_list.php" element={<StockList />} />
 
-        {/* Sales, Repairs, Pricing, Staff, Reports, Users */}
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/orders.php" element={<AdminOrders />} />
-        <Route path="/admin/repairs" element={<AdminRepairs />} />
-        <Route path="/admin/repairs.php" element={<AdminRepairs />} />
+        {/* Order Routes */}
+        <Route path="/admin/add-order" element={<AddOrder />} />
+        <Route path="/admin/add-order.php" element={<AddOrder />} />
+        <Route path="/admin/add_order.php" element={<AddOrder />} />
+        <Route path="/admin/orders" element={<ManageOrders />} />
+        <Route path="/admin/orders.php" element={<ManageOrders />} />
+        <Route path="/admin/manage-orders" element={<ManageOrders />} />
+        <Route path="/admin/manage_orders.php" element={<ManageOrders />} />
+        <Route path="/admin/user-orders" element={<UserOrders />} />
+        <Route path="/admin/user-orders/:uid" element={<UserOrders />} />
+        <Route path="/admin/user-orders.php" element={<UserOrders />} />
+        <Route path="/admin/user_orders.php" element={<UserOrders />} />
+
+        {/* Repair Routes */}
+        <Route path="/admin/add-repair" element={<AddRepair />} />
+        <Route path="/admin/add-repair.php" element={<AddRepair />} />
+        <Route path="/admin/add_repair.php" element={<AddRepair />} />
+        <Route path="/admin/manage-repair" element={<ManageRepair />} />
+        <Route path="/admin/manage-repair.php" element={<ManageRepair />} />
+        <Route path="/admin/manage-repairs" element={<ManageRepair />} />
+        <Route path="/admin/manage-repairs.php" element={<ManageRepair />} />
+        <Route path="/admin/repairs" element={<ManageRepair />} />
+        <Route path="/admin/repairs.php" element={<ManageRepair />} />
+        <Route path="/admin/edit-repair/:id" element={<EditRepair />} />
+        <Route path="/admin/edit-repair.php" element={<EditRepair />} />
+        <Route path="/admin/edit_repair.php" element={<EditRepair />} />
+
+        {/* Sales, Pricing, Staff, Reports, Users */}
         <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/pricing.php" element={<AdminPricing />} />
@@ -143,6 +177,10 @@ function AppContent() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/invoice/:id" element={<Invoice />} />
           <Route path="/lost-password" element={<LostPassword />} />
+          <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/my-orders.php" element={<MyOrders />} />
+          <Route path="/my_orders.php" element={<MyOrders />} />
+          <Route path="/my_orders" element={<MyOrders />} />
         </Routes>
       </main>
       <Footer />

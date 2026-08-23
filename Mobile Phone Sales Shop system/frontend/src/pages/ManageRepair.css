@@ -1,0 +1,55 @@
+.card-repairs-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45);
+  color: #f8fafc;
+  overflow: hidden;
+}
+
+.table-repairs-dark {
+  color: #e2e8f0;
+}
+
+.table-repairs-dark th {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.7px;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0.75rem;
+}
+
+.table-repairs-dark td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+}
+
+.table-repairs-dark tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table-repairs-dark tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+.status-select-dark {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50rem;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.status-select-dark:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
