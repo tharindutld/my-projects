@@ -7,7 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
 
 export default function AdminPricing() {
-  const { token, API_URL } = useAuth();
+  const { token, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   // Lists
@@ -62,12 +62,14 @@ export default function AdminPricing() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
     }
     loadData();
-  }, [token]);
+  }, [token, authLoading]);
 
   const handleApplyIndividual = async (e) => {
     e.preventDefault();

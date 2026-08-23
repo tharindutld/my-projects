@@ -9,13 +9,15 @@ import AdminLayout from '../components/AdminLayout';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 export default function AdminReports() {
-  const { token, user, API_URL } = useAuth();
+  const { token, user, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token || !user || user.role === 'Customer') {
       navigate('/login?staff=true');
       return;
@@ -52,7 +54,7 @@ export default function AdminReports() {
       }
     };
     load();
-  }, [token, user]);
+  }, [token, user, authLoading]);
 
   const reportCards = [
     {

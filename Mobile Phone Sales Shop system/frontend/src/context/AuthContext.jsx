@@ -3,17 +3,32 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   const API_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchProfile = async () => {
       if (!token) {
-        setUser(null);
-        setLoading(false);
+        if (isMounted) {
+          setUser(null);
+          localStorage.removeItem('user');
+          setLoading(false);
+        }
         return;
       }
 
@@ -23,9 +38,10 @@ export const AuthProvider = ({ children }) => {
             'Authorization': `Bearer ${token}`
           }
         });
+
         if (res.ok) {
           const data = await res.json();
-          setUser({
+          const fetchedUser = {
             id: data.ID || data.id,
             firstName: data.FirstName || data.first_name,
             lastName: data.LastName || data.last_name,
@@ -33,23 +49,26 @@ export const AuthProvider = ({ children }) => {
             mobileNumber: data.MobileNumber || data.phone,
             role: data.role || 'Customer',
             loyaltyPoints: data.LoyaltyPoints || 0
-          });
-        } else {
-          // Token expired or invalid
-          logout();
+          };
+          if (isMounted) {
+            setUser(fetchedUser);
+            localStorage.setItem('user', JSON.stringify(fetchedUser));
+          }
+        } else if (res.status === 401 || res.status === 403) {
+          if (isMounted) logout();
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
-    const delayTimer = setTimeout(() => {
-      fetchProfile();
-    }, 100);
+    fetchProfile();
 
-    return () => clearTimeout(delayTimer);
+    return () => {
+      isMounted = false;
+    };
   }, [token]);
 
   const login = async (email, password) => {
@@ -65,7 +84,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     setToken(data.token);
+    setUser(data.user);
     return data.user;
   };
 
@@ -82,7 +103,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     setToken(data.token);
+    setUser(data.user);
     return data.user;
   };
 
@@ -102,6 +125,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
@@ -121,13 +145,12 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Profile update failed');
     }
 
-    // Refresh profile state
     const profileRes = await fetch(`${API_URL}/auth/profile`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (profileRes.ok) {
       const updatedData = await profileRes.json();
-      setUser({
+      const updatedUser = {
         id: updatedData.ID || updatedData.id,
         firstName: updatedData.FirstName || updatedData.first_name,
         lastName: updatedData.LastName || updatedData.last_name,
@@ -135,7 +158,9 @@ export const AuthProvider = ({ children }) => {
         mobileNumber: updatedData.MobileNumber || updatedData.phone,
         role: updatedData.role || 'Customer',
         loyaltyPoints: updatedData.LoyaltyPoints || 0
-      });
+      };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
 
     return data.message;

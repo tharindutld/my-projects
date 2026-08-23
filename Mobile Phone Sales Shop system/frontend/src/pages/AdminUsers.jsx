@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 
 export default function AdminUsers() {
-  const { token, user, API_URL } = useAuth();
+  const { token, user, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -41,12 +41,14 @@ export default function AdminUsers() {
   }, [page, search, token, API_URL]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token || !user || user.role === 'Customer') {
       navigate('/login?staff=true');
       return;
     }
     loadUsers();
-  }, [loadUsers]);
+  }, [loadUsers, authLoading, token, user]);
 
   const toggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';

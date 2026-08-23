@@ -7,7 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
 
 export default function AdminStaff() {
-  const { token, API_URL } = useAuth();
+  const { token, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   // Lists
@@ -61,12 +61,14 @@ export default function AdminStaff() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
     }
     loadAccounts();
-  }, [token]);
+  }, [token, authLoading]);
 
   const handleRegisterStaff = async (e) => {
     e.preventDefault();

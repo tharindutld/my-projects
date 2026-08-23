@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 
 export default function AdminStock() {
-  const { token, API_URL } = useAuth();
+  const { token, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   // Dealers
@@ -69,13 +69,15 @@ export default function AdminStock() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
     }
     fetchDealers();
     generateBatch();
-  }, [token]);
+  }, [token, authLoading]);
 
   // Sync Serial / IMEI input boxes based on quantity
   useEffect(() => {

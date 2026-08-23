@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 export default function Wishlist() {
-  const { token, API_URL } = useAuth();
+  const { token, loading: authLoading, API_URL } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
@@ -35,8 +35,9 @@ export default function Wishlist() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     fetchWishlist();
-  }, [token]);
+  }, [token, authLoading]);
 
   const handleRemove = async (productId) => {
     setError('');

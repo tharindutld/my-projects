@@ -4,7 +4,7 @@ import { Award, User, ShoppingBag, Eye, Calendar, Settings } from 'lucide-react'
 import { useAuth } from '../context/AuthContext';
 
 export default function Profile() {
-  const { user, token, updateProfile, API_URL } = useAuth();
+  const { user, token, loading: authLoading, updateProfile, API_URL } = useAuth();
   const navigate = useNavigate();
 
   // Edit Profile States
@@ -20,6 +20,8 @@ export default function Profile() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login');
       return;
@@ -47,7 +49,7 @@ export default function Profile() {
       }
     };
     fetchOrders();
-  }, [token, user]);
+  }, [token, user, authLoading]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();

@@ -7,7 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
 
 export default function AdminOrders() {
-  const { token, API_URL } = useAuth();
+  const { token, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
@@ -54,12 +54,14 @@ export default function AdminOrders() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
     }
     fetchOrders();
-  }, [token, currentPage, filterStatus]);
+  }, [token, currentPage, filterStatus, authLoading]);
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setConfirmModal({

@@ -7,7 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
 
 export default function AdminRepairs() {
-  const { token, user, API_URL } = useAuth();
+  const { token, user, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   // Lists
@@ -93,13 +93,15 @@ export default function AdminRepairs() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
     }
     fetchRepairs();
     fetchTechnicians();
-  }, [token, currentPage, filterStatus, filterTech]);
+  }, [token, currentPage, filterStatus, filterTech, authLoading]);
 
   const handleOpenEdit = (repair) => {
     setSelectedRepair(repair);

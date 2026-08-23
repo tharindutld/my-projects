@@ -7,7 +7,6 @@ import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
 
 export default function AdminProducts() {
-  const { token, API_URL } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -93,7 +92,11 @@ export default function AdminProducts() {
     }
   };
 
+  const { token, loading: authLoading, API_URL } = useAuth();
+
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login?staff=true');
       return;
@@ -101,7 +104,7 @@ export default function AdminProducts() {
     fetchProducts();
     fetchCategories();
     fetchBrands();
-  }, [token]);
+  }, [token, authLoading]);
 
   // Sync state from query parameters
   useEffect(() => {

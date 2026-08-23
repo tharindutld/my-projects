@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 
 export default function AdminInventory() {
-  const { token, user, API_URL } = useAuth();
+  const { token, user, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
 
   const [inventory, setInventory] = useState([]);
@@ -58,12 +58,14 @@ export default function AdminInventory() {
   }, [page, search, token, API_URL]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token || !user || user.role === 'Customer') {
       navigate('/login?staff=true');
       return;
     }
     loadInventory();
-  }, [loadInventory]);
+  }, [loadInventory, authLoading, token, user]);
 
   const handleSearch = (e) => {
     e.preventDefault();

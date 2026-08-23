@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 export default function Checkout() {
-  const { user, token, API_URL } = useAuth();
+  const { user, token, loading: authLoading, API_URL } = useAuth();
   const { cartItems, getCartSubtotal, fetchCart } = useCart();
   const navigate = useNavigate();
 
@@ -33,10 +33,12 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token) {
       navigate('/login');
     }
-  }, [token]);
+  }, [token, authLoading]);
 
   const subtotal = getCartSubtotal();
   const availablePoints = user?.loyaltyPoints || 0;

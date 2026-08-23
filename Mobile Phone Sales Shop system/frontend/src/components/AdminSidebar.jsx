@@ -20,7 +20,8 @@ import {
   ClipboardList,
   UserCheck,
   Menu,
-  X
+  X,
+  Plus
 } from 'lucide-react';
 
 export default function AdminSidebar({ collapsed, setCollapsed }) {
