@@ -24,7 +24,7 @@ import {
   Plus
 } from 'lucide-react';
 
-export default function AdminSidebar({ collapsed, setCollapsed }) {
+function AdminSidebar({ collapsed, setCollapsed }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -173,36 +173,36 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               icon={<Tag size={18} />}
               label="Brands"
               collapsed={collapsed}
-              open={isOpen('brands', ['/admin/products'])}
+              open={isOpen('brands', ['/admin/add-brand', '/admin/manage-brand', '/admin/edit-brand'])}
               onToggle={() => toggleMenu('brands')}
-              active={location.search.includes('tab=brands')}
+              active={path === '/admin/add-brand' || path === '/admin/manage-brand' || path.startsWith('/admin/edit-brand')}
             >
-              <SubItem to="/admin/products?tab=brands&action=add" label="Add Brand" icon={<Plus size={13} />} active={location.search.includes('tab=brands') && location.search.includes('action=add')} />
-              <SubItem to="/admin/products?tab=brands" label="Manage Brands" icon={<List size={13} />} active={location.search.includes('tab=brands') && !location.search.includes('action=add')} />
+              <SubItem to="/admin/add-brand" label="Add Brand" icon={<Plus size={13} />} active={path === '/admin/add-brand'} />
+              <SubItem to="/admin/manage-brand" label="Manage Brands" icon={<List size={13} />} active={path === '/admin/manage-brand'} />
             </SubMenu>
 
             <SubMenu
               icon={<Grid3X3 size={18} />}
               label="Categories"
               collapsed={collapsed}
-              open={isOpen('cats', ['/admin/products'])}
+              open={isOpen('cats', ['/admin/add-category', '/admin/manage-category', '/admin/edit-category'])}
               onToggle={() => toggleMenu('cats')}
-              active={location.search.includes('tab=categories')}
+              active={path === '/admin/add-category' || path === '/admin/manage-category' || path.startsWith('/admin/edit-category')}
             >
-              <SubItem to="/admin/products?tab=categories&action=add" label="Add Category" icon={<Plus size={13} />} active={location.search.includes('tab=categories') && location.search.includes('action=add')} />
-              <SubItem to="/admin/products?tab=categories" label="Manage Categories" icon={<List size={13} />} active={location.search.includes('tab=categories') && !location.search.includes('action=add')} />
+              <SubItem to="/admin/add-category" label="Add Category" icon={<Plus size={13} />} active={path === '/admin/add-category'} />
+              <SubItem to="/admin/manage-category" label="Manage Categories" icon={<List size={13} />} active={path === '/admin/manage-category'} />
             </SubMenu>
 
             <SubMenu
               icon={<Smartphone size={18} />}
               label="Products"
               collapsed={collapsed}
-              open={isOpen('products', ['/admin/products', '/admin/pricing'])}
+              open={isOpen('products', ['/admin/add-product', '/admin/manage-product', '/admin/editproducts', '/admin/edit-product', '/admin/pricing'])}
               onToggle={() => toggleMenu('products')}
-              active={path === '/admin/products' && !location.search.includes('tab=')}
+              active={path === '/admin/add-product' || path === '/admin/manage-product' || path.startsWith('/admin/edit') || path === '/admin/pricing'}
             >
-              <SubItem to="/admin/products?action=add" label="Add Product" icon={<Plus size={13} />} active={path === '/admin/products' && location.search.includes('action=add') && !location.search.includes('tab=')} />
-              <SubItem to="/admin/products" label="Manage Products" icon={<List size={13} />} active={path === '/admin/products' && !location.search.includes('tab=') && !location.search.includes('action=add')} />
+              <SubItem to="/admin/add-product" label="Add Product" icon={<Plus size={13} />} active={path === '/admin/add-product'} />
+              <SubItem to="/admin/manage-product" label="Manage Products" icon={<List size={13} />} active={path === '/admin/manage-product'} />
               <SubItem to="/admin/pricing" label="Pricing & Discounts" icon={<Percent size={13} />} active={path === '/admin/pricing'} />
             </SubMenu>
           </>
@@ -217,12 +217,13 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               icon={<Box size={18} />}
               label="Inventory"
               collapsed={collapsed}
-              open={isOpen('inventory', ['/admin/inventory', '/admin/stock'])}
+              open={isOpen('inventory', ['/admin/inventory', '/admin/stock', '/admin/add-stock'])}
               onToggle={() => toggleMenu('inventory')}
-              active={path === '/admin/inventory' || path === '/admin/stock'}
+              active={path === '/admin/inventory' || path === '/admin/stock' || path === '/admin/add-stock'}
             >
               <SubItem to="/admin/stock" label="Batch Stock List" icon={<ClipboardList size={13} />} active={path === '/admin/stock'} />
-              <SubItem to="/admin/inventory" label="Manual Correction" icon={<ArrowUpDown size={13} />} active={path === '/admin/inventory'} />
+              <SubItem to="/admin/add-stock" label="Receive Stock Batch" icon={<Plus size={13} />} active={path === '/admin/add-stock'} />
+              <SubItem to="/admin/inventory" label="Catalog & Correction" icon={<ArrowUpDown size={13} />} active={path === '/admin/inventory'} />
             </SubMenu>
           </>
         )}
@@ -577,3 +578,6 @@ function SectionLabel({ label, collapsed }) {
     }}>{label}</p>
   );
 }
+
+export default AdminSidebar;
+

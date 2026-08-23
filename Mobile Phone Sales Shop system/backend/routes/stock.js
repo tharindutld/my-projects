@@ -246,4 +246,165 @@ router.post('/batch', verifyStaff(['Admin', 'Sales person']), async (req, res) =
   }
 });
 
+// 6. GET BATCH STOCK LIST (detailed with filters, IMEIs, KPI metrics, pagination)
+router.get('/list', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { search = '', brand = '', status = '', page = 1, limit = 10 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const whereClauses = ['1=1'];
+  const params = [];
+
+  if (search) {
+    whereClauses.push('(p.ProductName LIKE ? OR p.BrandName LIKE ? OR p.ModelNumber LIKE ? OR b.BatchNumber LIKE ? OR i.IMEI LIKE ? OR i.SerialNumber LIKE ?)');
+    const s = `%${search}%`;
+    params.push(s, s, s, s, s, s);
+  }
+
+  if (brand) {
+    whereClauses.push('p.BrandName = ?');
+    params.push(brand);
+  }
+
+  if (status === 'in-stock') {
+    whereClauses.push('b.CurrentQuantity > 5');
+  } else if (status === 'low') {
+    whereClauses.push('b.CurrentQuantity > 0 AND b.CurrentQuantity <= 5');
+  } else if (status === 'out') {
+    whereClauses.push('b.CurrentQuantity = 0');
+  }
+
+  const whereStr = whereClauses.join(' AND ');
+
+  try {
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(DISTINCT b.ID) as total 
+       FROM tbl_stock_batches b
+       JOIN tblproduct_variants v ON b.VariantId = v.ID
+       JOIN tblproducts p ON v.ProductId = p.ID
+       LEFT JOIN tbl_stock_imeis i ON b.ID = i.BatchId
+       WHERE ${whereStr}`,
+      params
+    );
+
+    const [rows] = await pool.query(
+      `SELECT b.ID, b.VariantId, b.BatchNumber, b.Dealer, b.PurchaseDate, b.CostPrice, b.SellingPrice, b.InitialQuantity, b.CurrentQuantity,
+              p.ProductName, p.BrandName, p.ModelNumber, p.SimType, p.CategoryName, v.RAM, v.ROM, v.Color,
+              GROUP_CONCAT(CONCAT(COALESCE(i.IMEI, i.SerialNumber, ''), ':', i.Status, ':', COALESCE(i.SerialNumber, '')) SEPARATOR ',') as batch_imeis
+       FROM tbl_stock_batches b
+       JOIN tblproduct_variants v ON b.VariantId = v.ID
+       JOIN tblproducts p ON v.ProductId = p.ID
+       LEFT JOIN tbl_stock_imeis i ON b.ID = i.BatchId
+       WHERE ${whereStr}
+       GROUP BY b.ID
+       ORDER BY b.ID DESC
+       LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    );
+
+    // KPI Summary
+    const [[{ totalBatches }]] = await pool.query('SELECT COUNT(*) as totalBatches FROM tbl_stock_batches');
+    const [[{ totalUnits }]] = await pool.query('SELECT COALESCE(SUM(CurrentQuantity), 0) as totalUnits FROM tbl_stock_batches');
+    const [[{ lowStockCount }]] = await pool.query('SELECT COUNT(*) as lowStockCount FROM tbl_stock_batches WHERE CurrentQuantity <= 5 AND CurrentQuantity > 0');
+    const [[{ availableImeis }]] = await pool.query('SELECT COUNT(*) as availableImeis FROM tbl_stock_imeis WHERE Status="Available"');
+
+    res.json({
+      items: rows,
+      totalRows: total,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      page: parseInt(page),
+      kpis: {
+        totalBatches,
+        totalUnits,
+        lowStockCount,
+        availableImeis
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error fetching stock list.' });
+  }
+});
+
+// 7. EDIT BATCH DETAILS (Admin only)
+router.put('/batch/:id', verifyStaff(['Admin']), async (req, res) => {
+  const { id } = req.params;
+  const { cost_price, selling_price, dealer } = req.body;
+
+  const cost = parseFloat(cost_price);
+  const selling = parseFloat(selling_price);
+
+  if (cost <= 0 || selling <= 0 || selling <= cost || selling < 10000) {
+    return res.status(400).json({ message: 'Invalid pricing parameters. Selling price must be greater than cost price and at least 10,000 LKR.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [bCheck] = await connection.query('SELECT VariantId, BatchNumber FROM tbl_stock_batches WHERE ID = ?', [id]);
+    if (bCheck.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Batch not found.' });
+    }
+
+    const { VariantId, BatchNumber } = bCheck[0];
+
+    await connection.query(
+      'UPDATE tbl_stock_batches SET CostPrice = ?, SellingPrice = ?, Dealer = ? WHERE ID = ?',
+      [cost, selling, dealer, id]
+    );
+
+    await connection.query('UPDATE tblproduct_variants SET Price = ? WHERE ID = ?', [selling, VariantId]);
+
+    await connection.commit();
+    res.json({ message: `Batch ${BatchNumber} updated successfully.` });
+  } catch (error) {
+    await connection.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Server error updating batch.' });
+  } finally {
+    connection.release();
+  }
+});
+
+// 8. DELETE BATCH (Admin only)
+router.delete('/batch/:id', verifyStaff(['Admin']), async (req, res) => {
+  const { id } = req.params;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [bCheck] = await connection.query('SELECT VariantId, CurrentQuantity, BatchNumber FROM tbl_stock_batches WHERE ID = ?', [id]);
+    if (bCheck.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Batch not found.' });
+    }
+
+    const { VariantId, CurrentQuantity, BatchNumber } = bCheck[0];
+
+    const [vCheck] = await connection.query('SELECT Stock FROM tblproduct_variants WHERE ID = ?', [VariantId]);
+    if (vCheck.length > 0) {
+      const newStock = Math.max(0, parseInt(vCheck[0].Stock) - parseInt(CurrentQuantity));
+      await connection.query('UPDATE tblproduct_variants SET Stock = ? WHERE ID = ?', [newStock, VariantId]);
+    }
+
+    await connection.query('DELETE FROM tbl_stock_batches WHERE ID = ?', [id]);
+
+    const logRef = `Deleted batch ${BatchNumber}`;
+    const adj = -parseInt(CurrentQuantity);
+    await connection.query('INSERT INTO tbl_stock_log (VariantId, Quantity, MovementType, ReferenceInfo) VALUES (?, ?, "Correction", ?)', [VariantId, adj, logRef]);
+
+    await connection.commit();
+    res.json({ message: `Batch ${BatchNumber} deleted successfully and variant stock corrected.` });
+  } catch (error) {
+    await connection.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Server error deleting batch.' });
+  } finally {
+    connection.release();
+  }
+});
+
 module.exports = router;
+
