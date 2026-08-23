@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, ShieldAlert, Package, Eye } from 'lucide-react';
+import { ArrowLeft, Check, X, ShieldAlert, Package, Eye, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastAlert from '../components/ToastAlert';
 
 export default function AdminOrders() {
   const { token, API_URL } = useAuth();
@@ -13,6 +16,18 @@ export default function AdminOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Error/Success Notification
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Confirmation Modal
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -46,33 +61,43 @@ export default function AdminOrders() {
     fetchOrders();
   }, [token, currentPage, filterStatus]);
 
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    if (!window.confirm(`Are you sure you want to set order status to: ${newStatus}?`)) return;
-    try {
-      const res = await fetch(`${API_URL}/orders/admin/${orderId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message);
-        fetchOrders();
-        if (selectedOrder?.ID === orderId) {
-          setSelectedOrder(prev => ({ ...prev, OrderStatus: newStatus }));
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Update Order Status',
+      message: `Are you sure you want to set order status to: ${newStatus}?`,
+      variant: newStatus === 'Cancelled' ? 'danger' : 'primary',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/orders/admin/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            fetchOrders();
+            if (selectedOrder?.ID === orderId) {
+              setSelectedOrder(prev => ({ ...prev, OrderStatus: newStatus }));
+            }
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to update order status.');
         }
-      } else {
-        alert(data.message);
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   const handleUpdateDeliveryStatus = async (orderId, newDelivery) => {
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/orders/admin/${orderId}/delivery`, {
         method: 'PUT',
@@ -84,102 +109,124 @@ export default function AdminOrders() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         fetchOrders();
         if (selectedOrder?.ID === orderId) {
           setSelectedOrder(prev => ({ ...prev, DeliveryStatus: newDelivery }));
         }
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Failed to update delivery status.');
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('WARNING: Are you sure you want to permanently delete this order?')) return;
-    try {
-      const res = await fetch(`${API_URL}/orders/admin/${orderId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message);
-        setSelectedOrder(null);
-        fetchOrders();
+  const handleDeleteOrder = (orderId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Order Record',
+      message: 'WARNING: Are you sure you want to permanently delete this customer order?',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/orders/admin/${orderId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            setSelectedOrder(null);
+            fetchOrders();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Error deleting order record.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+      {error && <ToastAlert type="error" message={error} onClose={() => setError('')} />}
+      {success && <ToastAlert type="success" message={success} onClose={() => setSuccess('')} />}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant || 'danger'}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
             <ArrowLeft size={14} /> Back to Dashboard
           </button>
-          <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Manage Orders</h1>
+          <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Customer Orders Management</h1>
         </div>
 
-        {/* Filter Tab */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="glass-input">
-            <option value="">All Orders</option>
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
+        {/* Filter status */}
+        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="glass-input" style={{ width: '200px' }}>
+          <option value="">All Order Statuses</option>
+          <option value="Order Placed">Order Placed</option>
+          <option value="Packed">Packed</option>
+          <option value="Dispatched">Dispatched</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
       </div>
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: selectedOrder ? '1fr 1fr' : '1fr',
+        gridTemplateColumns: selectedOrder ? '1.2fr 1fr' : '1fr',
         gap: '30px',
         alignItems: 'flex-start'
       }}>
         {/* Orders Table */}
         <div className="glass-panel" style={{ padding: '24px' }}>
           {loading ? (
-            <div style={{ padding: '20px', color: 'var(--text-muted)' }}>Fetching orders...</div>
+            <div style={{ color: 'var(--text-muted)' }}>Fetching orders...</div>
           ) : orders.length === 0 ? (
-            <div style={{ padding: '20px', color: 'var(--text-muted)' }}>No orders found matching search criteria.</div>
+            <div style={{ color: 'var(--text-muted)' }}>No customer orders found.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {orders.map(order => (
-                <div key={order.ID} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
+              {orders.map(ord => (
+                <div key={ord.ID} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   <div>
-                    <strong style={{ fontSize: '15px' }}>#{order.OrderNumber}</strong>
+                    <strong style={{ fontSize: '15px' }}>Order #{ord.OrderNumber}</strong>
                     <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Client: {order.FirstName} {order.LastName} &bull; {new Date(order.OrderDate).toLocaleDateString()}
+                      Customer: {ord.BillingFirstName} {ord.BillingLastName} &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
                     </span>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)' }}>
+                      Total Amount: <strong style={{ color: 'var(--primary)' }}>Rs. {parseFloat(ord.GrandTotal).toLocaleString()}</strong>
+                    </span>
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
                       <span style={{
-                        background: order.OrderStatus === 'Completed' ? 'rgba(16, 185, 129, 0.15)' : order.OrderStatus === 'Cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        color: order.OrderStatus === 'Completed' ? 'var(--success)' : order.OrderStatus === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
+                        background: ord.OrderStatus === 'Delivered' ? 'rgba(16, 185, 129, 0.15)' : ord.OrderStatus === 'Cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                        color: ord.OrderStatus === 'Delivered' ? 'var(--success)' : ord.OrderStatus === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
                         padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700'
-                      }}>{order.OrderStatus}</span>
-                      <span style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
-                        {order.DeliveryStatus}
-                      </span>
+                      }}>Status: {ord.OrderStatus}</span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <strong style={{ fontSize: '16px' }}>Rs. {parseFloat(order.TotalAmount).toLocaleString('en-US')}</strong>
-                    <button onClick={() => setSelectedOrder(order)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 12px', borderRadius: '8px' }}>
-                      <Eye size={14} /> Details
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setSelectedOrder(ord)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '13px' }}>
+                      <Eye size={14} /> View Details
                     </button>
                   </div>
                 </div>
               ))}
 
-              {/* Pagination controls */}
+              {/* Pagination */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
                 <button
                   disabled={currentPage === 1}
@@ -203,74 +250,78 @@ export default function AdminOrders() {
           )}
         </div>
 
-        {/* Selected Order Details & Management Pane */}
+        {/* Selected Order Detail Sidebar Panel */}
         {selectedOrder && (
-          <div className="glass-panel" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '800' }}>Manage Order #{selectedOrder.OrderNumber}</h2>
+          <div className="glass-panel animate-fade-in" style={{ padding: '30px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800' }}>Order #{selectedOrder.OrderNumber}</h2>
+              <button onClick={() => setSelectedOrder(null)} className="glass-btn glass-btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }}>Close</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '14px' }}>
               <div>
-                <button onClick={() => navigate(`/invoice/${selectedOrder.ID}?isAdmin=1`)} className="glass-btn" style={{ padding: '4px 10px', fontSize: '12px', marginRight: '8px' }}>Invoice</button>
-                <button onClick={() => setSelectedOrder(null)} className="glass-btn glass-btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }}>Close</button>
+                <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Shipping Address & Recipient</strong>
+                <div>{selectedOrder.BillingFirstName} {selectedOrder.BillingLastName}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{selectedOrder.BillingAddress}, {selectedOrder.BillingCity}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Phone: {selectedOrder.BillingPhone} | Email: {selectedOrder.BillingEmail}</div>
+              </div>
+
+              <div>
+                <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Payment Info</strong>
+                <div>Method: {selectedOrder.PaymentMethod} ({selectedOrder.PaymentStatus})</div>
+                <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+                  Grand Total: Rs. {parseFloat(selectedOrder.GrandTotal).toLocaleString()}
+                </div>
+              </div>
+
+              {/* Order Status Controls */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px' }}>Update Order Processing Status</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {['Order Placed', 'Packed', 'Dispatched', 'Delivered', 'Cancelled'].map(st => (
+                    <button
+                      key={st}
+                      onClick={() => handleUpdateOrderStatus(selectedOrder.ID, st)}
+                      className={`glass-btn ${selectedOrder.OrderStatus === st ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
+                      style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '6px' }}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery Tracking status */}
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px' }}>Delivery Tracking Status</label>
+                <select
+                  className="glass-input"
+                  value={selectedOrder.DeliveryStatus || 'Pending'}
+                  onChange={(e) => handleUpdateDeliveryStatus(selectedOrder.ID, e.target.value)}
+                >
+                  <option value="Pending">Pending Dispatch</option>
+                  <option value="In-Transit">In-Transit / Courier Pickup</option>
+                  <option value="Out for Delivery">Out for Delivery</option>
+                  <option value="Delivered">Delivered Successfully</option>
+                </select>
+              </div>
+
+              {/* Delete Order */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', marginTop: '10px' }}>
+                <button
+                  onClick={() => handleDeleteOrder(selectedOrder.ID)}
+                  className="glass-btn glass-btn-danger"
+                  style={{ width: '100%', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <Trash2 size={14} /> Permanently Delete Order Record
+                </button>
               </div>
             </div>
-
-            {/* Quick Action status updates */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => handleUpdateOrderStatus(selectedOrder.ID, 'Completed')} disabled={selectedOrder.OrderStatus === 'Completed'} className="glass-btn" style={{ background: 'var(--success)', padding: '10px 14px', borderRadius: '8px', fontSize: '12px', flexGrow: 1 }}>
-                Mark Completed
-              </button>
-              <button onClick={() => handleUpdateOrderStatus(selectedOrder.ID, 'Cancelled')} disabled={selectedOrder.OrderStatus === 'Cancelled'} className="glass-btn glass-btn-danger" style={{ padding: '10px 14px', borderRadius: '8px', fontSize: '12px', flexGrow: 1 }}>
-                Cancel Order
-              </button>
-            </div>
-
-            {/* Delivery state selection */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: '600' }}>Update Delivery Status:</label>
-              <select
-                value={selectedOrder.DeliveryStatus}
-                onChange={(e) => handleUpdateDeliveryStatus(selectedOrder.ID, e.target.value)}
-                className="glass-input"
-              >
-                <option value="Processing">Processing</option>
-                <option value="Shipped">Shipped</option>
-                <option value="In Transit">In Transit</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Returned">Returned</option>
-              </select>
-            </div>
-
-            <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)' }} />
-
-            {/* Order Items Table */}
-            <div>
-              <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '10px' }}>Line Items:</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', background: 'rgba(0,0,0,0.1)', padding: '15px', borderRadius: '8px' }}>
-                {selectedOrder.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{item.ProductName} ({item.Color}, {item.ROM}/{item.RAM}) x{item.ProductQty}</span>
-                    <strong>Rs. {(parseFloat(item.ProductPrice) * item.ProductQty).toLocaleString('en-US')}</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Shipping Info details */}
-            <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <strong>Recipient:</strong> {selectedOrder.ShippingName} ({selectedOrder.ShippingPhone})<br />
-              <strong>Address:</strong> {selectedOrder.ShippingAddress}, {selectedOrder.ShippingPostalCode}, {selectedOrder.ShippingCountry}<br />
-              <strong>Transaction Details:</strong> {selectedOrder.TransactionDetails || 'None'}
-            </div>
-
-            <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)' }} />
-
-            <button onClick={() => handleDeleteOrder(selectedOrder.ID)} className="glass-btn glass-btn-danger" style={{ width: '100%', borderRadius: '8px', fontSize: '12px' }}>
-              Permanently Delete Order Record
-            </button>
           </div>
         )}
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

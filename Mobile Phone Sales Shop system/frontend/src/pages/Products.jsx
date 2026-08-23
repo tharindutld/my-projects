@@ -1,22 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Search, Flame, Smartphone } from 'lucide-react';
+import { Search, Flame, SlidersHorizontal, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
+
+function ProductImage({ src, alt }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return <span style={{ fontSize: '60px' }}>📱</span>;
+  }
+  return (
+    <img
+      src={IMAGE_BASE + src}
+      alt={alt}
+      onError={() => setError(true)}
+      style={{ maxHeight: '170px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }}
+    />
+  );
+}
 
 export default function Products() {
   const { API_URL } = useAuth();
   const location = useLocation();
 
-  // Search parameters from URL
   const queryParams = new URLSearchParams(location.search);
   const urlSearch = queryParams.get('search') || '';
 
-  // Lists
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('');
   const [searchVal, setSearchVal] = useState(urlSearch);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setSearchVal(urlSearch);
@@ -25,16 +44,22 @@ export default function Products() {
   const loadCatalog = async () => {
     setLoading(true);
     try {
-      const prodRes = await fetch(`${API_URL}/products?limit=100`);
+      const prodRes = await fetch(`${API_URL}/products?limit=200`);
       if (prodRes.ok) {
         const prodData = await prodRes.json();
-        setProducts(prodData.products);
+        setProducts(Array.isArray(prodData) ? prodData : (prodData.products || []));
       }
 
       const brandRes = await fetch(`${API_URL}/products/brands`);
       if (brandRes.ok) {
         const brandData = await brandRes.json();
         setBrands(brandData.filter(b => b.Status === 1));
+      }
+
+      const catRes = await fetch(`${API_URL}/products/categories`);
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        setCategories(catData.filter(c => c.Status === 1));
       }
     } catch (err) {
       console.error(err);
@@ -47,15 +72,36 @@ export default function Products() {
     loadCatalog();
   }, []);
 
-  const filteredProducts = products.filter(p => {
+  // Client-side filter + sort
+  let filteredProducts = products.filter(p => {
     const matchesBrand = selectedBrand ? p.BrandName === selectedBrand : true;
+    const matchesCat = selectedCategory ? p.CategoryName === selectedCategory : true;
     const matchesSearch = searchVal
-      ? p.ProductName.toLowerCase().includes(searchVal.toLowerCase()) ||
-        p.BrandName.toLowerCase().includes(searchVal.toLowerCase()) ||
-        p.ModelNumber.toLowerCase().includes(searchVal.toLowerCase())
+      ? (p.ProductName || '').toLowerCase().includes(searchVal.toLowerCase()) ||
+        (p.BrandName || '').toLowerCase().includes(searchVal.toLowerCase()) ||
+        (p.ModelNumber || '').toLowerCase().includes(searchVal.toLowerCase())
       : true;
-    return matchesBrand && matchesSearch;
+    return matchesBrand && matchesCat && matchesSearch;
   });
+
+  if (sortBy === 'price_asc') {
+    filteredProducts = [...filteredProducts].sort((a, b) => parseFloat(a.MinPrice || 0) - parseFloat(b.MinPrice || 0));
+  } else if (sortBy === 'price_desc') {
+    filteredProducts = [...filteredProducts].sort((a, b) => parseFloat(b.MinPrice || 0) - parseFloat(a.MinPrice || 0));
+  } else if (sortBy === 'newest') {
+    filteredProducts = [...filteredProducts].sort((a, b) => b.ID - a.ID);
+  } else if (sortBy === 'name_asc') {
+    filteredProducts = [...filteredProducts].sort((a, b) => (a.ProductName || '').localeCompare(b.ProductName || ''));
+  }
+
+  const clearFilters = () => {
+    setSelectedBrand('');
+    setSelectedCategory('');
+    setSortBy('');
+    setSearchVal('');
+  };
+
+  const hasActiveFilters = selectedBrand || selectedCategory || sortBy || searchVal;
 
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
@@ -63,49 +109,110 @@ export default function Products() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
         
         {/* Page title */}
-        <div>
-          <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Browse Catalog</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
-            Find the perfect smartphone or tablet configuration tailored for you.
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Browse Catalog</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
+              {loading ? 'Loading...' : `${filteredProducts.length} phone${filteredProducts.length !== 1 ? 's' : ''} found`}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`glass-btn ${showFilters ? '' : 'glass-btn-secondary'}`}
+            style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}
+          >
+            <SlidersHorizontal size={16} /> Filters & Sort
+          </button>
         </div>
 
-        {/* Search & Filter Section */}
-        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
-          {/* Search box */}
-          <div style={{ position: 'relative', flexGrow: 1, minWidth: '260px' }}>
-            <input
-              type="text"
-              placeholder="Search by title, brand or model..."
-              className="glass-input"
-              style={{ width: '100%', paddingLeft: '40px' }}
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-            />
-            <Search size={18} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
-          </div>
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Search */}
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Search by title, brand or model..."
+                className="glass-input"
+                style={{ width: '100%', paddingLeft: '40px' }}
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+              />
+              <Search size={18} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
+            </div>
 
-          {/* Brands list */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <button
-              onClick={() => setSelectedBrand('')}
-              className={`glass-btn ${selectedBrand === '' ? '' : 'glass-btn-secondary'}`}
-              style={{ borderRadius: '20px', padding: '8px 16px', fontSize: '13px' }}
-            >
-              All Brands
-            </button>
-            {brands.map(b => (
-              <button
-                key={b.ID}
-                onClick={() => setSelectedBrand(b.BrandName)}
-                className={`glass-btn ${selectedBrand === b.BrandName ? '' : 'glass-btn-secondary'}`}
-                style={{ borderRadius: '20px', padding: '8px 16px', fontSize: '13px' }}
-              >
-                {b.BrandName}
-              </button>
-            ))}
+            {/* Brands + Sort row */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+              {/* Brand filter */}
+              <div style={{ flex: '1', minWidth: '220px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase' }}>Brand</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  <button
+                    onClick={() => setSelectedBrand('')}
+                    className={`glass-btn ${selectedBrand === '' ? '' : 'glass-btn-secondary'}`}
+                    style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '13px' }}
+                  >All</button>
+                  {brands.map(b => (
+                    <button
+                      key={b.ID}
+                      onClick={() => setSelectedBrand(b.BrandName)}
+                      className={`glass-btn ${selectedBrand === b.BrandName ? '' : 'glass-btn-secondary'}`}
+                      style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '13px' }}
+                    >{b.BrandName}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category filter */}
+              {categories.length > 0 && (
+                <div style={{ flex: '1', minWidth: '220px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase' }}>Category</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <button
+                      onClick={() => setSelectedCategory('')}
+                      className={`glass-btn ${selectedCategory === '' ? '' : 'glass-btn-secondary'}`}
+                      style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '13px' }}
+                    >All</button>
+                    {categories.map(c => (
+                      <button
+                        key={c.ID}
+                        onClick={() => setSelectedCategory(c.CategoryName)}
+                        className={`glass-btn ${selectedCategory === c.CategoryName ? '' : 'glass-btn-secondary'}`}
+                        style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '13px' }}
+                      >{c.CategoryName}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sort */}
+              <div style={{ minWidth: '200px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase' }}>Sort By</p>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  className="glass-input"
+                  style={{ width: '100%', fontSize: '13px', padding: '8px 12px' }}
+                >
+                  <option value="">Default</option>
+                  <option value="price_asc">Price: Low → High</option>
+                  <option value="price_desc">Price: High → Low</option>
+                  <option value="newest">Newest First</option>
+                  <option value="name_asc">Name: A → Z</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <div>
+                <button onClick={clearFilters} className="glass-btn-secondary" style={{ borderRadius: '20px', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <X size={14} /> Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Catalog list grid */}
         {loading ? (
@@ -120,6 +227,8 @@ export default function Products() {
           }}>
             {filteredProducts.map(p => {
               const isPromo = p.discountActive;
+              const price = parseFloat(p.MinPrice || p.minPrice || 0);
+              const discountedPrice = parseFloat(p.MinPriceDiscounted || p.minPriceDiscounted || price);
               return (
                 <div key={p.ID} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   
@@ -143,7 +252,7 @@ export default function Products() {
                         <Flame size={12} /> {p.DiscountPercent}% OFF
                       </div>
                     )}
-                    <span style={{ fontSize: '60px' }}>📱</span>
+                    <ProductImage src={p.Image1} alt={p.ProductName} />
                   </div>
 
                   {/* Details body */}
@@ -157,15 +266,15 @@ export default function Products() {
                       {isPromo ? (
                         <>
                           <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>
-                            Rs. {parseFloat(p.priceWithDiscount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            Rs. {discountedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           <span style={{ fontSize: '13px', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                            Rs. {parseFloat(p.minPrice).toLocaleString('en-US')}
+                            Rs. {price.toLocaleString('en-US')}
                           </span>
                         </>
                       ) : (
                         <span style={{ fontSize: '18px', fontWeight: '800' }}>
-                          Rs. {parseFloat(p.minPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {price > 0 ? `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Price on request'}
                         </span>
                       )}
                     </div>

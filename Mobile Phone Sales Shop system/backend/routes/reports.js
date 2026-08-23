@@ -95,4 +95,74 @@ router.get('/low-stock', verifyStaff(['Admin', 'Sales person']), async (req, res
   }
 });
 
+// 3. GET REPORTS SUMMARY — for AdminReports.jsx
+router.get('/summary', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  try {
+    const [[{ todaySales }]] = await pool.query(
+      "SELECT COALESCE(SUM(TotalAmount), 0) as todaySales FROM tbl_order_master WHERE DATE(OrderDate) = CURDATE() AND OrderStatus = 'Completed'"
+    );
+    const [[{ totalStock }]] = await pool.query(
+      "SELECT COALESCE(SUM(v.Stock), 0) as totalStock FROM tblproduct_variants v JOIN tblproducts p ON v.ProductId = p.ID WHERE p.Status = 1"
+    );
+    const [[{ totalCustomers }]] = await pool.query("SELECT COUNT(*) as totalCustomers FROM tbluser");
+    const [[{ totalStaff }]] = await pool.query("SELECT COUNT(*) as totalStaff FROM staff_users WHERE status = 'Active'");
+    const [[{ monthSales }]] = await pool.query(
+      "SELECT COALESCE(SUM(TotalAmount), 0) as monthSales FROM tbl_order_master WHERE MONTH(OrderDate) = MONTH(CURDATE()) AND YEAR(OrderDate) = YEAR(CURDATE()) AND OrderStatus = 'Completed'"
+    );
+    const [[{ lowStockCount }]] = await pool.query(
+      "SELECT COUNT(*) as lowStockCount FROM tblproduct_variants v JOIN tblproducts p ON v.ProductId = p.ID WHERE v.Stock <= 5 AND p.Status = 1"
+    );
+
+    // Best performing brand
+    const [bestBrandRows] = await pool.query(
+      `SELECT p.BrandName, SUM(oi.ProductQty * oi.ProductPrice) as revenue
+       FROM tbl_order_items oi
+       JOIN tblproduct_variants v ON oi.VariantId = v.ID
+       JOIN tblproducts p ON v.ProductId = p.ID
+       JOIN tbl_order_master m ON oi.OrderMasterId = m.ID
+       WHERE m.OrderStatus = 'Completed'
+       GROUP BY p.BrandName ORDER BY revenue DESC LIMIT 1`
+    );
+    const bestBrand = bestBrandRows.length > 0 ? bestBrandRows[0].BrandName : 'N/A';
+
+    // Top location
+    const [locRows] = await pool.query(
+      "SELECT ShippingPostalCode, COUNT(*) as cnt FROM tbl_order_master GROUP BY ShippingPostalCode ORDER BY cnt DESC LIMIT 1"
+    );
+    let topLocation = 'N/A';
+    if (locRows.length > 0) {
+      const pc = locRows[0].ShippingPostalCode;
+      if (pc === '00300') topLocation = 'Colombo 03';
+      else if (pc === '20400') topLocation = 'Kandy';
+      else if (pc === '60000') topLocation = 'Kurunegala';
+      else topLocation = `Postal: ${pc}`;
+    }
+
+    // Monthly sales trend
+    const [monthlySales] = await pool.query(
+      `SELECT month_label, rev FROM (
+        SELECT DATE_FORMAT(OrderDate, '%b %Y') as month_label, SUM(TotalAmount) as rev, MAX(OrderDate) as max_date
+        FROM tbl_order_master WHERE OrderStatus = 'Completed'
+        GROUP BY YEAR(OrderDate), MONTH(OrderDate) ORDER BY max_date DESC LIMIT 6
+       ) sub ORDER BY max_date ASC`
+    );
+
+    res.json({
+      todaySales: parseFloat(todaySales),
+      totalStock: parseInt(totalStock),
+      totalCustomers: parseInt(totalCustomers),
+      totalStaff: parseInt(totalStaff),
+      monthSales: parseFloat(monthSales),
+      lowStockCount: parseInt(lowStockCount),
+      bestBrand,
+      topLocation,
+      monthlySales
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error loading report summary' });
+  }
+});
+
 module.exports = router;
+

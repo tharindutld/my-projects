@@ -3,6 +3,23 @@ import { Link } from 'react-router-dom';
 import { Smartphone, Shield, Truck, Zap, Flame, Award } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
+
+function ProductImage({ src, alt }) {
+  const [error, setError] = useState(false);
+  if (!src || error) {
+    return <span style={{ fontSize: '64px' }}>📱</span>;
+  }
+  return (
+    <img
+      src={IMAGE_BASE + src}
+      alt={alt}
+      onError={() => setError(true)}
+      style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }}
+    />
+  );
+}
+
 export default function Home() {
   const { API_URL } = useAuth();
   const [products, setProducts] = useState([]);
@@ -24,7 +41,7 @@ export default function Home() {
         const prodRes = await fetch(`${API_URL}/products`);
         if (prodRes.ok) {
           const prodData = await prodRes.json();
-          setProducts(prodData.products);
+          setProducts(Array.isArray(prodData) ? prodData : (prodData.products || []));
         }
       } catch (err) {
         console.error(err);
@@ -191,6 +208,8 @@ export default function Home() {
           }}>
             {filteredProducts.map(p => {
               const isPromo = p.discountActive;
+              const price = parseFloat(p.MinPrice || p.minPrice || 0);
+              const discountedPrice = parseFloat(p.MinPriceDiscounted || p.minPriceDiscounted || price);
               return (
                 <div key={p.ID} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   {/* Image/Discount badge */}
@@ -213,7 +232,7 @@ export default function Home() {
                         <Flame size={12} /> {p.DiscountPercent}% OFF
                       </div>
                     )}
-                    <span style={{ fontSize: '64px' }}>📱</span>
+                    <ProductImage src={p.Image1} alt={p.ProductName} />
                   </div>
 
                   {/* Body */}
@@ -228,15 +247,15 @@ export default function Home() {
                       {isPromo ? (
                         <>
                           <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>
-                            Rs. {parseFloat(p.priceWithDiscount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            Rs. {discountedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           <span style={{ fontSize: '13px', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                            Rs. {parseFloat(p.minPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            Rs. {price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                           </span>
                         </>
                       ) : (
                         <span style={{ fontSize: '18px', fontWeight: '800' }}>
-                          Rs. {parseFloat(p.minPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {price > 0 ? `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Price on request'}
                         </span>
                       )}
                     </div>

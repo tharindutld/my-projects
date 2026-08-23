@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, Check, AlertCircle, Wrench, Calendar, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastAlert from '../components/ToastAlert';
 
 export default function AdminRepairs() {
   const { token, user, API_URL } = useAuth();
@@ -37,6 +40,16 @@ export default function AdminRepairs() {
   const [partsUsed, setPartsUsed] = useState('');
   const [laborTime, setLaborTime] = useState('');
   const [repairNotes, setRepairNotes] = useState('');
+
+  // Toast / Confirm modal state
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const isTechnician = user?.role === 'Technician';
   const isAdmin = user?.role === 'Admin';
@@ -105,6 +118,8 @@ export default function AdminRepairs() {
     setPartsUsed(repair.PartsUsed || '');
     setLaborTime(repair.LaborTime || '');
     setRepairNotes(repair.RepairNotes || '');
+    setError('');
+    setSuccess('');
   };
 
   const handleOpenAdd = () => {
@@ -124,19 +139,23 @@ export default function AdminRepairs() {
     setPartsUsed('');
     setLaborTime('');
     setRepairNotes('');
+    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
     if (!customerName || !deviceName || !issue || !techId || !repairDate) {
-      alert('Recipient, device details, issues description, technician, and repair date are required.');
+      setError('Customer name, device details, issue description, technician, and repair date are required.');
       return;
     }
 
     try {
       let res;
       if (isAddMode) {
-        // Create new repair job
         res = await fetch(`${API_URL}/repairs`, {
           method: 'POST',
           headers: {
@@ -160,7 +179,6 @@ export default function AdminRepairs() {
           })
         });
       } else {
-        // Edit existing repair job
         res = await fetch(`${API_URL}/repairs/${selectedRepair.ID}`, {
           method: 'PUT',
           headers: {
@@ -188,38 +206,60 @@ export default function AdminRepairs() {
 
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         setSelectedRepair(null);
         setIsAddMode(false);
         fetchRepairs();
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Failed to save repair job record.');
     }
   };
 
-  const handleDelete = async (repairId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this repair job?')) return;
-    try {
-      const res = await fetch(`${API_URL}/repairs/${repairId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        alert('Repair job deleted successfully.');
-        setSelectedRepair(null);
-        fetchRepairs();
+  const handleDelete = (repairId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Repair Record',
+      message: 'Are you sure you want to permanently delete this repair job record?',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/repairs/${repairId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setSuccess('Repair job deleted successfully.');
+            setSelectedRepair(null);
+            fetchRepairs();
+          } else {
+            const data = await res.json();
+            setError(data.message || 'Failed to delete repair job.');
+          }
+        } catch (err) {
+          setError('Error requesting repair job deletion.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
+      {error && <ToastAlert type="error" message={error} onClose={() => setError('')} />}
+      {success && <ToastAlert type="success" message={success} onClose={() => setSuccess('')} />}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
@@ -238,7 +278,7 @@ export default function AdminRepairs() {
             <option value="Cancelled">Cancelled</option>
           </select>
 
-          {/* Technician Filter (Admin / Sales only) */}
+          {/* Technician Filter */}
           {!isTechnician && (
             <select value={filterTech} onChange={(e) => { setFilterTech(e.target.value); setCurrentPage(1); }} className="glass-input">
               <option value="">All Technicians</option>
@@ -370,7 +410,7 @@ export default function AdminRepairs() {
                 <textarea className="glass-input" style={{ minHeight: '80px', resize: 'vertical' }} value={issue} onChange={(e) => setIssue(e.target.value)} disabled={isTechnician} required />
               </div>
 
-              {/* Assignment (Admin or Sales only) */}
+              {/* Assignment */}
               {!isTechnician && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '600' }}>Assign Technician *</label>
@@ -389,7 +429,7 @@ export default function AdminRepairs() {
                 <input type="date" className="glass-input" value={repairDate} onChange={(e) => setRepairDate(e.target.value)} disabled={isTechnician} required />
               </div>
 
-              {/* Diagnostics Cost pricing (Accessible by technicians or admin) */}
+              {/* Diagnostics Cost pricing */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '600' }}>Diagnostic Parts Cost (Rs.)</label>
@@ -414,7 +454,6 @@ export default function AdminRepairs() {
                 </div>
               )}
 
-              {/* Log diagnostic parts used, labor time and notes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '13px', fontWeight: '600' }}>Parts Used</label>
                 <input type="text" placeholder="e.g. LCD Screen, Battery" className="glass-input" value={partsUsed} onChange={(e) => setPartsUsed(e.target.value)} />
@@ -445,5 +484,6 @@ export default function AdminRepairs() {
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

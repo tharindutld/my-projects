@@ -29,7 +29,7 @@ export default function Footer() {
             background: 'linear-gradient(90deg, #ec4899, #6366f1)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
-          }}>ANTIGRAVITY PHONES</h4>
+          }}>MobileMart</h4>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
             Premium mobile store supplying the latest smartphones, tablets, repairs, and support services. Experience next-generation service.
           </p>
@@ -51,18 +51,12 @@ export default function Footer() {
               <Phone size={16} /> +94 11 234 5678
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Mail size={16} /> support@antigravityphones.lk
+              <Mail size={16} /> support@mobilemart.lk
             </li>
           </ul>
         </div>
 
-        {/* Tech stack */}
-        <div>
-          <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>Architecture & Stack</h4>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
-            Migrated from legacy PHP to a fully decoupled Node.js Express REST API, React SPA, and clean Glassmorphism CSS styling.
-          </p>
-        </div>
+
       </div>
 
       <hr style={{ border: '0', borderTop: '1px solid rgba(255, 255, 255, 0.05)', marginBottom: '20px' }} />
@@ -76,7 +70,7 @@ export default function Footer() {
         fontSize: '13px',
         color: 'var(--text-muted)'
       }}>
-        <span>&copy; {new Date().getFullYear()} Antigravity Phones. All rights reserved.</span>
+        <span>&copy; {new Date().getFullYear()} MobileMart. All rights reserved.</span>
         <div style={{ display: 'flex', gap: '20px' }}>
           <Link to="/about" style={{ color: 'var(--text-muted)' }}>About Us</Link>
           <Link to="/contact" style={{ color: 'var(--text-muted)' }}>Contact Us</Link>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, Smartphone, TrendingUp, AlertTriangle, Wrench, Plus, CheckCircle, Package } from 'lucide-react';
+import { LayoutDashboard, Users, Smartphone, TrendingUp, AlertTriangle, Wrench, Plus, CheckCircle, Package, Box, BarChart2, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
+import AdminLayout from '../components/AdminLayout';
 
 // Register ChartJS modules
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
@@ -111,7 +112,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
       {/* Welcome Title */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -331,9 +333,27 @@ export default function AdminDashboard() {
             <Wrench size={24} className="text-accent" />
             <strong>Repair Diagnostics</strong>
           </Link>
+
+          {!isTechnician && (
+            <>
+              <Link to="/admin/inventory" className="glass-btn glass-btn-secondary" style={{ padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Box size={24} style={{ color: '#f59e0b' }} />
+                <strong>Inventory Stock</strong>
+              </Link>
+              <Link to="/admin/reports" className="glass-btn glass-btn-secondary" style={{ padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <BarChart2 size={24} style={{ color: '#22d3ee' }} />
+                <strong>Reports & Analytics</strong>
+              </Link>
+              <Link to="/admin/users" className="glass-btn glass-btn-secondary" style={{ padding: '16px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <UserCheck size={24} style={{ color: '#a78bfa' }} />
+                <strong>Registered Customers</strong>
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, UserPlus, Shield, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastAlert from '../components/ToastAlert';
 
 export default function AdminStaff() {
   const { token, API_URL } = useAuth();
@@ -23,6 +26,14 @@ export default function AdminStaff() {
   // Status indicators
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Confirmation Modal
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const loadAccounts = async () => {
     setLoading(true);
@@ -62,7 +73,6 @@ export default function AdminStaff() {
     setError('');
     setSuccess('');
 
-    // Input validations
     if (!firstName || !lastName || !email || !phone || !password || !role) {
       setError('Please fill in all staff details.');
       return;
@@ -107,52 +117,81 @@ export default function AdminStaff() {
     }
   };
 
-  const handleToggleCustomerLock = async (customerId, currentStatus) => {
+  const handleToggleCustomerLock = (customerId, currentStatus) => {
     const nextStatus = currentStatus === 1 ? 0 : 1;
-    const actionLabel = nextStatus === 0 ? 'lock / disable' : 'unlock / active';
-    if (!window.confirm(`Are you sure you want to ${actionLabel} this customer's account?`)) return;
+    const actionLabel = nextStatus === 0 ? 'lock' : 'unlock';
 
-    try {
-      const res = await fetch(`${API_URL}/staff/customers/${customerId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: nextStatus })
-      });
+    setConfirmModal({
+      isOpen: true,
+      title: `${actionLabel.toUpperCase()} Customer Account`,
+      message: `Are you sure you want to ${actionLabel} this customer's account?`,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/staff/customers/${customerId}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: nextStatus })
+          });
 
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message);
-        loadAccounts();
-      } else {
-        alert(data.message);
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            loadAccounts();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to update customer status.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
-  const handleDeleteStaff = async (staffId) => {
-    if (!window.confirm('WARNING: Are you sure you want to delete this staff user? This action is irreversible.')) return;
-    try {
-      const res = await fetch(`${API_URL}/staff/${staffId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        alert('Staff account deleted.');
-        loadAccounts();
+  const handleDeleteStaff = (staffId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Staff Account',
+      message: 'WARNING: Are you sure you want to delete this staff user? This action is irreversible.',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/staff/${staffId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setSuccess('Staff account deleted successfully.');
+            loadAccounts();
+          } else {
+            const data = await res.json();
+            setError(data.message || 'Failed to delete staff member.');
+          }
+        } catch (err) {
+          setError('Error deleting staff account.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
+      {error && <ToastAlert type="error" message={error} onClose={() => setError('')} />}
+      {success && <ToastAlert type="success" message={success} onClose={() => setSuccess('')} />}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '30px' }}>
         <ArrowLeft size={14} /> Back to Dashboard
       </button>
@@ -204,9 +243,6 @@ export default function AdminStaff() {
                 <option value="Admin">Admin</option>
               </select>
             </div>
-
-            {error && <div style={{ color: 'var(--danger)', fontSize: '13px', background: 'rgba(239,68,68,0.1)', padding: '10px', borderRadius: '6px' }}>{error}</div>}
-            {success && <div style={{ color: 'var(--success)', fontSize: '13px', background: 'rgba(16,185,129,0.1)', padding: '10px', borderRadius: '6px' }}>{success}</div>}
 
             <button type="submit" className="glass-btn" style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }}>
               Add Staff Record
@@ -286,5 +322,6 @@ export default function AdminStaff() {
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

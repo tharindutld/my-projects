@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, AlertCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
 
 export default function AdminStock() {
   const { token, API_URL } = useAuth();
@@ -176,7 +177,8 @@ export default function AdminStock() {
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
       <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '30px' }}>
         <ArrowLeft size={14} /> Back to Dashboard
@@ -316,5 +318,6 @@ export default function AdminStock() {
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

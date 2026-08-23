@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Flame, RefreshCw, Layers } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastAlert from '../components/ToastAlert';
 
 export default function AdminPricing() {
   const { token, API_URL } = useAuth();
@@ -24,9 +27,15 @@ export default function AdminPricing() {
   const [bulkStartDate, setBulkStartDate] = useState('');
   const [bulkEndDate, setBulkEndDate] = useState('');
 
-  // Status indicators
+  // Status indicators & Confirm modal
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const loadData = async () => {
     setLoading(true);
@@ -34,8 +43,9 @@ export default function AdminPricing() {
       const prodRes = await fetch(`${API_URL}/products?limit=200`);
       if (prodRes.ok) {
         const prodData = await prodRes.json();
-        setProducts(prodData.products);
-        if (prodData.products.length > 0) setSelectedProductId(prodData.products[0].ID.toString());
+        const pList = Array.isArray(prodData) ? prodData : (prodData.products || []);
+        setProducts(pList);
+        if (pList.length > 0) setSelectedProductId(pList[0].ID.toString());
       }
 
       const catRes = await fetch(`${API_URL}/products/categories`);
@@ -70,7 +80,6 @@ export default function AdminPricing() {
       return;
     }
 
-    // Schedule validation
     const todayStr = new Date().toISOString().slice(0, 10);
     if (startDate && startDate < todayStr) {
       setError('Start Date cannot be in the past.');
@@ -123,7 +132,6 @@ export default function AdminPricing() {
       return;
     }
 
-    // Schedule validation
     const todayStr = new Date().toISOString().slice(0, 10);
     if (bulkStartDate && bulkStartDate < todayStr) {
       setError('Bulk Start Date cannot be in the past.');
@@ -165,32 +173,51 @@ export default function AdminPricing() {
     }
   };
 
-  const handleClearPromotions = async () => {
-    if (!window.confirm('Are you sure you want to permanently clear all promotional discount schedules?')) return;
-    setError('');
-    setSuccess('');
-
-    try {
-      const res = await fetch(`${API_URL}/pricing/clear`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSuccess(data.message);
-        loadData();
-      } else {
-        setError(data.message);
+  const handleClearPromotions = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear All Promotions',
+      message: 'Are you sure you want to permanently clear all promotional discount schedules across the catalog?',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setError('');
+        setSuccess('');
+        try {
+          const res = await fetch(`${API_URL}/pricing/clear`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            loadData();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to clear promotions.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+      {error && <ToastAlert type="error" message={error} onClose={() => setError('')} />}
+      {success && <ToastAlert type="success" message={success} onClose={() => setSuccess('')} />}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
             <ArrowLeft size={14} /> Back to Dashboard
@@ -202,9 +229,6 @@ export default function AdminPricing() {
           Clear All Current Promotions
         </button>
       </div>
-
-      {error && <div style={{ color: 'var(--danger)', fontSize: '14px', background: 'rgba(239,68,68,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '30px' }}>{error}</div>}
-      {success && <div style={{ color: 'var(--success)', fontSize: '14px', background: 'rgba(16,185,129,0.1)', padding: '12px', borderRadius: '8px', marginBottom: '30px' }}>{success}</div>}
 
       <div style={{
         display: 'grid',
@@ -291,5 +315,6 @@ export default function AdminPricing() {
       </div>
 
     </div>
+    </AdminLayout>
   );
 }

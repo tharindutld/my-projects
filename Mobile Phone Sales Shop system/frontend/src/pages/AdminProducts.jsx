@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Smartphone, FolderPlus, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastAlert from '../components/ToastAlert';
 
 export default function AdminProducts() {
   const { token, API_URL } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Active Tab: 'products', 'categories', 'brands'
   const [activeTab, setActiveTab] = useState('products');
@@ -30,16 +34,24 @@ export default function AdminProducts() {
   // --- Category form states ---
   const [categoryAddName, setCategoryAddName] = useState('');
   const [categoryAddStatus, setCategoryAddStatus] = useState('1');
-  const [editingCategory, setEditingCategory] = useState(null); // { ID, CategoryName, Status }
+  const [editingCategory, setEditingCategory] = useState(null);
 
   // --- Brand form states ---
   const [brandAddName, setBrandAddName] = useState('');
   const [brandAddStatus, setBrandAddStatus] = useState('1');
-  const [editingBrand, setEditingBrand] = useState(null); // { ID, BrandName, Status }
+  const [editingBrand, setEditingBrand] = useState(null);
 
-  // Error/Success
+  // Error/Success Notification
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Custom Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -91,6 +103,21 @@ export default function AdminProducts() {
     fetchBrands();
   }, [token]);
 
+  // Sync state from query parameters
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['products', 'brands', 'categories'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    } else {
+      setActiveTab('products');
+    }
+
+    const actionParam = searchParams.get('action');
+    if (actionParam === 'add' && (!tabParam || tabParam === 'products')) {
+      handleOpenAdd();
+    }
+  }, [searchParams]);
+
   // --- Product CRUD ---
   const handleOpenEdit = (p) => {
     setSelectedProduct(p);
@@ -102,7 +129,6 @@ export default function AdminProducts() {
     setSimType(p.SimType || 'Single SIM');
     setStatus(p.Status.toString());
     
-    // Look up categoryId by matching categoryName
     const match = categories.find(c => c.CategoryName === p.CategoryName);
     setCategoryId(match ? match.ID.toString() : (categories.length > 0 ? categories[0].ID.toString() : ''));
     
@@ -188,30 +214,42 @@ export default function AdminProducts() {
     }
   };
 
-  const handleProductDelete = async (productId) => {
-    if (!window.confirm('WARNING: Deleting this product will remove all of its specifications and configurations. Proceed?')) return;
-    try {
-      const res = await fetch(`${API_URL}/products/${productId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        alert('Product catalog item deleted.');
-        setSelectedProduct(null);
-        fetchProducts();
-      } else {
-        const data = await res.json();
-        alert(data.message);
+  const handleProductDelete = (productId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Product',
+      message: 'WARNING: Deleting this product will remove all of its specifications and configurations. Proceed?',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/products/${productId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess('Product catalog item deleted successfully.');
+            setSelectedProduct(null);
+            fetchProducts();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to delete product.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   // --- Category CRUD ---
   const handleCategoryAdd = async (e) => {
     e.preventDefault();
-    if (!categoryAddName.trim()) return;
+    if (!categoryAddName.trim()) {
+      setError('Category name is required.');
+      return;
+    }
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/products/categories`, {
         method: 'POST',
@@ -223,20 +261,22 @@ export default function AdminProducts() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         setCategoryAddName('');
         fetchCategories();
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Server request failed while adding category.');
     }
   };
 
   const handleCategoryUpdate = async (e) => {
     e.preventDefault();
     if (!editingCategory || !editingCategory.CategoryName.trim()) return;
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/products/categories/${editingCategory.ID}`, {
         method: 'PUT',
@@ -248,37 +288,52 @@ export default function AdminProducts() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         setEditingCategory(null);
         fetchCategories();
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Server error updating category.');
     }
   };
 
-  const handleCategoryDelete = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/products/categories/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      alert(data.message);
-      if (res.ok) {
-        fetchCategories();
+  const handleCategoryDelete = (id, catName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete category '${catName}'?`,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/products/categories/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            fetchCategories();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to delete category.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   // --- Brand CRUD ---
   const handleBrandAdd = async (e) => {
     e.preventDefault();
-    if (!brandAddName.trim()) return;
+    if (!brandAddName.trim()) {
+      setError('Brand name is required.');
+      return;
+    }
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/products/brands`, {
         method: 'POST',
@@ -290,20 +345,22 @@ export default function AdminProducts() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         setBrandAddName('');
         fetchBrands();
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Server request failed while adding brand.');
     }
   };
 
   const handleBrandUpdate = async (e) => {
     e.preventDefault();
     if (!editingBrand || !editingBrand.BrandName.trim()) return;
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/products/brands/${editingBrand.ID}`, {
         method: 'PUT',
@@ -315,260 +372,400 @@ export default function AdminProducts() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        setSuccess(data.message);
         setEditingBrand(null);
         fetchBrands();
       } else {
-        alert(data.message);
+        setError(data.message);
       }
     } catch (err) {
-      console.error(err);
+      setError('Server error updating brand.');
     }
   };
 
-  const handleBrandDelete = async (id) => {
-    try {
-      const res = await fetch(`${API_URL}/products/brands/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      alert(data.message);
-      if (res.ok) {
-        fetchBrands();
+  const handleBrandDelete = (id, bName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Brand',
+      message: `Are you sure you want to delete brand '${bName}'?`,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`${API_URL}/products/brands/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setSuccess(data.message);
+            fetchBrands();
+          } else {
+            setError(data.message);
+          }
+        } catch (err) {
+          setError('Failed to delete brand.');
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <AdminLayout>
+    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
       
+      {/* Toast Alert Notifications */}
+      {error && <ToastAlert type="error" message={error} onClose={() => setError('')} />}
+      {success && <ToastAlert type="success" message={success} onClose={() => setSuccess('')} />}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-            <ArrowLeft size={14} /> Back to Dashboard
-          </button>
-          <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Product & Taxonomy Catalog</h1>
+          <h1 style={{ fontSize: '28px', fontWeight: '800' }}>Catalog Management</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
+            Manage devices, categories, and brand classifications.
+          </p>
         </div>
 
         {activeTab === 'products' && (
-          <button onClick={handleOpenAdd} className="glass-btn" style={{ borderRadius: '8px' }}>
-            <Plus size={16} /> Create Catalog Item
+          <button
+            onClick={handleOpenAdd}
+            className="glass-btn"
+            style={{ borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Plus size={18} /> Add New Product
           </button>
         )}
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>
+      {/* Nav Tabs */}
+      <div className="glass-panel" style={{ padding: '8px', display: 'flex', gap: '8px', marginBottom: '24px', borderRadius: '14px' }}>
         <button
-          onClick={() => { setActiveTab('products'); setSelectedProduct(null); setIsAddMode(false); }}
-          className={`glass-btn ${activeTab === 'products' ? '' : 'glass-btn-secondary'}`}
-          style={{ borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          onClick={() => setActiveTab('products')}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: 'none',
+            fontWeight: '700',
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: activeTab === 'products' ? 'var(--primary)' : 'transparent',
+            color: activeTab === 'products' ? '#fff' : 'var(--text-muted)',
+            transition: 'var(--transition)'
+          }}
         >
-          <Smartphone size={16} /> Products Catalog
+          <Smartphone size={18} /> Products ({products.length})
         </button>
+
         <button
-          onClick={() => { setActiveTab('categories'); setEditingCategory(null); }}
-          className={`glass-btn ${activeTab === 'categories' ? '' : 'glass-btn-secondary'}`}
-          style={{ borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          onClick={() => setActiveTab('categories')}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: 'none',
+            fontWeight: '700',
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: activeTab === 'categories' ? 'var(--primary)' : 'transparent',
+            color: activeTab === 'categories' ? '#fff' : 'var(--text-muted)',
+            transition: 'var(--transition)'
+          }}
         >
-          <FolderPlus size={16} /> Categories
+          <FolderPlus size={18} /> Categories ({categories.length})
         </button>
+
         <button
-          onClick={() => { setActiveTab('brands'); setEditingBrand(null); }}
-          className={`glass-btn ${activeTab === 'brands' ? '' : 'glass-btn-secondary'}`}
-          style={{ borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          onClick={() => setActiveTab('brands')}
+          style={{
+            flex: 1,
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: 'none',
+            fontWeight: '700',
+            fontSize: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: activeTab === 'brands' ? 'var(--primary)' : 'transparent',
+            color: activeTab === 'brands' ? '#fff' : 'var(--text-muted)',
+            transition: 'var(--transition)'
+          }}
         >
-          <Tag size={16} /> Brands
+          <Tag size={18} /> Brands ({brands.length})
         </button>
       </div>
 
-      {/* PRODUCTS TAB */}
+      {/* ─── TAB 1: PRODUCTS ─── */}
       {activeTab === 'products' && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: (selectedProduct || isAddMode) ? '1fr 1fr' : '1fr',
-          gap: '30px',
-          alignItems: 'flex-start'
-        }}>
-          {/* Products List Panel */}
-          <div className="glass-panel" style={{ padding: '24px' }}>
-            {loading ? (
-              <div style={{ color: 'var(--text-muted)' }}>Fetching catalog...</div>
-            ) : products.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)' }}>No catalog items found.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {products.map(p => (
-                  <div key={p.ID} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <div style={{ fontSize: '24px' }}>📱</div>
-                      <div>
-                        <strong style={{ fontSize: '15px' }}>{p.ProductName}</strong>
-                        <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)' }}>
-                          Brand: {p.BrandName} &bull; Model: {p.ModelNumber} &bull; Category: {p.CategoryName}
-                        </span>
-                        <span style={{ fontSize: '11px', display: 'block', color: p.Status === 1 ? 'var(--success)' : 'var(--danger)' }}>
-                          Status: {p.Status === 1 ? 'Active' : 'Disabled'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button onClick={() => handleOpenEdit(p)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 12px', borderRadius: '8px' }}>
-                      <Edit2 size={14} /> Edit Specifications
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Selected Product Form Panel */}
+        <>
+          {/* Add / Edit Form Modal */}
           {(selectedProduct || isAddMode) && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '30px' }}>
+            <div className="glass-panel animate-fade-in" style={{ padding: '24px', marginBottom: '30px', borderLeft: '4px solid var(--primary)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: '800' }}>
-                  {isAddMode ? 'Create New Catalog Item' : `Edit Product Specs`}
-                </h2>
-                <button onClick={() => { setSelectedProduct(null); setIsAddMode(false); }} className="glass-btn glass-btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }}>Close</button>
+                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>
+                  {isAddMode ? 'Add New Product Item' : `Edit Product: ${selectedProduct?.ProductName}`}
+                </h3>
+                <button
+                  onClick={() => { setSelectedProduct(null); setIsAddMode(false); }}
+                  className="glass-btn glass-btn-secondary"
+                  style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '13px' }}
+                >
+                  Cancel
+                </button>
               </div>
 
-              <form onSubmit={handleProductSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Product Title *</label>
-                  <input type="text" placeholder="e.g. Galaxy S24 Ultra" className="glass-input" value={productName} onChange={(e) => setProductName(e.target.value)} required />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Brand Name *</label>
-                    <select className="glass-input" value={brandName} onChange={(e) => setBrandName(e.target.value)} required>
-                      <option value="">Select Brand</option>
-                      {brands.map(b => (
-                        <option key={b.ID} value={b.BrandName}>{b.BrandName} {b.Status === 0 ? '(Inactive)' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Model Number *</label>
-                    <input type="text" placeholder="e.g. SM-S928B" className="glass-input" value={modelNumber} onChange={(e) => setModelNumber(e.target.value)} required />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Display Info</label>
-                    <input type="text" placeholder="e.g. 6.8 inch AMOLED" className="glass-input" value={display} onChange={(e) => setDisplay(e.target.value)} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Sim Type</label>
-                    <select className="glass-input" value={simType} onChange={(e) => setSimType(e.target.value)}>
-                      <option value="Single SIM">Single SIM</option>
-                      <option value="Dual SIM">Dual SIM</option>
-                      <option value="eSIM">eSIM</option>
-                      <option value="None">None (Wi-Fi only)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Catalog Category *</label>
-                    <select className="glass-input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-                      {categories.map(c => (
-                        <option key={c.ID} value={c.ID}>{c.CategoryName} {c.Status === 0 ? '(Inactive)' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '13px', fontWeight: '600' }}>Catalog Status</label>
-                    <select className="glass-input" value={status} onChange={(e) => setStatus(e.target.value)}>
-                      <option value="1">Active / Listed</option>
-                      <option value="0">Disabled / Unlisted</option>
-                    </select>
-                  </div>
-                </div>
-
-                {error && <div style={{ color: 'var(--danger)', fontSize: '13px', background: 'rgba(239,68,68,0.1)', padding: '10px', borderRadius: '6px' }}>{error}</div>}
-                {success && <div style={{ color: 'var(--success)', fontSize: '13px', background: 'rgba(16,185,129,0.1)', padding: '10px', borderRadius: '6px' }}>{success}</div>}
-
-                <button type="submit" className="glass-btn" style={{ borderRadius: '8px', marginTop: '10px' }}>
-                  Save Specifications
-                </button>
-
-                {!isAddMode && (
-                  <button type="button" onClick={() => handleProductDelete(selectedProduct.ID)} className="glass-btn glass-btn-danger" style={{ borderRadius: '8px', marginTop: '5px' }}>
-                    <Trash2 size={16} /> Permanently Delete Catalog Record
-                  </button>
-                )}
-              </form>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CATEGORIES TAB */}
-      {activeTab === 'categories' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '30px', alignItems: 'flex-start' }}>
-          {/* Add / Edit Category Form */}
-          <div className="glass-panel" style={{ padding: '24px' }}>
-            {editingCategory ? (
-              <form onSubmit={handleCategoryUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Edit Category</h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Category Name</label>
+              <form onSubmit={handleProductSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                <div>
+                  <label className="glass-label">Product Name *</label>
                   <input
                     type="text"
-                    className="glass-input"
-                    value={editingCategory.CategoryName}
-                    onChange={(e) => setEditingCategory({ ...editingCategory, CategoryName: e.target.value })}
                     required
+                    value={productName}
+                    onChange={e => setProductName(e.target.value)}
+                    className="glass-input"
+                    placeholder="e.g. Galaxy S24 Ultra"
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Status</label>
-                  <select
+                <div>
+                  <label className="glass-label">Brand Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={brandName}
+                    onChange={e => setBrandName(e.target.value)}
                     className="glass-input"
+                    placeholder="e.g. Samsung"
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-label">Category *</label>
+                  <select
+                    value={categoryId}
+                    onChange={e => setCategoryId(e.target.value)}
+                    className="glass-input"
+                  >
+                    {categories.map(c => (
+                      <option key={c.ID} value={c.ID}>{c.CategoryName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="glass-label">Model Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={modelNumber}
+                    onChange={e => setModelNumber(e.target.value)}
+                    className="glass-input"
+                    placeholder="e.g. SM-S928B"
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-label">SIM Configuration</label>
+                  <select
+                    value={simType}
+                    onChange={e => setSimType(e.target.value)}
+                    className="glass-input"
+                  >
+                    <option value="Single SIM">Single SIM</option>
+                    <option value="Dual SIM">Dual SIM</option>
+                    <option value="eSIM Support">eSIM Support</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="glass-label">Display Specs</label>
+                  <input
+                    type="text"
+                    value={display}
+                    onChange={e => setDisplay(e.target.value)}
+                    className="glass-input"
+                    placeholder="e.g. 6.8 inch Dynamic AMOLED"
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-label">Status</label>
+                  <select
+                    value={status}
+                    onChange={e => setStatus(e.target.value)}
+                    className="glass-input"
+                  >
+                    <option value="1">Active (Published)</option>
+                    <option value="0">Inactive (Draft)</option>
+                  </select>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="submit" className="glass-btn" style={{ borderRadius: '10px' }}>
+                    {isAddMode ? 'Create Product' : 'Update Product Specs'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Products List Table */}
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px' }}>Product Catalog ({products.length})</h3>
+
+            {loading ? (
+              <p style={{ color: 'var(--text-muted)' }}>Loading products...</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
+                      <th style={{ padding: '12px' }}>Product</th>
+                      <th style={{ padding: '12px' }}>Brand / Category</th>
+                      <th style={{ padding: '12px' }}>Model</th>
+                      <th style={{ padding: '12px' }}>Starting Price</th>
+                      <th style={{ padding: '12px' }}>Total Stock</th>
+                      <th style={{ padding: '12px' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map(p => (
+                      <tr key={p.ID} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <td style={{ padding: '12px', fontWeight: '700' }}>{p.ProductName}</td>
+                        <td style={{ padding: '12px', color: 'var(--text-muted)' }}>
+                          {p.BrandName} &bull; {p.CategoryName}
+                        </td>
+                        <td style={{ padding: '12px' }}>{p.ModelNumber}</td>
+                        <td style={{ padding: '12px', color: 'var(--primary)', fontWeight: '700' }}>
+                          Rs. {parseFloat(p.MinPrice || 0).toLocaleString()}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            background: p.TotalStock <= 5 ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)',
+                            color: p.TotalStock <= 5 ? 'var(--danger)' : 'var(--success)',
+                            padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '700'
+                          }}>
+                            {p.TotalStock || 0} units
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            background: p.Status === 1 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                            color: p.Status === 1 ? 'var(--success)' : 'var(--danger)',
+                            padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700'
+                          }}>
+                            {p.Status === 1 ? 'Active' : 'Draft'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => handleOpenEdit(p)}
+                              className="glass-btn glass-btn-secondary"
+                              style={{ padding: '6px 10px', borderRadius: '6px' }}
+                              title="Edit product"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleProductDelete(p.ID)}
+                              className="glass-btn glass-btn-danger"
+                              style={{ padding: '6px 10px', borderRadius: '6px' }}
+                              title="Delete product"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ─── TAB 2: CATEGORIES ─── */}
+      {activeTab === 'categories' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+          {/* Add / Edit Category Form */}
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px' }}>
+              {editingCategory ? 'Edit Category' : 'Add New Category'}
+            </h3>
+
+            {editingCategory ? (
+              <form onSubmit={handleCategoryUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className="glass-label">Category Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingCategory.CategoryName}
+                    onChange={e => setEditingCategory({ ...editingCategory, CategoryName: e.target.value })}
+                    className="glass-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="glass-label">Status</label>
+                  <select
                     value={editingCategory.Status}
-                    onChange={(e) => setEditingCategory({ ...editingCategory, Status: e.target.value })}
+                    onChange={e => setEditingCategory({ ...editingCategory, Status: e.target.value })}
+                    className="glass-input"
                   >
                     <option value="1">Active</option>
                     <option value="0">Inactive</option>
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button type="submit" className="glass-btn" style={{ flexGrow: 1, borderRadius: '8px' }}>Update</button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button type="submit" className="glass-btn" style={{ borderRadius: '8px' }}>Update Category</button>
                   <button type="button" onClick={() => setEditingCategory(null)} className="glass-btn glass-btn-secondary" style={{ borderRadius: '8px' }}>Cancel</button>
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleCategoryAdd} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Add New Category</h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Category Name</label>
+              <form onSubmit={handleCategoryAdd} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className="glass-label">Category Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Smart Watch"
-                    className="glass-input"
-                    value={categoryAddName}
-                    onChange={(e) => setCategoryAddName(e.target.value)}
                     required
+                    placeholder="e.g. Smartphones, Accessories"
+                    value={categoryAddName}
+                    onChange={e => setCategoryAddName(e.target.value)}
+                    className="glass-input"
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Status</label>
+                <div>
+                  <label className="glass-label">Status</label>
                   <select
-                    className="glass-input"
                     value={categoryAddStatus}
-                    onChange={(e) => setCategoryAddStatus(e.target.value)}
+                    onChange={e => setCategoryAddStatus(e.target.value)}
+                    className="glass-input"
                   >
                     <option value="1">Active</option>
                     <option value="0">Inactive</option>
@@ -604,7 +801,7 @@ export default function AdminProducts() {
                     <button onClick={() => setEditingCategory(c)} className="glass-btn glass-btn-secondary" style={{ padding: '6px 10px', borderRadius: '6px' }}>
                       <Edit2 size={12} />
                     </button>
-                    <button onClick={() => handleCategoryDelete(c.ID)} className="glass-btn glass-btn-danger" style={{ padding: '6px 10px', borderRadius: '6px' }}>
+                    <button onClick={() => handleCategoryDelete(c.ID, c.CategoryName)} className="glass-btn glass-btn-danger" style={{ padding: '6px 10px', borderRadius: '6px' }}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -615,65 +812,65 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* BRANDS TAB */}
+      {/* ─── TAB 3: BRANDS ─── */}
       {activeTab === 'brands' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '30px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
           {/* Add / Edit Brand Form */}
           <div className="glass-panel" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '20px' }}>
+              {editingBrand ? 'Edit Brand' : 'Add New Brand'}
+            </h3>
+
             {editingBrand ? (
-              <form onSubmit={handleBrandUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Edit Brand</h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Brand Name</label>
+              <form onSubmit={handleBrandUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className="glass-label">Brand Name</label>
                   <input
                     type="text"
-                    className="glass-input"
-                    value={editingBrand.BrandName}
-                    onChange={(e) => setEditingBrand({ ...editingBrand, BrandName: e.target.value })}
                     required
+                    value={editingBrand.BrandName}
+                    onChange={e => setEditingBrand({ ...editingBrand, BrandName: e.target.value })}
+                    className="glass-input"
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Status</label>
+                <div>
+                  <label className="glass-label">Status</label>
                   <select
-                    className="glass-input"
                     value={editingBrand.Status}
-                    onChange={(e) => setEditingBrand({ ...editingBrand, Status: e.target.value })}
+                    onChange={e => setEditingBrand({ ...editingBrand, Status: e.target.value })}
+                    className="glass-input"
                   >
                     <option value="1">Active</option>
                     <option value="0">Inactive</option>
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button type="submit" className="glass-btn" style={{ flexGrow: 1, borderRadius: '8px' }}>Update</button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button type="submit" className="glass-btn" style={{ borderRadius: '8px' }}>Update Brand</button>
                   <button type="button" onClick={() => setEditingBrand(null)} className="glass-btn glass-btn-secondary" style={{ borderRadius: '8px' }}>Cancel</button>
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleBrandAdd} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Add New Brand</h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Brand Name</label>
+              <form onSubmit={handleBrandAdd} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className="glass-label">Brand Name</label>
                   <input
                     type="text"
-                    placeholder="e.g. Apple"
-                    className="glass-input"
-                    value={brandAddName}
-                    onChange={(e) => setBrandAddName(e.target.value)}
                     required
+                    placeholder="e.g. Apple, Samsung, Google"
+                    value={brandAddName}
+                    onChange={e => setBrandAddName(e.target.value)}
+                    className="glass-input"
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Status</label>
+                <div>
+                  <label className="glass-label">Status</label>
                   <select
-                    className="glass-input"
                     value={brandAddStatus}
-                    onChange={(e) => setBrandAddStatus(e.target.value)}
+                    onChange={e => setBrandAddStatus(e.target.value)}
+                    className="glass-input"
                   >
                     <option value="1">Active</option>
                     <option value="0">Inactive</option>
@@ -709,7 +906,7 @@ export default function AdminProducts() {
                     <button onClick={() => setEditingBrand(b)} className="glass-btn glass-btn-secondary" style={{ padding: '6px 10px', borderRadius: '6px' }}>
                       <Edit2 size={12} />
                     </button>
-                    <button onClick={() => handleBrandDelete(b.ID)} className="glass-btn glass-btn-danger" style={{ padding: '6px 10px', borderRadius: '6px' }}>
+                    <button onClick={() => handleBrandDelete(b.ID, b.BrandName)} className="glass-btn glass-btn-danger" style={{ padding: '6px 10px', borderRadius: '6px' }}>
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -721,5 +918,6 @@ export default function AdminProducts() {
       )}
 
     </div>
+    </AdminLayout>
   );
 }

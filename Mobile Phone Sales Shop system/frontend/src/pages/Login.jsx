@@ -61,12 +61,10 @@ export default function Login() {
       } else {
         // Log in
         if (isStaffPortal) {
-          const u = await staffLogin(email, password);
-          alert(`Welcome back, ${u.first_name}!`);
+          await staffLogin(email, password);
           navigate('/admin');
         } else {
-          const u = await login(email, password);
-          alert(`Welcome back, ${u.FirstName}!`);
+          await login(email, password);
           navigate('/');
         }
       }

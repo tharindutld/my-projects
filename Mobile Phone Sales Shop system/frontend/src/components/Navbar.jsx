@@ -72,7 +72,7 @@ export default function Navbar() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             letterSpacing: '1px'
-          }}>ANTIGRAVITY PHONES</span>
+          }}>MobileMart</span>
         </Link>
 
         {/* Search */}
@@ -178,7 +178,6 @@ export default function Navbar() {
               gap: '6px'
             }}>
               <User size={22} />
-              {user && <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.firstName}</span>}
             </button>
 
             {dropdownOpen && (

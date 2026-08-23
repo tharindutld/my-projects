@@ -4,6 +4,23 @@ import { ShoppingCart, Heart, Flame, Shield, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
+const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
+
+function ProductImage({ src, alt }) {
+  const [imgError, setImgError] = useState(false);
+  if (!src || imgError) {
+    return <span style={{ fontSize: '120px' }}>📱</span>;
+  }
+  return (
+    <img
+      src={IMAGE_BASE + src}
+      alt={alt}
+      onError={() => setImgError(true)}
+      style={{ maxHeight: '320px', maxWidth: '100%', objectFit: 'contain' }}
+    />
+  );
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,9 +44,9 @@ export default function ProductDetail() {
           throw new Error('Product not found');
         }
         const data = await res.json();
-        setProduct(data.product);
-        setVariants(data.variants);
-        if (data.variants.length > 0) {
+        setProduct(data);
+        setVariants(data.variants || []);
+        if (data.variants && data.variants.length > 0) {
           setSelectedVariant(data.variants[0]);
         }
 
@@ -159,7 +176,7 @@ export default function ProductDetail() {
               <Flame size={14} /> {product.DiscountPercent}% OFF PROMO
             </div>
           )}
-          <span style={{ fontSize: '150px' }}>📱</span>
+          <ProductImage src={product.Image1} alt={product.ProductName} />
         </div>
 
         {/* Configurations Details */}

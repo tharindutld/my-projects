@@ -120,7 +120,33 @@ router.get('/customers', verifyStaff(['Admin', 'Sales person']), async (req, res
   }
 });
 
-// 7. TOGGLE CUSTOMER ACTIVE STATUS (Admin and Sales person)
+// 7. GET REGISTERED CUSTOMERS — Paginated with search (for AdminUsers.jsx)
+router.get('/users', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { search, page = 1, limit = 15 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  let whereClause = '';
+  const params = [];
+
+  if (search) {
+    whereClause = 'WHERE (FirstName LIKE ? OR LastName LIKE ? OR Email LIKE ? OR MobileNumber LIKE ?)';
+    const s = `%${search}%`;
+    params.push(s, s, s, s);
+  }
+
+  try {
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) as total FROM tbluser ${whereClause}`, params);
+    const [rows] = await pool.query(
+      `SELECT ID, FirstName, LastName, MobileNumber, Email, LoyaltyPoints, Status, CreationDate FROM tbluser ${whereClause} ORDER BY ID DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    );
+    res.json({ users: rows, totalRows: total, totalPages: Math.ceil(total / parseInt(limit)), page: parseInt(page) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 8. TOGGLE CUSTOMER ACTIVE STATUS (Admin and Sales person)
 router.put('/customers/:id/status', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -138,4 +164,23 @@ router.put('/customers/:id/status', verifyStaff(['Admin', 'Sales person']), asyn
   }
 });
 
+// 9. TOGGLE CUSTOMER STATUS — alternate route used by AdminUsers.jsx
+router.put('/users/:id/status', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!['Active', 'Inactive'].includes(status)) {
+    return res.status(400).json({ message: 'Invalid status' });
+  }
+
+  try {
+    await pool.query('UPDATE tbluser SET Status = ? WHERE ID = ?', [status, id]);
+    res.json({ message: `Customer status updated to ${status} successfully.` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
+
