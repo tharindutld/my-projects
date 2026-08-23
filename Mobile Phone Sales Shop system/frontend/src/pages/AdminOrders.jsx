@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmModal from '../components/ConfirmModal';
 import ToastAlert from '../components/ToastAlert';
+import './AdminOrders.css';
 
 export default function AdminOrders() {
   const { token, loading: authLoading, API_URL } = useAuth();
@@ -177,7 +178,7 @@ export default function AdminOrders() {
         </div>
 
         {/* Filter status */}
-        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="glass-input" style={{ width: '200px' }}>
+        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="custom-glass-input" style={{ width: '220px' }}>
           <option value="">All Order Statuses</option>
           <option value="Order Placed">Order Placed</option>
           <option value="Packed">Packed</option>
@@ -201,32 +202,37 @@ export default function AdminOrders() {
             <div style={{ color: 'var(--text-muted)' }}>No customer orders found.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {orders.map(ord => (
-                <div key={ord.ID} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-                  <div>
-                    <strong style={{ fontSize: '15px' }}>Order #{ord.OrderNumber}</strong>
-                    <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Customer: {ord.BillingFirstName} {ord.BillingLastName} &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
-                    </span>
-                    <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)' }}>
-                      Total Amount: <strong style={{ color: 'var(--primary)' }}>Rs. {parseFloat(ord.GrandTotal).toLocaleString()}</strong>
-                    </span>
-                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                      <span style={{
-                        background: ord.OrderStatus === 'Delivered' ? 'rgba(16, 185, 129, 0.15)' : ord.OrderStatus === 'Cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        color: ord.OrderStatus === 'Delivered' ? 'var(--success)' : ord.OrderStatus === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
-                        padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700'
-                      }}>Status: {ord.OrderStatus}</span>
+              {orders.map(ord => {
+                const statusClass = 
+                  ord.OrderStatus === 'Delivered' ? 'status-pill-delivered' :
+                  ord.OrderStatus === 'Cancelled' ? 'status-pill-cancelled' :
+                  ord.OrderStatus === 'Dispatched' ? 'status-pill-dispatched' : 'status-pill-pending';
+
+                return (
+                  <div key={ord.ID} className="orders-card-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                    <div>
+                      <strong style={{ fontSize: '15px', color: '#fff' }}>Order #{ord.OrderNumber}</strong>
+                      <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Customer: {ord.BillingFirstName} {ord.BillingLastName} &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
+                      </span>
+                      <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Total Amount: <strong style={{ color: '#818cf8' }}>Rs. {parseFloat(ord.GrandTotal).toLocaleString()}</strong>
+                      </span>
+                      <div style={{ marginTop: '10px' }}>
+                        <span className={`status-pill ${statusClass}`}>
+                          Status: {ord.OrderStatus}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => setSelectedOrder(ord)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 14px', borderRadius: '8px', fontSize: '13px' }}>
+                        <Eye size={14} /> View Details
+                      </button>
                     </div>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => setSelectedOrder(ord)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '13px' }}>
-                      <Eye size={14} /> View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Pagination */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
@@ -254,31 +260,31 @@ export default function AdminOrders() {
 
         {/* Selected Order Detail Sidebar Panel */}
         {selectedOrder && (
-          <div className="glass-panel animate-fade-in" style={{ padding: '30px' }}>
+          <div className="orders-panel-detail animate-fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '800' }}>Order #{selectedOrder.OrderNumber}</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>Order #{selectedOrder.OrderNumber}</h2>
               <button onClick={() => setSelectedOrder(null)} className="glass-btn glass-btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }}>Close</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '14px' }}>
               <div>
                 <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Shipping Address & Recipient</strong>
-                <div>{selectedOrder.BillingFirstName} {selectedOrder.BillingLastName}</div>
+                <div style={{ color: '#fff', fontWeight: '600' }}>{selectedOrder.BillingFirstName} {selectedOrder.BillingLastName}</div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{selectedOrder.BillingAddress}, {selectedOrder.BillingCity}</div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Phone: {selectedOrder.BillingPhone} | Email: {selectedOrder.BillingEmail}</div>
               </div>
 
               <div>
                 <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Payment Info</strong>
-                <div>Method: {selectedOrder.PaymentMethod} ({selectedOrder.PaymentStatus})</div>
-                <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+                <div style={{ color: '#e2e8f0' }}>Method: {selectedOrder.PaymentMethod} ({selectedOrder.PaymentStatus})</div>
+                <div style={{ fontSize: '18px', fontWeight: '800', color: '#818cf8', marginTop: '4px' }}>
                   Grand Total: Rs. {parseFloat(selectedOrder.GrandTotal).toLocaleString()}
                 </div>
               </div>
 
               {/* Order Status Controls */}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px' }}>Update Order Processing Status</label>
+                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px', color: '#f8fafc' }}>Update Order Processing Status</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {['Order Placed', 'Packed', 'Dispatched', 'Delivered', 'Cancelled'].map(st => (
                     <button
@@ -295,9 +301,9 @@ export default function AdminOrders() {
 
               {/* Delivery Tracking status */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px' }}>Delivery Tracking Status</label>
+                <label style={{ fontSize: '13px', fontWeight: '700', display: 'block', marginBottom: '8px', color: '#f8fafc' }}>Delivery Tracking Status</label>
                 <select
-                  className="glass-input"
+                  className="custom-glass-input w-100"
                   value={selectedOrder.DeliveryStatus || 'Pending'}
                   onChange={(e) => handleUpdateDeliveryStatus(selectedOrder.ID, e.target.value)}
                 >

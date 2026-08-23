@@ -1,0 +1,100 @@
+/* Admin Orders Custom Glassmorphic Styling */
+
+.orders-container {
+  color: #f8fafc;
+  padding-bottom: 2.5rem;
+}
+
+.orders-header {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 1.5rem 2rem;
+  backdrop-filter: blur(16px);
+  margin-bottom: 2rem;
+}
+
+.orders-card-item {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orders-card-item:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.orders-panel-detail {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 90px;
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 50rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-pill-delivered {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill-cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-pill-dispatched {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.custom-glass-input {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+  padding: 8px 14px !important;
+  font-size: 0.88rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-glass-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+  background: rgba(15, 23, 42, 0.9) !important;
+}
+
+.custom-glass-input option {
+  background: #0f172a;
+  color: #f8fafc;
+}

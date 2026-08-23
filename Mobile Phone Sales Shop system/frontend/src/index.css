@@ -41,9 +41,9 @@
 }
 
 body {
-  font-family: var(--font-sans);
-  background: var(--bg-gradient);
-  color: var(--text-primary);
+  font-family: var(--font-sans) !important;
+  background: var(--bg-gradient) !important;
+  color: var(--text-primary) !important;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
