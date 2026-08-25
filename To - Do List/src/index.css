@@ -97,25 +97,70 @@ input, textarea, select {
 }
 
 /* Fix dropdown select options visibility in dark/light modes */
-select option {
-  background-color: var(--bg-secondary) !important;
-  color: var(--text-primary) !important;
-  padding: 8px 12px;
+.sort-dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-tertiary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.sort-dropdown-container:hover, .custom-dropdown-btn:hover {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 12px var(--accent-glow) !important;
+  background: var(--bg-card-hover) !important;
+}
+
+.custom-dropdown-item:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--accent-primary) !important;
+}
+
+.sort-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
 }
 
 .sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   border: none;
   outline: none;
+  padding-right: 1.25rem;
 }
 
-.sort-select option {
+.sort-chevron {
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.sort-dropdown-container:hover .sort-chevron {
+  color: var(--accent-primary);
+  transform: translateY(1px);
+}
+
+select option {
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 /* Custom Scrollbar */
@@ -447,8 +492,14 @@ select option {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   box-shadow: var(--shadow-lg);
   padding: 1.75rem;
+}
+
+.modal-content::-webkit-scrollbar {
+  display: none;
 }
 
 .form-group {

@@ -82,7 +82,13 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error during registration.' });
+    if (error.code === 'ER_DUP_ENTRY') {
+      if (error.sqlMessage && error.sqlMessage.includes('phone')) {
+        return res.status(400).json({ error: 'Phone number is already registered.', field: 'phone' });
+      }
+      return res.status(400).json({ error: 'Email is already registered.', field: 'email' });
+    }
+    res.status(500).json({ error: error.message || 'Server error during registration.' });
   }
 });
 
@@ -148,6 +154,52 @@ router.get('/me', async (req, res) => {
     res.json({ user: users[0] });
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+});
+
+// Update User Profile
+router.put('/me', async (req, res) => {
+  try {
+    const { id, name, phone, avatar } = req.body;
+
+    if (!id || !name || !phone) {
+      return res.status(400).json({ error: 'User ID, name, and phone number are required.' });
+    }
+
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name.trim())) {
+      return res.status(400).json({
+        error: 'Name cannot include numbers, special characters, decimals, minus or plus.',
+        field: 'name'
+      });
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      return res.status(400).json({
+        error: 'Phone number must be exactly 10 digits (no letters or special characters).',
+        field: 'phone'
+      });
+    }
+
+    const pool = await getPool();
+
+    // Check if phone number is taken by another user
+    const [existingPhone] = await pool.query('SELECT id FROM users WHERE phone = ? AND id != ?', [phone.trim(), id]);
+    if (existingPhone.length > 0) {
+      return res.status(400).json({ error: 'Phone number is already registered by another account.', field: 'phone' });
+    }
+
+    await pool.query(
+      'UPDATE users SET name = ?, phone = ?, avatar = ? WHERE id = ?',
+      [name.trim(), phone.trim(), avatar || '⚡', id]
+    );
+
+    const [updatedUsers] = await pool.query('SELECT id, name, email, phone, avatar, created_at FROM users WHERE id = ?', [id]);
+    res.json({ message: 'Profile updated successfully!', user: updatedUsers[0] });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Server error updating profile.' });
   }
 });
 

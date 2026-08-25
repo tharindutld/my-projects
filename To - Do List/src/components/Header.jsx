@@ -9,8 +9,7 @@ import {
   Sun, 
   Moon, 
   Database, 
-  User,
-  Zap
+  User
 } from 'lucide-react';
 
 export default function Header({
@@ -26,24 +25,16 @@ export default function Header({
   onNewTask
 }) {
   return (
-    <header className="header-bar">
-      <div className="flex items-center gap-4">
-        {/* Brand logo for mobile/collapsed view */}
-        <div className="brand-logo" style={{ fontSize: '1.25rem' }}>
-          <Zap className="w-6 h-6 text-indigo-500" style={{ color: '#6366f1' }} />
-          <span>TaskPulse</span>
-        </div>
-
-        {/* Search Bar */}
-        <div className="search-box">
-          <Search size={16} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search tasks, tags, notes... (Ctrl+K)"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+    <header className="header-bar" style={{ gap: '1rem', flexWrap: 'wrap' }}>
+      {/* Search Bar */}
+      <div className="search-box">
+        <Search size={16} style={{ color: 'var(--text-secondary)' }} />
+        <input
+          type="text"
+          placeholder="Search tasks, tags, notes... (Ctrl+K)"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {/* View Switcher Tabs */}
@@ -79,11 +70,11 @@ export default function Header({
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {/* Database Status Indicator */}
-        <div className={`db-status ${dbOnline ? 'db-online' : 'db-offline'}`} title={dbOnline ? 'MySQL Connected' : 'Running Offline Mode (LocalStorage Persistent)'}>
+        <div className={`db-status ${dbOnline ? 'db-online' : 'db-offline'}`} title={dbOnline ? 'MySQL Connected' : 'MySQL Disconnected'}>
           <Database size={13} />
-          <span>{dbOnline ? 'MySQL Live' : 'Local Sync'}</span>
+          <span>{dbOnline ? 'MySQL Connected' : 'MySQL Offline'}</span>
         </div>
 
         {/* Theme Toggle */}

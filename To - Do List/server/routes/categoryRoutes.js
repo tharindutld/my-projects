@@ -65,6 +65,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const pool = await getPool();
+    await pool.query('UPDATE tasks SET category_id = NULL WHERE category_id = ?', [id]);
     await pool.query('DELETE FROM categories WHERE id = ?', [id]);
     res.json({ message: 'Category deleted successfully.' });
   } catch (error) {

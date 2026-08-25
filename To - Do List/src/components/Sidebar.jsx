@@ -228,11 +228,13 @@ export default function Sidebar({
                 type="button"
                 className="btn btn-primary"
                 style={{ background: '#ef4444', color: 'white' }}
-                onClick={() => {
-                  if (onDeleteCategory) {
-                    onDeleteCategory(confirmingCategory.id);
-                  }
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const targetId = confirmingCategory.id;
                   setConfirmingCategory(null);
+                  if (onDeleteCategory) {
+                    await onDeleteCategory(targetId);
+                  }
                 }}
               >
                 Delete Project Tag

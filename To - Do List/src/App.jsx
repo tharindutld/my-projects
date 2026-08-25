@@ -339,6 +339,13 @@ export default function App() {
         onRegister={handleRegister}
         onLogout={handleLogout}
         onDemoLogin={handleDemoLogin}
+        taskStats={taskStats}
+        onUpdateUser={async (name, phone, avatar) => {
+          if (!user) return;
+          const res = await api.updateProfile(user.id, name, phone, avatar);
+          setUser(res.user);
+          localStorage.setItem('task_pulse_user', JSON.stringify(res.user));
+        }}
       />
     </div>
   );

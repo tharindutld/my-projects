@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import TaskCard from './TaskCard';
 import { 
   ArrowUpDown, 
+  ChevronDown,
+  Check,
   CheckSquare, 
   Trash2, 
   Plus, 
@@ -22,6 +24,26 @@ export default function ListView({
 }) {
   const [sortBy, setSortBy] = useState('created'); // 'created', 'dueDate', 'priority', 'title'
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'todo', 'in_progress', 'completed'
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef(null);
+
+  const SORT_OPTIONS = [
+    { value: 'created', label: 'Date Added' },
+    { value: 'dueDate', label: 'Due Date' },
+    { value: 'priority', label: 'Priority' },
+    { value: 'title', label: 'Title (A-Z)' },
+  ];
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Filter tasks
   let filtered = tasks.filter((t) => {
@@ -96,19 +118,95 @@ export default function ListView({
             ))}
           </div>
 
-          {/* Sort Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-tertiary)', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <ArrowUpDown size={14} style={{ color: 'var(--text-secondary)' }} />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="sort-select"
+          {/* Custom Sort Dropdown */}
+          <div className="custom-dropdown" ref={sortRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="custom-dropdown-btn"
+              onClick={() => setIsSortOpen(!isSortOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'var(--bg-tertiary)',
+                padding: '0.45rem 0.85rem',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: 'var(--shadow-sm)'
+              }}
             >
-              <option value="created">Sort: Date Added</option>
-              <option value="dueDate">Sort: Due Date</option>
-              <option value="priority">Sort: Priority</option>
-              <option value="title">Sort: Title (A-Z)</option>
-            </select>
+              <ArrowUpDown size={15} style={{ color: 'var(--accent-primary)' }} />
+              <span>Sort: {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}</span>
+              <ChevronDown
+                size={14}
+                style={{
+                  color: 'var(--text-secondary)',
+                  transition: 'transform 0.2s ease',
+                  transform: isSortOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}
+              />
+            </button>
+
+            {isSortOpen && (
+              <div
+                className="custom-dropdown-menu"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 6px)',
+                  right: 0,
+                  zIndex: 50,
+                  width: '180px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-lg)',
+                  padding: '0.35rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem',
+                  animation: 'fadeIn 0.15s ease'
+                }}
+              >
+                {SORT_OPTIONS.map((opt) => {
+                  const isSelected = sortBy === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setSortBy(opt.value);
+                        setIsSortOpen(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.85rem',
+                        fontWeight: isSelected ? 700 : 500,
+                        color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
+                        background: isSelected ? 'var(--bg-tertiary)' : 'transparent',
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease'
+                      }}
+                      className="custom-dropdown-item"
+                    >
+                      <span>{opt.label}</span>
+                      {isSelected && <Check size={14} style={{ color: 'var(--accent-primary)' }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
