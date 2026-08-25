@@ -256,10 +256,16 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(catData)
       });
-      if (!res.ok) throw new Error('Failed to create category');
-      return await res.json();
-    } catch {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create category');
+      return data;
+    } catch (err) {
+      if (err.message.includes('already exists')) throw err;
       const cats = getLocalCategories();
+      const exists = cats.some(c => c.name.toLowerCase() === catData.name.trim().toLowerCase());
+      if (exists) {
+        throw new Error('A project tag with this name already exists.');
+      }
       const newCat = { id: Date.now(), ...catData };
       cats.push(newCat);
       setLocalCategories(cats);

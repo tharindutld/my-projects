@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 
 const COLORS = [
@@ -6,18 +6,50 @@ const COLORS = [
   '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6'
 ];
 
-export default function CategoryModal({ isOpen, onClose, onSave }) {
+export default function CategoryModal({ isOpen, onClose, onSave, categories = [] }) {
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#6366f1');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    setName('');
+    setSelectedColor('#6366f1');
+    setErrorMsg('');
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setName(val);
+    if (val.trim() && categories.some((c) => c.name.toLowerCase() === val.trim().toLowerCase())) {
+      setErrorMsg('A project tag with this name already exists.');
+    } else {
+      setErrorMsg('');
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    onSave({ name: name.trim(), color: selectedColor, icon: 'folder' });
-    setName('');
-    onClose();
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setErrorMsg('Project tag name is required.');
+      return;
+    }
+
+    if (categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      setErrorMsg('A project tag with this name already exists.');
+      return;
+    }
+
+    try {
+      await onSave({ name: trimmed, color: selectedColor, icon: 'folder' });
+      setName('');
+      setErrorMsg('');
+      onClose();
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to save project tag.');
+    }
   };
 
   return (
@@ -32,7 +64,7 @@ export default function CategoryModal({ isOpen, onClose, onSave }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label className="form-label">Category / Project Name *</label>
             <input
@@ -40,10 +72,15 @@ export default function CategoryModal({ isOpen, onClose, onSave }) {
               className="form-input"
               placeholder="e.g. Design System, Finance, Marketing"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              onChange={handleNameChange}
+              style={{ border: errorMsg ? '1px solid #ef4444' : undefined }}
               autoFocus
             />
+            {errorMsg && (
+              <span style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: '0.25rem', display: 'block', fontWeight: 500 }}>
+                ⚠️ {errorMsg}
+              </span>
+            )}
           </div>
 
           <div className="form-group">
@@ -76,7 +113,7 @@ export default function CategoryModal({ isOpen, onClose, onSave }) {
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={!!errorMsg}>
               Add Category
             </button>
           </div>

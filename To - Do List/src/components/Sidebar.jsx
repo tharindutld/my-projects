@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Inbox, 
   Calendar, 
@@ -8,18 +8,29 @@ import {
   FolderPlus, 
   Zap,
   Tag,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 export default function Sidebar({
   activeFilter,
   setActiveFilter,
   categories,
+  tasks = [],
   selectedCategory,
   setSelectedCategory,
   onOpenCategoryModal,
+  onDeleteCategory,
   taskStats
 }) {
+  const [confirmingCategory, setConfirmingCategory] = useState(null);
+
+  const getTaskCountForCategory = (catId) => {
+    return tasks.filter((t) => String(t.category_id) === String(catId)).length;
+  };
+
   return (
     <aside className="sidebar">
       {/* Brand Header */}
@@ -115,27 +126,49 @@ export default function Sidebar({
         </div>
 
         <div className="sidebar-nav">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              className={`nav-item ${selectedCategory === String(cat.id) ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(String(cat.id))}
-            >
-              <div className="nav-item-left">
-                <span
-                  style={{
-                    width: '10px',
-                    height: '10px',
-                    borderRadius: '50%',
-                    backgroundColor: cat.color || '#6366f1'
-                  }}
-                />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>
-                  {cat.name}
-                </span>
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === String(cat.id);
+            const count = getTaskCountForCategory(cat.id);
+
+            return (
+              <div
+                key={cat.id}
+                className={`nav-item ${isSelected ? 'active' : ''}`}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', group: 'category-item' }}
+                onClick={() => setSelectedCategory(String(cat.id))}
+              >
+                <div className="nav-item-left">
+                  <span
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: cat.color || '#6366f1'
+                    }}
+                  />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>
+                    {cat.name}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {count > 0 && <span className="count-pill">{count}</span>}
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    title={`Delete ${cat.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmingCategory(cat);
+                    }}
+                    style={{ padding: '0.2rem', color: 'var(--text-muted)' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -160,6 +193,54 @@ export default function Sidebar({
           />
         </div>
       </div>
+
+      {/* Delete Category Confirmation Modal */}
+      {confirmingCategory && (
+        <div className="modal-overlay" onClick={() => setConfirmingCategory(null)}>
+          <div className="modal-content" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertTriangle size={20} />
+                <span>Delete Project Tag?</span>
+              </h3>
+              <button className="btn-icon" onClick={() => setConfirmingCategory(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {getTaskCountForCategory(confirmingCategory.id) > 0 ? (
+              <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.85rem 1rem', borderRadius: '10px', fontSize: '0.88rem', color: 'var(--text-primary)', marginBottom: '1.25rem', lineHeight: '1.4' }}>
+                ⚠️ The project tag <strong>"{confirmingCategory.name}"</strong> currently has <strong>{getTaskCountForCategory(confirmingCategory.id)} task(s)</strong> assigned to it.
+                <br /><br />
+                Are you sure you want to delete this project tag? (Tasks will remain intact, but will no longer have a project tag).
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                Are you sure you want to delete the project tag <strong>"{confirmingCategory.name}"</strong>?
+              </p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setConfirmingCategory(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ background: '#ef4444', color: 'white' }}
+                onClick={() => {
+                  if (onDeleteCategory) {
+                    onDeleteCategory(confirmingCategory.id);
+                  }
+                  setConfirmingCategory(null);
+                }}
+              >
+                Delete Project Tag
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

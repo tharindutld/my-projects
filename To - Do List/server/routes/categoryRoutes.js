@@ -31,14 +31,25 @@ router.post('/', async (req, res) => {
   try {
     const { name, color, icon, userId } = req.body;
 
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Category name is required.' });
     }
 
     const pool = await getPool();
+
+    // Check if category name already exists (case-insensitive)
+    const [existing] = await pool.query(
+      'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND (user_id IS NULL OR user_id = ?)',
+      [name.trim(), userId || null]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'A project tag with this name already exists.' });
+    }
+
     const [result] = await pool.query(
       'INSERT INTO categories (name, color, icon, user_id) VALUES (?, ?, ?, ?)',
-      [name, color || '#6366f1', icon || 'folder', userId || null]
+      [name.trim(), color || '#6366f1', icon || 'folder', userId || null]
     );
 
     const [newCategory] = await pool.query('SELECT * FROM categories WHERE id = ?', [result.insertId]);

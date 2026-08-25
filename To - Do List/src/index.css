@@ -96,6 +96,28 @@ input, textarea, select {
   outline: none;
 }
 
+/* Fix dropdown select options visibility in dark/light modes */
+select option {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  padding: 8px 12px;
+}
+
+.sort-select {
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.sort-select option {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

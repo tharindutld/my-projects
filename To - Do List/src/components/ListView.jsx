@@ -98,11 +98,11 @@ export default function ListView({
 
           {/* Sort Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-tertiary)', padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <ArrowUpDown size={14} className="text-gray-400" />
+            <ArrowUpDown size={14} style={{ color: 'var(--text-secondary)' }} />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              style={{ background: 'transparent', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+              className="sort-select"
             >
               <option value="created">Sort: Date Added</option>
               <option value="dueDate">Sort: Due Date</option>

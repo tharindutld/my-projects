@@ -145,6 +145,17 @@ export default function App() {
     setCategories((prev) => [...prev, created]);
   };
 
+  const handleDeleteCategory = async (catId) => {
+    await api.deleteCategory(catId);
+    setCategories((prev) => prev.filter((c) => String(c.id) !== String(catId)));
+    setTasks((prev) =>
+      prev.map((t) => (String(t.category_id) === String(catId) ? { ...t, category_id: null, category_name: null } : t))
+    );
+    if (String(selectedCategory) === String(catId)) {
+      setSelectedCategory(null);
+    }
+  };
+
   // Auth Operations
   const handleLogin = async (email, password) => {
     const data = await api.login(email, password);
@@ -221,9 +232,11 @@ export default function App() {
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         categories={categories}
+        tasks={tasks}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
+        onDeleteCategory={handleDeleteCategory}
         taskStats={taskStats}
       />
 
@@ -315,6 +328,7 @@ export default function App() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSave={handleSaveCategory}
+        categories={categories}
       />
 
       <AuthModal
