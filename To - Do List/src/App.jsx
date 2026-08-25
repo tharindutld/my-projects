@@ -17,7 +17,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'today', 'upcoming', 'urgent', 'starred', 'completed'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [theme, setTheme] = useState(localStorage.getItem('task_pulse_theme') || 'dark');
+  const [theme, setTheme] = useState(localStorage.getItem('task_pulse_theme') || 'light');
 
   // Data State
   const [tasks, setTasks] = useState([]);

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, User, Mail, Lock, Phone, Zap, LogOut, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Mail, Lock, Phone, Zap, LogOut, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, user, onLogin, onRegister, onLogout, onDemoLogin }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -11,13 +12,18 @@ export default function AuthModal({ isOpen, onClose, user, onLogin, onRegister, 
   const [errorMsg, setErrorMsg] = useState('');
   const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', phone: '', password: '' });
 
+  useEffect(() => {
+    setShowLogoutConfirm(false);
+    setErrorMsg('');
+    setFieldErrors({ name: '', email: '', phone: '', password: '' });
+  }, [isOpen, user]);
+
   if (!isOpen) return null;
 
   const AVATARS = ['⚡', '🚀', '🎯', '🔥', '💻', '🎨', '🌟', '🧠'];
 
   const validateName = (val) => {
     if (!val.trim()) return 'Full name is required.';
-    // Cannot include numbers, decimals, minus, plus, or special characters (only letters & spaces)
     const nameRegex = /^[A-Za-z\s]+$/;
     if (!nameRegex.test(val.trim())) {
       return 'Name cannot include numbers, special characters, decimals, minus or plus.';
@@ -138,15 +144,79 @@ export default function AuthModal({ isOpen, onClose, user, onLogin, onRegister, 
       <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800 }}>
-            {user ? 'User Profile' : isRegisterMode ? 'Create Account' : 'Sign In'}
+            {showLogoutConfirm
+              ? 'Confirm Log Out'
+              : user
+              ? 'User Profile'
+              : isRegisterMode
+              ? 'Create Account'
+              : 'Sign In'}
           </h3>
           <button className="btn-icon" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
 
-        {user ? (
-          // Logged In View
+        {showLogoutConfirm ? (
+          // Logout Confirmation View
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div
+              style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                padding: '1.25rem',
+                borderRadius: '12px',
+                textAlign: 'center'
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  color: '#ef4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 0.75rem auto'
+                }}
+              >
+                <AlertTriangle size={24} />
+              </div>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Are you sure you want to log out?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+                You are currently signed in as <strong>{user?.name}</strong> ({user?.email}).
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flex: 1, background: '#ef4444', color: 'white', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  onLogout();
+                  onClose();
+                }}
+              >
+                Yes, Log Out
+              </button>
+            </div>
+          </div>
+        ) : user ? (
+          // Logged In Profile View
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ fontSize: '2.5rem', width: '60px', height: '60px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -169,7 +239,7 @@ export default function AuthModal({ isOpen, onClose, user, onLogin, onRegister, 
 
             <button
               className="btn btn-secondary"
-              onClick={() => { onLogout(); onClose(); }}
+              onClick={() => setShowLogoutConfirm(true)}
               style={{ color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
               <LogOut size={16} />
