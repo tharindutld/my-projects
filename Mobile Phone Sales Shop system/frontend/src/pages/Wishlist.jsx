@@ -52,6 +52,20 @@ export default function Wishlist() {
     fetchWishlist();
   }, [token, authLoading]);
 
+  const showSuccessMsg = (msg) => {
+    setSuccess(msg);
+    setTimeout(() => {
+      setSuccess('');
+    }, 2500);
+  };
+
+  const showErrorMsg = (msg) => {
+    setError(msg);
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+  };
+
   const requestRemove = (item) => {
     setConfirmModal({
       isOpen: true,
@@ -77,13 +91,13 @@ export default function Wishlist() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
-        setSuccess('Item removed from wishlist.');
+        showSuccessMsg('Item removed from wishlist.');
         fetchWishlist();
       } else {
-        setError('Failed to remove item.');
+        showErrorMsg('Failed to remove item.');
       }
     } catch (err) {
-      setError('Error communicating with backend.');
+      showErrorMsg('Error communicating with backend.');
     }
   };
 
@@ -91,14 +105,14 @@ export default function Wishlist() {
     setError('');
     setSuccess('');
     if (!variantId) {
-      setError('Please select a specific variant configuration from the product details page.');
+      showErrorMsg('Please select a specific variant configuration from the product details page.');
       return;
     }
     try {
       const msg = await addToCart(variantId, 1);
-      setSuccess(msg || 'Added to cart successfully!');
+      showSuccessMsg(msg || 'Added to cart successfully!');
     } catch (err) {
-      setError(err.message);
+      showErrorMsg(err.message);
     }
   };
 
@@ -166,10 +180,14 @@ export default function Wishlist() {
                       position: 'absolute',
                       top: '12px',
                       right: '12px',
+                      width: '36px',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       background: 'rgba(239,68,68,0.15)',
                       border: '1px solid rgba(239,68,68,0.3)',
                       color: 'var(--danger)',
-                      padding: '8px',
                       borderRadius: '50%',
                       cursor: 'pointer',
                       zIndex: 3
