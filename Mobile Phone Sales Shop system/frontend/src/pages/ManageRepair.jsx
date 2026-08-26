@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
   Wrench, PlusCircle, Search, XCircle, Tag, 
-  Barcode, Info, Edit, Trash2, CheckCircle, ArrowLeft 
+  Barcode, Info, Edit, Trash2, CheckCircle, ArrowLeft,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
@@ -10,6 +11,19 @@ import ToastAlert from '../components/ToastAlert';
 import ConfirmModal from '../components/ConfirmModal';
 import { formatCurrency } from '../utils/format';
 import './ManageRepair.css';
+
+const getPageNumbers = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, '...', total];
+  }
+  if (current >= total - 3) {
+    return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, '...', current - 1, current, current + 1, '...', total];
+};
 
 export default function ManageRepair() {
   const { token, user, API_URL, loading: authLoading } = useAuth();
@@ -282,34 +296,35 @@ export default function ManageRepair() {
 
                       return (
                         <tr key={row.ID} className="border-secondary">
-                          <td className="ps-4 text-center text-muted">{cnt}</td>
-                          <td className="fw-semibold text-white">{row.CustomerName}</td>
+                          <td className="ps-4 text-center fw-semibold" style={{ color: '#cbd5e1' }}>{cnt}</td>
+                          <td className="fw-bold text-white">{row.CustomerName}</td>
                           <td>
-                            <div className="fw-semibold text-white">{row.DeviceName}</div>
+                            <div className="fw-bold text-white fs-6">{row.DeviceName}</div>
                             {(row.BrandName || row.ProductName) && (
-                              <div className="small text-muted" style={{ fontSize: '0.8rem' }}>
+                              <div className="small mt-0.5" style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>
                                 <Tag size={12} className="text-primary me-1" />
                                 {`${row.BrandName || ''} ${row.ProductName || ''}`.trim()}
                               </div>
                             )}
                             {row.IMEINumber && (
-                              <div className="small font-monospace text-info" style={{ fontSize: '0.78rem' }}>
+                              <div className="small font-monospace text-info mt-0.5" style={{ fontSize: '0.8rem' }}>
                                 <Barcode size={12} className="me-1" />{row.IMEINumber}
                               </div>
                             )}
-                            <div className="text-muted small text-truncate mt-1" style={{ maxWidth: '220px' }} title={row.Issue}>
-                              <Info size={12} className="text-warning me-1" />{row.Issue}
+                            <div className="mt-1 d-flex align-items-start gap-1" style={{ fontSize: '0.82rem', color: '#e2e8f0', lineHeight: '1.4' }} title={row.Issue}>
+                              <Info size={13} className="text-warning me-1 flex-shrink-0 mt-0.5" />
+                              <span>{row.Issue}</span>
                             </div>
                           </td>
                           {!isTechnician && (
                             <td>
-                              <div className="text-danger small">Cost: Rs. {formatCurrency(row.Cost)}</div>
+                              <div className="text-danger small fw-semibold">Cost: Rs. {formatCurrency(row.Cost)}</div>
                               <div className="text-success fw-semibold small">Income: Rs. {formatCurrency(row.Income)}</div>
                             </td>
                           )}
                           <td>
-                            <span className="text-light">{row.TechFirstName} {row.TechLastName}</span>
-                            <span className="small text-muted d-block" style={{ fontSize: '0.75rem' }}>{row.TechRole || 'Technician'}</span>
+                            <div className="fw-semibold text-white">{row.TechFirstName} {row.TechLastName}</div>
+                            <div className="small d-block" style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>{row.TechRole || 'Technician'}</div>
                           </td>
                           <td className="text-center">
                             {(isAdmin || isTechnician) ? (
@@ -330,7 +345,7 @@ export default function ManageRepair() {
                               </span>
                             )}
                           </td>
-                          <td className="small text-muted">
+                          <td className="small fw-semibold" style={{ color: '#e2e8f0' }}>
                             {new Date(row.RepairDate).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })}
                           </td>
                           <td className="text-end pe-4">
@@ -359,52 +374,58 @@ export default function ManageRepair() {
               </table>
             </div>
 
-            {/* Pagination Controls */}
+            {/* Glass Pagination Controls */}
             {pagination.totalPages > 1 && (
-              <nav className="d-flex justify-content-center my-4">
-                <ul className="pagination pagination-sm gap-1">
-                  <li className={`page-item ${pageParam <= 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link bg-dark text-light border-secondary"
+              <div className="d-flex justify-content-center align-items-center gap-2 my-4 flex-wrap">
+                <button
+                  disabled={pageParam <= 1}
+                  onClick={() => {
+                    const newParams = Object.fromEntries(searchParams);
+                    newParams.page = (pageParam - 1).toString();
+                    setSearchParams(newParams);
+                  }}
+                  className="repair-pagination-btn"
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {getPageNumbers(pageParam, pagination.totalPages).map((p, idx) => {
+                  if (p === '...') {
+                    return (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-light opacity-50 fw-bold">
+                        &hellip;
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={p}
                       onClick={() => {
                         const newParams = Object.fromEntries(searchParams);
-                        newParams.page = (pageParam - 1).toString();
+                        newParams.page = p.toString();
                         setSearchParams(newParams);
                       }}
+                      className={`repair-pagination-btn ${pageParam === p ? 'repair-pagination-btn-active' : ''}`}
                     >
-                      &laquo;
+                      {p}
                     </button>
-                  </li>
+                  );
+                })}
 
-                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
-                    <li key={p} className={`page-item ${pageParam === p ? 'active' : ''}`}>
-                      <button 
-                        className={`page-link border-secondary ${pageParam === p ? 'bg-primary text-white' : 'bg-dark text-light'}`}
-                        onClick={() => {
-                          const newParams = Object.fromEntries(searchParams);
-                          newParams.page = p.toString();
-                          setSearchParams(newParams);
-                        }}
-                      >
-                        {p}
-                      </button>
-                    </li>
-                  ))}
-
-                  <li className={`page-item ${pageParam >= pagination.totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link bg-dark text-light border-secondary"
-                      onClick={() => {
-                        const newParams = Object.fromEntries(searchParams);
-                        newParams.page = (pageParam + 1).toString();
-                        setSearchParams(newParams);
-                      }}
-                    >
-                      &raquo;
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+                <button
+                  disabled={pageParam >= pagination.totalPages}
+                  onClick={() => {
+                    const newParams = Object.fromEntries(searchParams);
+                    newParams.page = (pageParam + 1).toString();
+                    setSearchParams(newParams);
+                  }}
+                  className="repair-pagination-btn"
+                  title="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             )}
 
           </div>

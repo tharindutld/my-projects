@@ -1,8 +1,8 @@
 .card-repairs-dark {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
   box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45);
   color: #f8fafc;
@@ -10,24 +10,25 @@
 }
 
 .table-repairs-dark {
-  color: #e2e8f0;
+  color: #f8fafc;
 }
 
 .table-repairs-dark th {
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   letter-spacing: 0.7px;
-  color: #94a3b8;
-  background: rgba(30, 41, 59, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1 !important;
+  background: rgba(30, 41, 59, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
   padding: 1rem 0.75rem;
 }
 
 .table-repairs-dark td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 1rem 0.75rem;
   vertical-align: middle;
+  color: #f8fafc;
 }
 
 .table-repairs-dark tbody tr {
@@ -35,21 +36,72 @@
 }
 
 .table-repairs-dark tbody tr:hover {
-  background-color: rgba(59, 130, 246, 0.08) !important;
+  background-color: rgba(99, 102, 241, 0.08) !important;
 }
 
 .status-select-dark {
-  background-color: #0f172a;
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50rem;
-  font-size: 0.82rem;
-  padding: 0.3rem 0.75rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 50rem !important;
+  font-size: 0.82rem !important;
+  padding: 0.35rem 2.2rem 0.35rem 0.85rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23818cf8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 12px 10px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  cursor: pointer;
+}
+
+.status-select-dark option {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  padding: 8px;
 }
 
 .status-select-dark:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+  background-color: #0f172a;
+}
+
+/* Glass Pagination Styling */
+.repair-pagination-btn {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #f8fafc !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer;
+}
+
+.repair-pagination-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.3) !important;
+  border-color: #6366f1 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}
+
+.repair-pagination-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+.repair-pagination-btn-active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4) !important;
 }

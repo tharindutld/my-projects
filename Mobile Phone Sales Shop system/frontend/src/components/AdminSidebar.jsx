@@ -299,11 +299,12 @@ function AdminSidebar({ collapsed, setCollapsed }) {
               icon={<UserCog size={18} />}
               label="Staff Accounts"
               collapsed={collapsed}
-              open={isOpen('staff', ['/admin/staff'])}
+              open={isOpen('staff', ['/admin/staff', '/admin/add-staff', '/admin/adm_add_staff.php', '/admin/adm_view_staff.php'])}
               onToggle={() => toggleMenu('staff')}
-              active={path === '/admin/staff'}
+              active={path.startsWith('/admin/staff') || path.startsWith('/admin/add-staff') || path.includes('staff')}
             >
-              <SubItem to="/admin/staff" label="Manage Staff" icon={<Users size={13} />} active={path === '/admin/staff'} />
+              <SubItem to="/admin/add-staff" label="Add Staff" icon={<Plus size={13} />} active={path === '/admin/add-staff' || path === '/admin/adm_add_staff.php'} />
+              <SubItem to="/admin/staff" label="Manage Staff" icon={<Users size={13} />} active={path === '/admin/staff' || path === '/admin/adm_view_staff.php' || path === '/admin/manage-staff'} />
             </SubMenu>
           </>
         )}

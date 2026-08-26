@@ -1,0 +1,501 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Pencil, ArrowLeft, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import ToastAlert from '../components/ToastAlert';
+import ConfirmModal from '../components/ConfirmModal';
+
+export default function EditStaff() {
+  const { id } = useParams();
+  const { token, API_URL, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Max birth date (18 years ago)
+  const today = new Date();
+  const maxBirthDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+    .toISOString()
+    .split('T')[0];
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    gender: '',
+    birthDate: '',
+    role: '',
+    status: '',
+    newPassword: ''
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [toast, setToast] = useState({ type: '', message: '' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!token) {
+      navigate('/login?staff=true');
+      return;
+    }
+
+    const fetchStaffMember = async () => {
+      try {
+        const res = await fetch(`${API_URL}/staff/user/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFormData({
+            firstName: data.first_name || '',
+            lastName: data.last_name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            gender: data.gender || '',
+            birthDate: data.birth_date ? data.birth_date.split('T')[0] : '',
+            role: data.role || '',
+            status: data.status || 'Active',
+            newPassword: ''
+          });
+        } else {
+          setToast({ type: 'error', message: 'Staff member not found.' });
+        }
+      } catch (err) {
+        setToast({ type: 'error', message: 'Failed to load staff details.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaffMember();
+  }, [id, token, authLoading]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    const nameRegex = /^[a-zA-Z\s]+$/;
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required.';
+    } else if (!nameRegex.test(formData.firstName.trim()) || formData.firstName.trim().length < 2 || formData.firstName.trim().length > 50) {
+      errors.firstName = 'First name must contain only letters and spaces (2-50 characters).';
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Last name is required.';
+    } else if (!nameRegex.test(formData.lastName.trim()) || formData.lastName.trim().length < 2 || formData.lastName.trim().length > 50) {
+      errors.lastName = 'Last name must contain only letters and spaces (2-50 characters).';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required.';
+    } else if (!/^0[0-9]{9}$/.test(formData.phone.trim())) {
+      errors.phone = 'Phone number must be exactly 10 digits starting with 0.';
+    }
+
+    if (!formData.gender) {
+      errors.gender = 'Please select a gender.';
+    }
+
+    if (!formData.birthDate) {
+      errors.birthDate = 'Please select a birth date.';
+    } else {
+      const birth = new Date(formData.birthDate);
+      if (birth > today) {
+        errors.birthDate = 'Birth date cannot be in the future.';
+      } else {
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        if (age < 18) {
+          errors.birthDate = 'Staff member must be at least 18 years old.';
+        }
+      }
+    }
+
+    if (!formData.role) {
+      errors.role = 'Please select a role.';
+    }
+
+    if (!formData.status) {
+      errors.status = 'Please select a status.';
+    }
+
+    if (formData.newPassword && formData.newPassword.length < 8) {
+      errors.newPassword = 'Password must be at least 8 characters long.';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmitAttempt = (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      setToast({ type: 'error', message: 'Please fix the highlighted errors in the form.' });
+      return;
+    }
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Staff Profile Update',
+      message: `Are you sure you want to update the profile for ${formData.firstName} ${formData.lastName}?`,
+      onConfirm: executeUpdateStaff
+    });
+  };
+
+  const executeUpdateStaff = async () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    try {
+      const payload = {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        gender: formData.gender,
+        birth_date: formData.birthDate,
+        role: formData.role,
+        status: formData.status
+      };
+      if (formData.newPassword.trim()) {
+        payload.password = formData.newPassword.trim();
+      }
+
+      const res = await fetch(`${API_URL}/staff/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ type: 'success', message: 'Staff profile updated successfully.' });
+        setTimeout(() => navigate('/admin/staff'), 1200);
+      } else {
+        setToast({ type: 'error', message: data.message || 'Failed to update staff profile.' });
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: 'Network or server error.' });
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-5 text-muted">Loading staff profile details...</div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="container-fluid py-4" style={{ maxWidth: '1100px' }}>
+        {toast.message && (
+          <ToastAlert type={toast.type} message={toast.message} onClose={() => setToast({ type: '', message: '' })} />
+        )}
+
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
+
+        {/* Top Header */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#818cf8',
+              background: 'rgba(99,102,241,0.15)',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              display: 'inline-block',
+              marginBottom: '8px'
+            }}>Staff Management</span>
+            <h2 className="text-white fw-bold m-0 d-flex align-items-center gap-2">
+              <Pencil className="text-primary" /> Update Details for {formData.firstName}
+            </h2>
+          </div>
+
+          <Link to="/admin/staff" className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+            <ArrowLeft size={16} /> Back to Staff Directory
+          </Link>
+        </div>
+
+        {/* Main Glass Form Container */}
+        <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <form noValidate onSubmit={handleSubmitAttempt}>
+            <div className="row g-4">
+              
+              {/* First Name */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  First Name <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  className={`custom-glass-input w-100 ${fieldErrors.firstName ? 'is-invalid' : ''}`}
+                  placeholder="Enter first name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+                {fieldErrors.firstName && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.firstName}
+                  </div>
+                )}
+              </div>
+
+              {/* Last Name */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Last Name <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  className={`custom-glass-input w-100 ${fieldErrors.lastName ? 'is-invalid' : ''}`}
+                  placeholder="Enter last name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+                {fieldErrors.lastName && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.lastName}
+                  </div>
+                )}
+              </div>
+
+              {/* Email Address */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Email Address <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  className={`custom-glass-input w-100 ${fieldErrors.email ? 'is-invalid' : ''}`}
+                  placeholder="example@mail.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+                {fieldErrors.email && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.email}
+                  </div>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Phone Number <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  className={`custom-glass-input w-100 ${fieldErrors.phone ? 'is-invalid' : ''}`}
+                  placeholder="07xxxxxxxx"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+                {fieldErrors.phone && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.phone}
+                  </div>
+                )}
+              </div>
+
+              {/* Gender */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Gender <span className="text-danger">*</span>
+                </label>
+                <select
+                  name="gender"
+                  className={`custom-glass-input w-100 ${fieldErrors.gender ? 'is-invalid' : ''}`}
+                  value={formData.gender}
+                  onChange={handleChange}
+                  style={{ color: '#ffffff' }}
+                >
+                  <option value="" disabled style={{ background: '#0f172a', color: '#94a3b8' }}>Choose Gender...</option>
+                  <option value="Male" style={{ background: '#0f172a', color: '#ffffff' }}>Male</option>
+                  <option value="Female" style={{ background: '#0f172a', color: '#ffffff' }}>Female</option>
+                </select>
+                {fieldErrors.gender && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.gender}
+                  </div>
+                )}
+              </div>
+
+              {/* Birth Date */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Birth Date <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="birthDate"
+                  max={maxBirthDate}
+                  className={`custom-glass-input w-100 ${fieldErrors.birthDate ? 'is-invalid' : ''}`}
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                />
+                {fieldErrors.birthDate && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.birthDate}
+                  </div>
+                )}
+              </div>
+
+              {/* Role */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Role <span className="text-danger">*</span>
+                </label>
+                <select
+                  name="role"
+                  className={`custom-glass-input w-100 ${fieldErrors.role ? 'is-invalid' : ''}`}
+                  value={formData.role}
+                  onChange={handleChange}
+                  style={{ color: '#ffffff' }}
+                >
+                  <option value="" disabled style={{ background: '#0f172a', color: '#94a3b8' }}>Choose Role...</option>
+                  <option value="Admin" style={{ background: '#0f172a', color: '#ffffff' }}>Admin</option>
+                  <option value="Sales person" style={{ background: '#0f172a', color: '#ffffff' }}>Sales person</option>
+                  <option value="Technician" style={{ background: '#0f172a', color: '#ffffff' }}>Technician</option>
+                </select>
+                {fieldErrors.role && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.role}
+                  </div>
+                )}
+              </div>
+
+              {/* Status */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  Status <span className="text-danger">*</span>
+                </label>
+                <select
+                  name="status"
+                  className={`custom-glass-input w-100 ${fieldErrors.status ? 'is-invalid' : ''}`}
+                  value={formData.status}
+                  onChange={handleChange}
+                  style={{ color: '#ffffff' }}
+                >
+                  <option value="" disabled style={{ background: '#0f172a', color: '#94a3b8' }}>Choose Status...</option>
+                  <option value="Active" style={{ background: '#0f172a', color: '#ffffff' }}>Active</option>
+                  <option value="Inactive" style={{ background: '#0f172a', color: '#ffffff' }}>Inactive</option>
+                </select>
+                {fieldErrors.status && (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.status}
+                  </div>
+                )}
+              </div>
+
+              {/* Security Section Header */}
+              <div className="col-12 mt-4">
+                <h6 className="text-primary fw-bold mb-2 pb-2 d-flex align-items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Shield size={18} /> Security Settings
+                </h6>
+              </div>
+
+              {/* New Password */}
+              <div className="col-md-6">
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                  New Password
+                </label>
+                <div className="position-relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="newPassword"
+                    className={`custom-glass-input w-100 ${fieldErrors.newPassword ? 'is-invalid' : ''}`}
+                    placeholder="Leave blank to keep current password"
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                    style={{ paddingRight: '42px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#cbd5e1',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {fieldErrors.newPassword ? (
+                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                    {fieldErrors.newPassword}
+                  </div>
+                ) : (
+                  <small className="d-block mt-1" style={{ color: '#cbd5e1', fontSize: '12px' }}>
+                    Only fill this if you want to change the user's password (min 8 characters).
+                  </small>
+                )}
+              </div>
+
+            </div>
+
+            <hr style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '32px 0 24px 0' }} />
+
+            {/* Buttons */}
+            <div className="d-flex justify-content-end gap-3">
+              <Link
+                to="/admin/staff"
+                className="glass-btn glass-btn-secondary"
+                style={{ padding: '10px 24px', borderRadius: '10px' }}
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                className="glass-btn glass-btn-primary"
+                style={{ padding: '10px 28px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <CheckCircle size={16} /> Update Staff Profile
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}

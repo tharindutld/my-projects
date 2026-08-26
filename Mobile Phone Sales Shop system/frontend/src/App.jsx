@@ -55,6 +55,11 @@ import AddRepair from './pages/AddRepair';
 import ManageRepair from './pages/ManageRepair';
 import EditRepair from './pages/EditRepair';
 
+// Staff Pages
+import AddStaff from './pages/AddStaff';
+import ManageStaff from './pages/ManageStaff';
+import EditStaff from './pages/EditStaff';
+
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -142,12 +147,26 @@ function AppContent() {
         <Route path="/admin/edit-repair.php" element={<EditRepair />} />
         <Route path="/admin/edit_repair.php" element={<EditRepair />} />
 
-        {/* Sales, Pricing, Staff, Reports, Users */}
+        {/* Staff Routes */}
+        <Route path="/admin/add-staff" element={<AddStaff />} />
+        <Route path="/admin/add-staff.php" element={<AddStaff />} />
+        <Route path="/admin/add_staff.php" element={<AddStaff />} />
+        <Route path="/admin/adm_add_staff.php" element={<AddStaff />} />
+        <Route path="/admin/staff" element={<ManageStaff />} />
+        <Route path="/admin/staff.php" element={<ManageStaff />} />
+        <Route path="/admin/manage-staff" element={<ManageStaff />} />
+        <Route path="/admin/manage-staff.php" element={<ManageStaff />} />
+        <Route path="/admin/manage_staff.php" element={<ManageStaff />} />
+        <Route path="/admin/adm_view_staff.php" element={<ManageStaff />} />
+        <Route path="/admin/edit-staff/:id" element={<EditStaff />} />
+        <Route path="/admin/edit-staff.php" element={<EditStaff />} />
+        <Route path="/admin/edit_staff.php" element={<EditStaff />} />
+        <Route path="/admin/adm_edit_staff.php" element={<EditStaff />} />
+
+        {/* Sales, Pricing, Reports, Users */}
         <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/pricing.php" element={<AdminPricing />} />
-        <Route path="/admin/staff" element={<AdminStaff />} />
-        <Route path="/admin/staff.php" element={<AdminStaff />} />
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/reports.php" element={<AdminReports />} />
         <Route path="/admin/users" element={<AdminUsers />} />
