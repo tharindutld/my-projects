@@ -19,6 +19,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tasks', taskRoutes);
 
+// Root welcome endpoint
+app.get('/', (req, res) => {
+  res.json({ message: '🚀 TaskPulse API Server is running!', health: '/api/health' });
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
