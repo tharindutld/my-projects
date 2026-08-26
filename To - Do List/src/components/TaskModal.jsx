@@ -179,7 +179,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
           </div>
 
           {/* Row 1: Priority & Category */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="modal-form-grid">
             <div className="form-group">
               <label className="form-label">Priority</label>
               <select
@@ -212,7 +212,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
           </div>
 
           {/* Row 2: Status & Due Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="modal-form-grid">
             <div className="form-group">
               <label className="form-label">Status Stage</label>
               <select

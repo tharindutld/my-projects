@@ -9,7 +9,8 @@ import {
   Sun, 
   Moon, 
   Database, 
-  User
+  User,
+  Menu
 } from 'lucide-react';
 
 export default function Header({
@@ -22,16 +23,27 @@ export default function Header({
   dbOnline,
   user,
   onOpenAuth,
-  onNewTask
+  onNewTask,
+  onToggleMobileSidebar
 }) {
   return (
     <header className="header-bar" style={{ gap: '1rem', flexWrap: 'wrap' }}>
+      {/* Mobile Sidebar Hamburger Toggle */}
+      <button 
+        className="btn-icon mobile-menu-toggle" 
+        onClick={onToggleMobileSidebar} 
+        title="Toggle Menu"
+        aria-label="Toggle navigation menu"
+      >
+        <Menu size={22} />
+      </button>
+
       {/* Search Bar */}
       <div className="search-box">
         <Search size={16} style={{ color: 'var(--text-secondary)' }} />
         <input
           type="text"
-          placeholder="Search tasks, tags, notes... (Ctrl+K)"
+          placeholder="Search tasks... (Ctrl+K)"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />

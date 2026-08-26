@@ -26,10 +26,11 @@ export default function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('task_pulse_user') || 'null'));
   const [dbOnline, setDbOnline] = useState(false);
 
-  // Modals State
+  // Modals & UI State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
@@ -251,6 +252,8 @@ export default function App() {
         onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
         onDeleteCategory={handleDeleteCategory}
         taskStats={taskStats}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Area */}
@@ -269,6 +272,7 @@ export default function App() {
             setEditingTask(null);
             setIsTaskModalOpen(true);
           }}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
         />
 
         {/* Viewport Content */}

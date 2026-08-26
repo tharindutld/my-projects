@@ -81,7 +81,7 @@ export default function CalendarView({ tasks, onEdit }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
           {/* Previous Month Days */}
           {prevMonthDays.map((d, idx) => (
-            <div key={`prev-${idx}`} style={{ minHeight: '90px', padding: '0.5rem', borderRadius: '8px', background: 'rgba(0,0,0,0.1)', opacity: 0.3, fontSize: '0.8rem' }}>
+            <div key={`prev-${idx}`} className="calendar-day-cell" style={{ minHeight: '90px', padding: '0.5rem', borderRadius: '8px', background: 'rgba(0,0,0,0.1)', opacity: 0.3, fontSize: '0.8rem' }}>
               {d}
             </div>
           ))}
@@ -94,6 +94,7 @@ export default function CalendarView({ tasks, onEdit }) {
             return (
               <div
                 key={`day-${day}`}
+                className="calendar-day-cell"
                 style={{
                   minHeight: '100px',
                   padding: '0.5rem',

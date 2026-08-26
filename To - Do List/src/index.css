@@ -556,20 +556,176 @@ select option {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-/* Responsive */
+/* Mobile Menu Toggle Button Base */
+.mobile-menu-toggle {
+  display: none;
+}
+
+.mobile-sidebar-close {
+  display: none;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Task Cards Grid Responsive Utility */
+.task-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* Responsive Media Queries */
 @media (max-width: 1024px) {
   .kanban-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .content-viewport {
+    padding: 1.25rem 1.5rem;
+  }
 }
+
 @media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-sidebar-close {
+    display: flex;
+  }
+
+  /* Slide-over Mobile Sidebar Drawer */
   .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 999;
+    width: 280px;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-secondary);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .header-bar {
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 160px;
+    width: 100%;
+    order: 2;
+  }
+
+  .view-tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.3rem;
+    order: 3;
+    justify-content: flex-start;
+  }
+
+  .view-tab {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .kanban-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .kanban-column {
+    min-width: 280px;
+    max-width: 320px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    max-height: calc(100vh - 200px);
+  }
+
+  .content-viewport {
+    padding: 1rem 0.85rem;
+  }
+
+  .db-status span {
     display: none;
   }
-  .kanban-grid {
+
+  .db-status {
+    padding: 0.4rem;
+    border-radius: 50%;
+  }
+
+  .modal-content {
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+    max-height: 95vh;
+  }
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .modal-form-grid {
     grid-template-columns: 1fr;
   }
-  .search-box {
-    width: 180px;
+
+  .task-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-bar {
+    padding: 0.75rem 0.65rem;
+  }
+
+  .content-viewport {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .glass-panel {
+    border-radius: var(--radius-md);
+  }
+
+  /* Calendar mobile matrix adjustments */
+  .calendar-day-cell {
+    min-height: 65px !important;
+    padding: 0.3rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .btn {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .view-tab span {
+    font-size: 0.75rem;
   }
 }

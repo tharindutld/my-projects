@@ -23,7 +23,9 @@ export default function Sidebar({
   setSelectedCategory,
   onOpenCategoryModal,
   onDeleteCategory,
-  taskStats
+  taskStats,
+  isMobileOpen,
+  onCloseMobile
 }) {
   const [confirmingCategory, setConfirmingCategory] = useState(null);
 
@@ -31,15 +33,48 @@ export default function Sidebar({
     return tasks.filter((t) => String(t.category_id) === String(catId)).length;
   };
 
+  const handleFilterClick = (filter) => {
+    setActiveFilter(filter);
+    setSelectedCategory(null);
+    if (onCloseMobile) onCloseMobile();
+  };
+
+  const handleCategoryClick = (catId) => {
+    setSelectedCategory(String(catId));
+    if (onCloseMobile) onCloseMobile();
+  };
+
   return (
-    <aside className="sidebar">
-      {/* Brand Header */}
-      <div className="brand-logo">
-        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-          <Zap size={20} />
+    <>
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={onCloseMobile} 
+          aria-label="Close navigation sidebar"
+        />
+      )}
+
+      <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
+        {/* Brand Header */}
+        <div className="brand-logo" style={{ justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <Zap size={20} />
+            </div>
+            <span>TaskPulse</span>
+          </div>
+
+          {/* Close button for Mobile Drawer */}
+          <button 
+            className="btn-icon mobile-sidebar-close" 
+            onClick={onCloseMobile} 
+            title="Close menu"
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <span>TaskPulse</span>
-      </div>
 
       {/* Main Navigation */}
       <nav className="sidebar-nav">
@@ -49,7 +84,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'all' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('all'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('all')}
         >
           <div className="nav-item-left">
             <Inbox size={18} />
@@ -60,7 +95,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'today' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('today'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('today')}
         >
           <div className="nav-item-left">
             <Calendar size={18} />
@@ -71,7 +106,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'upcoming' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('upcoming'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('upcoming')}
         >
           <div className="nav-item-left">
             <Clock size={18} />
@@ -82,7 +117,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'urgent' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('urgent'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('urgent')}
         >
           <div className="nav-item-left">
             <AlertCircle size={18} style={{ color: 'var(--priority-urgent)' }} />
@@ -93,7 +128,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'starred' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('starred'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('starred')}
         >
           <div className="nav-item-left">
             <Star size={18} style={{ color: '#f59e0b' }} />
@@ -104,7 +139,7 @@ export default function Sidebar({
 
         <button
           className={`nav-item ${activeFilter === 'completed' && !selectedCategory ? 'active' : ''}`}
-          onClick={() => { setActiveFilter('completed'); setSelectedCategory(null); }}
+          onClick={() => handleFilterClick('completed')}
         >
           <div className="nav-item-left">
             <CheckCircle2 size={18} style={{ color: 'var(--status-completed)' }} />
@@ -134,8 +169,8 @@ export default function Sidebar({
               <div
                 key={cat.id}
                 className={`nav-item ${isSelected ? 'active' : ''}`}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', group: 'category-item' }}
-                onClick={() => setSelectedCategory(String(cat.id))}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                onClick={() => handleCategoryClick(cat.id)}
               >
                 <div className="nav-item-left">
                   <span
@@ -244,5 +279,6 @@ export default function Sidebar({
         </div>
       )}
     </aside>
+    </>
   );
 }

@@ -219,7 +219,7 @@ export default function ListView({
             <span>Pinned Tasks ({pinnedTasks.length})</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          <div className="task-cards-grid">
             {pinnedTasks.map((t) => (
               <TaskCard
                 key={t.id}
@@ -271,7 +271,7 @@ export default function ListView({
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          <div className="task-cards-grid">
             {unpinnedTasks.map((t) => (
               <TaskCard
                 key={t.id}
