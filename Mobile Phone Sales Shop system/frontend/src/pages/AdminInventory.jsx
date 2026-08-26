@@ -255,19 +255,21 @@ export default function AdminInventory() {
                     <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>{row.ModelNumber}</td>
                     <td style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>{row.initial}</td>
                     <td style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>{row.soldQty}</td>
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                      <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: '700' }}>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>
                         {badge.label}
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                       <span style={{
                         background: row.Status === 1 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
                         color: row.Status === 1 ? 'var(--success)' : 'var(--danger)',
                         borderRadius: '20px',
                         padding: '4px 10px',
                         fontSize: '12px',
-                        fontWeight: '700'
+                        fontWeight: '700',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block'
                       }}>
                         {row.Status === 1 ? 'Active' : 'Inactive'}
                       </span>

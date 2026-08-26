@@ -375,8 +375,8 @@ export default function StockList() {
                   <th style={{ padding: '14px 16px' }}>Selling Price</th>
                   <th style={{ padding: '14px 16px', textAlign: 'center' }}>Current Qty</th>
                   <th style={{ padding: '14px 16px', textAlign: 'center' }}>Registered IMEIs</th>
-                  <th style={{ padding: '14px 16px', textAlign: 'center' }}>Status</th>
-                  <th style={{ padding: '14px 16px', textAlign: 'right' }}>Actions</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>Status</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -415,22 +415,22 @@ export default function StockList() {
                         </td>
 
                         {isAdmin && (
-                          <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                          <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                             LKR {parseFloat(row.CostPrice || 0).toLocaleString()}
                           </td>
                         )}
 
-                        <td style={{ padding: '14px 16px', fontWeight: '700', color: '#fff' }}>
+                        <td style={{ padding: '14px 16px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap' }}>
                           LKR {parseFloat(row.SellingPrice || 0).toLocaleString()}
                         </td>
 
-                        <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                        <td style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           <span style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', padding: '4px 12px', borderRadius: '12px', fontWeight: '800' }}>
                             {remaining} / {row.InitialQuantity}
                           </span>
                         </td>
 
-                        <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                        <td style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {imeisList.length > 0 ? (
                             <button
                               onClick={() => setSelectedImeiBatch({
@@ -440,7 +440,7 @@ export default function StockList() {
                                 imeis: imeisList
                               })}
                               className="glass-btn-secondary"
-                              style={{ padding: '4px 12px', borderRadius: '14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              style={{ padding: '4px 12px', borderRadius: '14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}
                             >
                               <QrCode size={13} /> {row.CategoryName === 'Tablet' ? 'Serials' : 'IMEIs'} ({imeisList.length})
                             </button>
@@ -449,13 +449,13 @@ export default function StockList() {
                           )}
                         </td>
 
-                        <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                        <td style={{ padding: '14px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {remaining > 5 ? (
-                            <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>In Stock</span>
+                            <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>In Stock</span>
                           ) : remaining > 0 ? (
-                            <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>Low Stock</span>
+                            <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>Low Stock</span>
                           ) : (
-                            <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>Out of Stock</span>
+                            <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>Out of Stock</span>
                           )}
                         </td>
 

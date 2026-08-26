@@ -290,13 +290,13 @@ export default function AdminDashboard() {
                               <td className={`text-center fw-bold ${isZero ? 'text-danger' : 'text-warning'}`}>
                                 {ls.Stock} units left
                               </td>
-                              <td className="text-center">
+                              <td className="text-center" style={{ whiteSpace: 'nowrap' }}>
                                 {isZero ? (
-                                  <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>
+                                  <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>
                                     Out of Stock
                                   </span>
                                 ) : (
-                                  <span style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>
+                                  <span style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>
                                     Low Stock
                                   </span>
                                 )}

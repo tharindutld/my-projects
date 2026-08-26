@@ -283,11 +283,11 @@ export default function Inventory() {
                         <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: '800', color: item.Stock === 0 ? '#f87171' : '#fbbf24' }}>
                           {item.Stock} units
                         </td>
-                        <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                        <td style={{ padding: '10px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {item.Stock === 0 ? (
-                            <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>Out of Stock</span>
+                            <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>Out of Stock</span>
                           ) : (
-                            <span style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: '700' }}>Low Stock</span>
+                            <span style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', padding: '3px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>Low Stock</span>
                           )}
                         </td>
                       </tr>
