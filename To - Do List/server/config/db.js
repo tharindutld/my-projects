@@ -4,6 +4,11 @@ const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_USER = process.env.DB_USER || 'root';
 const DB_PASS = process.env.DB_PASS || '';
 const DB_NAME = process.env.DB_NAME || 'todo_app';
+const DB_PORT = parseInt(process.env.DB_PORT || '3306', 10);
+
+const sslConfig = (process.env.DB_SSL === 'true' || (DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1'))
+  ? { rejectUnauthorized: false }
+  : undefined;
 
 let pool = null;
 
@@ -16,6 +21,8 @@ export async function getPool() {
       host: DB_HOST,
       user: DB_USER,
       password: DB_PASS,
+      port: DB_PORT,
+      ssl: sslConfig
     });
 
     await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
@@ -27,6 +34,8 @@ export async function getPool() {
       user: DB_USER,
       password: DB_PASS,
       database: DB_NAME,
+      port: DB_PORT,
+      ssl: sslConfig,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
