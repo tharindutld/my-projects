@@ -213,49 +213,49 @@ export default function CustomerBehaviorPage() {
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading customer data...</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}>
-                    <th style={{ padding: '12px 16px' }}>Customer Name</th>
-                    <th style={{ padding: '12px 16px' }}>Email Address</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Orders Placed</th>
-                    <th style={{ padding: '12px 16px' }}>Total Spend</th>
-                    <th style={{ padding: '12px 16px' }}>Average Order Value</th>
-                    <th style={{ padding: '12px 16px' }}>Favorite Brand</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Purchase Freq</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Loyalty Points</th>
+                    <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Customer Name</th>
+                    <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Email Address</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>Orders Placed</th>
+                    <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Total Spend</th>
+                    <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Average Order Value</th>
+                    <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Favorite Brand</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>Purchase Freq</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>Loyalty Points</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data?.customers && data.customers.length > 0 ? (
                     data.customers.map((c) => (
                       <tr key={c.ID} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '12px 16px', fontWeight: '700' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: '700', whiteSpace: 'nowrap' }}>
                           {c.FirstName} {c.LastName || ''}
                         </td>
-                        <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>{c.Email}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <span style={{ background: 'rgba(255,255,255,0.08)', padding: '4px 10px', borderRadius: '12px', fontWeight: '700' }}>
-                            {c.TotalOrders} orders
+                        <td style={{ padding: '12px 16px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{c.Email}</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: 'rgba(255,255,255,0.08)', padding: '4px 12px', borderRadius: '12px', fontWeight: '700', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                            {c.TotalOrders} {c.TotalOrders === 1 ? 'order' : 'orders'}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#06b6d4', fontWeight: '700' }}>
+                        <td style={{ padding: '12px 16px', color: '#06b6d4', fontWeight: '700', whiteSpace: 'nowrap' }}>
                           Rs. {parseFloat(c.TotalSpend || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
-                        <td style={{ padding: '12px 16px', color: '#10b981', fontWeight: '600' }}>
+                        <td style={{ padding: '12px 16px', color: '#10b981', fontWeight: '600', whiteSpace: 'nowrap' }}>
                           Rs. {parseFloat(c.AvgSpend || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', padding: '4px 10px', borderRadius: '12px', fontWeight: '600', fontSize: '12px' }}>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', padding: '4px 10px', borderRadius: '12px', fontWeight: '600', fontSize: '12px', whiteSpace: 'nowrap', display: 'inline-block' }}>
                             {c.fav_brand}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <td style={{ padding: '12px 16px', textAlign: 'center', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                           {c.orders_per_month.toFixed(1)} / mo
                         </td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <span style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', padding: '4px 10px', borderRadius: '12px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            <Award size={12} /> {c.LoyaltyPoints || 0} pts
+                        <td style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', padding: '4px 12px', borderRadius: '12px', fontWeight: '700', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+                            <Award size={14} /> {c.LoyaltyPoints || 0} pts
                           </span>
                         </td>
                       </tr>

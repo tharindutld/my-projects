@@ -239,7 +239,7 @@ export default function SeasonalTrendsPage() {
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading seasonal trends data...</div>
           ) : activeTab === 'monthly' ? (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}>
                     <th style={{ padding: '12px 16px' }}>Year / Month</th>
@@ -300,7 +300,7 @@ export default function SeasonalTrendsPage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}>
                     <th style={{ padding: '12px 16px' }}>Calendar Week Number</th>
