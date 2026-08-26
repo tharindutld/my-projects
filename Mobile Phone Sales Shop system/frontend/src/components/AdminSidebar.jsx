@@ -243,7 +243,7 @@ function AdminSidebar({ collapsed, setCollapsed }) {
               onToggle={() => toggleMenu('orders')}
               active={path.startsWith('/admin/orders') || path.startsWith('/admin/add-order') || path.startsWith('/admin/add_order')}
             >
-              <SubItem to="/admin/add-order.php" label="Create Order" icon={<Plus size={13} />} active={path === '/admin/add-order' || path === '/admin/add-order.php'} />
+              <SubItem to="/admin/add-order" label="Create Order" icon={<Plus size={13} />} active={path === '/admin/add-order' || path === '/admin/add-order.php'} />
               <SubItem to="/admin/orders" label="Manage Orders" icon={<List size={13} />} active={path === '/admin/orders' || path === '/admin/orders.php' || path === '/admin/manage-orders'} />
             </SubMenu>
           </>
@@ -261,9 +261,9 @@ function AdminSidebar({ collapsed, setCollapsed }) {
           active={path.startsWith('/admin/repairs') || path.startsWith('/admin/add-repair') || path.startsWith('/admin/manage-repair') || path.startsWith('/admin/manage-repairs')}
         >
           {!isTechnician && (
-            <SubItem to="/admin/add-repair.php" label="Log Repair" icon={<Plus size={13} />} active={path === '/admin/add-repair' || path === '/admin/add-repair.php'} />
+            <SubItem to="/admin/add-repair" label="Log Repair" icon={<Plus size={13} />} active={path === '/admin/add-repair' || path === '/admin/add-repair.php'} />
           )}
-          <SubItem to="/admin/manage-repair.php" label="Manage Repairs" icon={<List size={13} />} active={path === '/admin/manage-repair' || path === '/admin/manage-repair.php' || path === '/admin/manage-repairs' || path === '/admin/manage-repairs.php' || path === '/admin/repairs'} />
+          <SubItem to="/admin/manage-repair" label="Manage Repairs" icon={<List size={13} />} active={path === '/admin/manage-repair' || path === '/admin/manage-repair.php' || path === '/admin/manage-repairs' || path === '/admin/manage-repairs.php' || path === '/admin/repairs'} />
         </SubMenu>
 
         {/* Customers */}

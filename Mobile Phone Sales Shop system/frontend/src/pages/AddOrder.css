@@ -1,74 +1,227 @@
+/* Add / Create In-Store Order (POS) Premium Glassmorphic Styling */
+
 .add-order-container {
   color: #f8fafc;
-  padding-bottom: 2rem;
+  padding-bottom: 3rem;
 }
 
+/* Header Container */
 .add-order-header {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 1.5rem 2rem;
-  backdrop-filter: blur(16px);
-}
-
-.glass-card {
-  background: rgba(15, 23, 42, 0.75);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.add-order-header p {
+  color: #cbd5e1 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Glass Card Component */
+.glass-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 20px 50px 0 rgba(0, 0, 0, 0.55) !important;
 }
 
-.custom-input {
-  background-color: rgba(30, 41, 59, 0.7) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+/* Labels - High Contrast */
+.add-order-container label,
+.add-order-container .form-label {
   color: #f8fafc !important;
-  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+/* Inputs, Selects & Textareas */
+.custom-input,
+.add-order-container .form-control,
+.add-order-container .form-select {
+  background-color: rgba(30, 41, 59, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s ease !important;
 }
 
-.custom-input:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
-  background-color: rgba(15, 23, 42, 0.9) !important;
+.custom-input::placeholder,
+.add-order-container .form-control::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1;
 }
 
-.custom-input option {
-  background-color: #0f172a;
-  color: #f8fafc;
+.custom-input:focus,
+.add-order-container .form-control:focus,
+.add-order-container .form-select:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25) !important;
+  background-color: rgba(15, 23, 42, 0.98) !important;
+  color: #ffffff !important;
 }
 
+.custom-input option,
+.add-order-container .form-select option {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  padding: 10px;
+}
+
+/* Input Group Addons & Layout */
+.add-order-container .input-group {
+  display: flex !important;
+  align-items: stretch !important;
+  flex-wrap: nowrap !important;
+}
+
+.add-order-container .input-group-text {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #818cf8 !important;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* First element in input-group (Prefix) */
+.add-order-container .input-group > .input-group-text:first-child,
+.add-order-container .input-group > .form-control:first-child,
+.add-order-container .input-group > .form-select:first-child {
+  border-top-left-radius: 12px !important;
+  border-bottom-left-radius: 12px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: none !important;
+}
+
+/* Last element in input-group (Suffix) */
+.add-order-container .input-group > .input-group-text:last-child,
+.add-order-container .input-group > .form-control:last-child,
+.add-order-container .input-group > .form-select:last-child {
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: none !important;
+}
+
+/* Search Dropdown Lists */
 .search-dropdown-list {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  border-radius: 0 0 14px 14px;
-  max-height: 280px;
+  background: rgba(15, 23, 42, 0.98) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(99, 102, 241, 0.5) !important;
+  border-radius: 14px !important;
+  max-height: 320px;
   overflow-y: auto;
   z-index: 1050;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7) !important;
 }
 
 .search-dropdown-item {
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: all 0.2s ease !important;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none !important;
 }
 
 .search-dropdown-item:hover {
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.25), rgba(99, 102, 241, 0.15));
-  padding-left: 1.5rem !important;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.2)) !important;
+  padding-left: 20px !important;
 }
 
+.search-dropdown-item .fw-bold {
+  color: #ffffff !important;
+}
+
+.search-dropdown-item .text-muted {
+  color: #cbd5e1 !important;
+}
+
+/* Cart & Product Selection Table Styling */
+.add-order-container table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #f8fafc;
+}
+
+.add-order-container table th {
+  background: rgba(30, 41, 59, 0.8) !important;
+  color: #cbd5e1 !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.add-order-container table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  vertical-align: middle;
+  background: transparent !important;
+  color: #f8fafc;
+}
+
+.add-order-container table tr:hover td {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Customer Walk-in / Member Toggle Buttons */
+.add-order-container .btn-group .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #cbd5e1 !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+}
+
+.add-order-container .btn-group .btn-outline-secondary:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #ffffff !important;
+  border-color: #6366f1 !important;
+}
+
+.add-order-container .btn-group .btn-primary,
+.add-order-container .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4) !important;
+}
+
+.add-order-container .btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6) !important;
+}
+
+/* Helper utilities */
 .extra-small {
   font-size: 11px;
 }

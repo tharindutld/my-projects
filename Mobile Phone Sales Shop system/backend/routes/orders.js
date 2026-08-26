@@ -290,7 +290,7 @@ router.get('/admin/list', verifyStaff(['Admin', 'Sales person']), async (req, re
     WHERE 1=1
   `;
   let selectQuery = `
-    SELECT m.*, u.FirstName, u.LastName, u.Email, u.MobileNumber
+    SELECT m.*, m.TotalAmount as GrandTotal, u.FirstName, u.LastName, u.Email, u.MobileNumber
     FROM tbl_order_master m
     JOIN tbluser u ON m.UserId = u.ID
     WHERE 1=1

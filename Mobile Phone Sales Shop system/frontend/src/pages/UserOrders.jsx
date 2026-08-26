@@ -28,7 +28,7 @@ export default function UserOrders() {
 
   const fetchUserOrders = async () => {
     if (!uid) {
-      navigate('/admin/users.php');
+      navigate('/admin/users');
       return;
     }
     setLoading(true);
@@ -80,18 +80,32 @@ export default function UserOrders() {
         <ToastAlert message={error} type="danger" onClose={() => setError('')} />
 
         {/* Header Bar */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div>
-            <h3 className="fw-bold text-white mb-1">Customer Purchase History</h3>
-            <p className="text-muted small mb-0">
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: 'var(--primary)',
+              background: 'rgba(99,102,241,0.12)',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              display: 'inline-block',
+              marginBottom: '10px'
+            }}>Customer Ledger</span>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0 }} className="text-white d-flex align-items-center gap-2">
+              <Receipt className="text-primary" /> Customer Purchase History
+            </h1>
+            <p className="text-muted small mt-1 mb-0">
               Review completed orders, net spend metrics, and invoices for {userData ? `${userData.FirstName} ${userData.LastName}` : 'Customer'}.
             </p>
           </div>
           <button 
             className="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 px-3"
-            onClick={() => navigate('/admin/users.php')}
+            onClick={() => navigate('/admin/users')}
           >
-            <ArrowLeft /> Back to Customers
+            <ArrowLeft size={16} /> Back to Customers
           </button>
         </div>
 

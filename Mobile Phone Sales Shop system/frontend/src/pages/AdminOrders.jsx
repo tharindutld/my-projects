@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, ShieldAlert, Package, Eye, Trash2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Check, X, ShieldAlert, Package, Eye, Trash2, ShoppingBag, Plus, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ConfirmModal from '../components/ConfirmModal';
@@ -179,23 +179,39 @@ export default function AdminOrders() {
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
-          <button onClick={() => navigate('/admin')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-            <ArrowLeft size={14} /> Back to Dashboard
-          </button>
-          <h1 style={{ fontSize: '32px', fontWeight: '800' }}>Customer Orders Management</h1>
+          <span style={{
+            fontSize: '12px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: 'var(--primary)',
+            background: 'rgba(99,102,241,0.12)',
+            padding: '4px 10px',
+            borderRadius: '12px',
+            display: 'inline-block',
+            marginBottom: '10px'
+          }}>Order Management</span>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <ShoppingBag size={28} className="text-primary" /> Customer Orders Management
+          </h1>
         </div>
 
-        {/* Filter status */}
-        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="custom-glass-input" style={{ width: '220px' }}>
-          <option value="">All Order Statuses</option>
-          <option value="Order Placed">Order Placed</option>
-          <option value="Packed">Packed</option>
-          <option value="Dispatched">Dispatched</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Link to="/admin/add-order" className="glass-btn" style={{ borderRadius: '12px', padding: '8px 16px', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>
+            <Plus size={16} /> Create Order (POS)
+          </Link>
+          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="custom-glass-input" style={{ width: '200px' }}>
+            <option value="">All Order Statuses</option>
+            <option value="Order Placed">Order Placed</option>
+            <option value="Packed">Packed</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
       </div>
 
       <div style={{
@@ -218,15 +234,18 @@ export default function AdminOrders() {
                   ord.OrderStatus === 'Cancelled' ? 'status-pill-cancelled' :
                   ord.OrderStatus === 'Dispatched' ? 'status-pill-dispatched' : 'status-pill-pending';
 
+                const customerName = ord.BillingName || (ord.FirstName ? `${ord.FirstName} ${ord.LastName || ''}`.trim() : (ord.ShippingName || 'Walk-in / Online Customer'));
+                const amount = ord.TotalAmount ?? ord.GrandTotal ?? 0;
+
                 return (
                   <div key={ord.ID} className="orders-card-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                     <div>
                       <strong style={{ fontSize: '15px', color: '#fff' }}>Order #{ord.OrderNumber}</strong>
                       <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Customer: {ord.BillingFirstName} {ord.BillingLastName} &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
+                        Customer: <span style={{ color: '#e2e8f0', fontWeight: '600' }}>{customerName}</span> &bull; Date: {new Date(ord.OrderDate).toLocaleDateString()}
                       </span>
                       <span style={{ fontSize: '12px', display: 'block', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Total Amount: <strong style={{ color: '#818cf8' }}>Rs. {formatCurrency(ord.GrandTotal)}</strong>
+                        Total Amount: <strong style={{ color: '#818cf8' }}>Rs. {formatCurrency(amount)}</strong>
                       </span>
                       <div style={{ marginTop: '10px' }}>
                         <span className={`status-pill ${statusClass}`}>
@@ -279,17 +298,58 @@ export default function AdminOrders() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '14px' }}>
               <div>
                 <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Shipping Address & Recipient</strong>
-                <div style={{ color: '#fff', fontWeight: '600' }}>{selectedOrder.BillingFirstName} {selectedOrder.BillingLastName}</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{selectedOrder.BillingAddress}, {selectedOrder.BillingCity}</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Phone: {selectedOrder.BillingPhone} | Email: {selectedOrder.BillingEmail}</div>
+                <div style={{ color: '#fff', fontWeight: '600' }}>
+                  {selectedOrder.BillingName || selectedOrder.ShippingName || (selectedOrder.FirstName ? `${selectedOrder.FirstName} ${selectedOrder.LastName || ''}`.trim() : 'Customer')}
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                  {selectedOrder.BillingAddress || selectedOrder.ShippingAddress || 'N/A'}{selectedOrder.BillingCity ? `, ${selectedOrder.BillingCity}` : ''}
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Phone: {selectedOrder.BillingPhone || selectedOrder.ShippingPhone || selectedOrder.MobileNumber || 'N/A'} | Email: {selectedOrder.BillingEmail || selectedOrder.Email || 'N/A'}
+                </div>
               </div>
 
               <div>
                 <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '4px' }}>Payment Info</strong>
-                <div style={{ color: '#e2e8f0' }}>Method: {selectedOrder.PaymentMethod} ({selectedOrder.PaymentStatus})</div>
+                <div style={{ color: '#e2e8f0' }}>Method: {selectedOrder.PaymentMethod || 'Card'}</div>
                 <div style={{ fontSize: '18px', fontWeight: '800', color: '#818cf8', marginTop: '4px' }}>
-                  Grand Total: Rs. {formatCurrency(selectedOrder.GrandTotal)}
+                  Grand Total: Rs. {formatCurrency(selectedOrder.TotalAmount ?? selectedOrder.GrandTotal ?? 0)}
                 </div>
+              </div>
+
+              {/* Items Breakdown */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                  <strong style={{ display: 'block', color: 'var(--text-muted)', fontSize: '12px', marginBottom: '10px' }}>
+                    Purchased Products ({selectedOrder.items.length})
+                  </strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedOrder.items.map((item, idx) => (
+                      <div key={idx} className="glass-card" style={{ padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ fontSize: '13px', color: '#fff', display: 'block' }}>{item.ProductName}</strong>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            {item.Color} &bull; {item.RAM}/{item.ROM} &bull; Qty: {item.ProductQty}
+                          </span>
+                        </div>
+                        <span style={{ color: '#818cf8', fontWeight: '700', fontSize: '13px' }}>
+                          Rs. {formatCurrency(parseFloat(item.ProductPrice || 0) * (item.ProductQty || 1))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* View Invoice Button */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                <button
+                  onClick={() => window.open(`/invoice/${selectedOrder.ID}?isAdmin=1`, '_blank')}
+                  className="glass-btn glass-btn-secondary"
+                  style={{ width: '100%', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <FileText size={15} /> View Full Invoice / Receipt
+                </button>
               </div>
 
               {/* Order Status Controls */}

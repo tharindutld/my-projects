@@ -276,7 +276,7 @@ export default function AddRepair() {
       if (res.ok) {
         setSuccess('Repair log has been successfully added.');
         setTimeout(() => {
-          navigate('/admin/manage-repairs.php');
+          navigate('/admin/manage-repair');
         }, 1200);
       } else {
         setError(data.message || 'Failed to add repair log.');
@@ -338,8 +338,8 @@ export default function AddRepair() {
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="mb-3">
           <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link to="/admin/dashboard.php" className="text-decoration-none text-info">Home</Link></li>
-            <li className="breadcrumb-item"><Link to="/admin/manage-repairs.php" className="text-decoration-none text-info">Manage Repairs</Link></li>
+            <li className="breadcrumb-item"><Link to="/admin" className="text-decoration-none text-info">Home</Link></li>
+            <li className="breadcrumb-item"><Link to="/admin/manage-repair" className="text-decoration-none text-info">Manage Repairs</Link></li>
             <li className="breadcrumb-item active text-light" aria-current="page">Log Repair</li>
           </ol>
         </nav>
@@ -362,7 +362,7 @@ export default function AddRepair() {
             </h5>
             <button 
               className="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-1"
-              onClick={() => navigate('/admin/manage-repairs.php')}
+              onClick={() => navigate('/admin/manage-repair')}
             >
               <ArrowLeft size={16} /> Back to Repairs
             </button>
@@ -658,7 +658,7 @@ export default function AddRepair() {
                 <button 
                   type="button" 
                   className="btn btn-outline-secondary px-4 rounded-pill"
-                  onClick={() => navigate('/admin/manage-repairs.php')}
+                  onClick={() => navigate('/admin/manage-repair')}
                 >
                   Cancel
                 </button>

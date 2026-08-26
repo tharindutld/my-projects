@@ -52,7 +52,7 @@ export default function EditRepair() {
       return;
     }
     if (!repairId) {
-      navigate('/admin/manage-repairs.php');
+      navigate('/admin/manage-repair');
       return;
     }
 
@@ -186,8 +186,8 @@ export default function EditRepair() {
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="mb-3">
           <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link to="/admin/dashboard.php" className="text-decoration-none text-info">Home</Link></li>
-            <li className="breadcrumb-item"><Link to="/admin/manage-repairs.php" className="text-decoration-none text-info">Manage Repairs</Link></li>
+            <li className="breadcrumb-item"><Link to="/admin" className="text-decoration-none text-info">Home</Link></li>
+            <li className="breadcrumb-item"><Link to="/admin/manage-repair" className="text-decoration-none text-info">Manage Repairs</Link></li>
             <li className="breadcrumb-item active text-light" aria-current="page">Edit Repair</li>
           </ol>
         </nav>
@@ -210,7 +210,7 @@ export default function EditRepair() {
             </h5>
             <button 
               className="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-1"
-              onClick={() => navigate('/admin/manage-repairs.php')}
+              onClick={() => navigate('/admin/manage-repair')}
             >
               <ArrowLeft size={16} /> Back to Repairs
             </button>
@@ -398,7 +398,7 @@ export default function EditRepair() {
                 )}
 
                 <div className="mt-4 text-end d-flex justify-content-end gap-2">
-                  <button type="button" className="btn btn-outline-secondary px-4 rounded-pill" onClick={() => navigate('/admin/manage-repairs.php')}>
+                  <button type="button" className="btn btn-outline-secondary px-4 rounded-pill" onClick={() => navigate('/admin/manage-repair')}>
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary px-4 rounded-pill d-flex align-items-center gap-2" disabled={submitting}>

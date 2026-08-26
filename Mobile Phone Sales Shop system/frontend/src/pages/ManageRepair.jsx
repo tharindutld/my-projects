@@ -175,7 +175,7 @@ export default function ManageRepair() {
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" className="mb-3">
           <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link to="/admin/dashboard.php" className="text-decoration-none text-info">Home</Link></li>
+            <li className="breadcrumb-item"><Link to="/admin" className="text-decoration-none text-info">Home</Link></li>
             <li className="breadcrumb-item active text-light" aria-current="page">
               Manage Repairs{filterParam ? ` - ${filterParam.charAt(0).toUpperCase() + filterParam.slice(1)}` : ''}
             </li>
@@ -206,7 +206,7 @@ export default function ManageRepair() {
             <div>
               <button 
                 className="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-2"
-                onClick={() => navigate('/admin/add-repair.php')}
+                onClick={() => navigate('/admin/add-repair')}
               >
                 <PlusCircle size={18} /> Log New Repair
               </button>
@@ -337,7 +337,7 @@ export default function ManageRepair() {
                             <div className="d-flex justify-content-end gap-1">
                               <button 
                                 className="btn btn-sm btn-primary rounded-pill px-3 d-flex align-items-center gap-1"
-                                onClick={() => navigate(`/admin/edit-repair.php?id=${row.ID}`)}
+                                onClick={() => navigate(`/admin/edit-repair/${row.ID}`)}
                               >
                                 <Edit size={14} /> Edit
                               </button>

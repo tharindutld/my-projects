@@ -208,7 +208,7 @@ export default function AddOrder() {
       if (res.ok) {
         setSuccess(data.message || 'In-store order finalized successfully!');
         setTimeout(() => {
-          navigate('/admin/orders.php');
+          navigate('/admin/orders');
         }, 1500);
       } else {
         setError(data.message || 'Failed to finalize in-store order.');
@@ -292,18 +292,30 @@ export default function AddOrder() {
 
         {/* Header */}
         <div className="add-order-header mb-4">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-              <h3 className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
+              <span style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                color: 'var(--primary)',
+                background: 'rgba(99,102,241,0.12)',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                display: 'inline-block',
+                marginBottom: '10px'
+              }}>Order Management</span>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0 }} className="text-white d-flex align-items-center gap-2">
                 <PlusCircle className="text-primary" /> Create In-Store Order (POS)
-              </h3>
-              <p className="text-muted small mb-0">Create new walk-in or member orders, process counter payments & manage inventory stock.</p>
+              </h1>
+              <p className="mt-1 mb-0" style={{ color: '#cbd5e1', fontSize: '14px', fontWeight: '500' }}>Create new walk-in or member orders, process counter payments & manage inventory stock.</p>
             </div>
             <button 
               className="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 px-3"
-              onClick={() => navigate('/admin/orders.php')}
+              onClick={() => navigate('/admin/orders')}
             >
-              <ArrowLeft /> Back to Orders
+              <ArrowLeft size={16} /> Back to Orders
             </button>
           </div>
         </div>
@@ -351,7 +363,7 @@ export default function AddOrder() {
                 {userType === 'walkin' ? (
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <label className="form-label text-light small fw-semibold">Customer Name <span className="text-danger">*</span></label>
+                      <label className="form-label">Customer Name <span className="text-danger">*</span></label>
                       <input 
                         type="text" 
                         className={`form-control custom-input ${fieldErrors.walkinName ? 'is-invalid border-danger' : ''}`}
@@ -363,7 +375,7 @@ export default function AddOrder() {
                       {fieldErrors.walkinName && <div className="text-danger extra-small mt-1">{fieldErrors.walkinName}</div>}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label text-light small fw-semibold">Phone Number <span className="text-danger">*</span></label>
+                      <label className="form-label">Phone Number <span className="text-danger">*</span></label>
                       <input 
                         type="tel" 
                         className={`form-control custom-input ${fieldErrors.walkinPhone ? 'is-invalid border-danger' : ''}`}
@@ -375,7 +387,7 @@ export default function AddOrder() {
                       {fieldErrors.walkinPhone && <div className="text-danger extra-small mt-1">{fieldErrors.walkinPhone}</div>}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label text-light small fw-semibold">Email Address <span className="text-danger">*</span></label>
+                      <label className="form-label">Email Address <span className="text-danger">*</span></label>
                       <input 
                         type="email" 
                         className={`form-control custom-input ${fieldErrors.walkinEmail ? 'is-invalid border-danger' : ''}`}
@@ -387,7 +399,7 @@ export default function AddOrder() {
                       {fieldErrors.walkinEmail && <div className="text-danger extra-small mt-1">{fieldErrors.walkinEmail}</div>}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label text-light small fw-semibold">Location / Address <span className="text-danger">*</span></label>
+                      <label className="form-label">Location / Address <span className="text-danger">*</span></label>
                       <input 
                         type="text" 
                         className={`form-control custom-input ${fieldErrors.walkinAddress ? 'is-invalid border-danger' : ''}`}
@@ -403,9 +415,9 @@ export default function AddOrder() {
                   <div className="registered-customer-section">
                     {!selectedCustomer ? (
                       <div className="position-relative">
-                        <label className="form-label text-light small fw-semibold">Search Registered Member</label>
+                        <label className="form-label">Search Registered Member</label>
                         <div className="input-group">
-                          <span className="input-group-text bg-dark border-secondary text-muted"><Search /></span>
+                          <span className="input-group-text"><Search size={18} /></span>
                           <input 
                             type="text"
                             className="form-control custom-input"
@@ -414,7 +426,7 @@ export default function AddOrder() {
                             onChange={e => setCustSearchQuery(e.target.value)}
                           />
                         </div>
-                        {custSearching && <div className="p-2 text-muted small">Searching...</div>}
+                        {custSearching && <div className="p-2 text-light small opacity-75">Searching customer catalog...</div>}
                         {custSearchResults.length > 0 && (
                           <div className="search-dropdown-list shadow-lg">
                             {custSearchResults.map(cust => (
@@ -424,21 +436,21 @@ export default function AddOrder() {
                                 onClick={() => handleSelectCustomer(cust)}
                               >
                                 <div className="fw-bold text-white">{cust.name}</div>
-                                <div className="text-muted small">{cust.email} &bull; {cust.phone}</div>
+                                <div className="text-light small opacity-75">{cust.email} &bull; {cust.phone}</div>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="p-3 bg-dark border border-primary rounded-3 d-flex justify-content-between align-items-center">
+                      <div className="p-3 rounded-3 d-flex justify-content-between align-items-center" style={{ background: 'rgba(30, 41, 59, 0.9)', border: '1px solid #6366f1' }}>
                         <div>
-                          <h6 className="fw-bold text-primary mb-1">{selectedCustomer.name}</h6>
-                          <div className="text-muted small">{selectedCustomer.email} &bull; Phone: {selectedCustomer.phone}</div>
+                          <h6 className="fw-bold text-white mb-1">{selectedCustomer.name}</h6>
+                          <div className="text-light small opacity-75">{selectedCustomer.email} &bull; Phone: {selectedCustomer.phone}</div>
                         </div>
                         <button 
                           type="button" 
-                          className="btn btn-outline-danger btn-sm rounded-pill"
+                          className="btn btn-outline-danger btn-sm rounded-pill px-3"
                           onClick={() => setSelectedCustomer(null)}
                         >
                           Change Member
@@ -457,16 +469,16 @@ export default function AddOrder() {
 
                 <div className="position-relative mb-4">
                   <div className="input-group input-group-lg">
-                    <span className="input-group-text bg-dark border-secondary text-muted"><Search /></span>
+                    <span className="input-group-text"><Search size={20} /></span>
                     <input 
                       type="text"
                       className="form-control custom-input"
-                      placeholder="Type product name, brand, or model number..."
+                      placeholder="Type product name, brand, or model number to add..."
                       value={prodSearchQuery}
                       onChange={e => setProdSearchQuery(e.target.value)}
                     />
                   </div>
-                  {prodSearching && <div className="p-2 text-muted small">Searching products...</div>}
+                  {prodSearching && <div className="p-2 text-light small opacity-75">Searching store inventory...</div>}
                   {prodSearchResults.length > 0 && (
                     <div className="search-dropdown-list shadow-lg">
                       {prodSearchResults.map(prod => (
@@ -476,11 +488,13 @@ export default function AddOrder() {
                           onClick={() => handleAddProductToCart(prod)}
                         >
                           <div>
-                            <span className="fw-bold text-white">{prod.name}</span>
-                            <span className="badge bg-secondary ms-2 small">{prod.model}</span>
-                            <div className="text-muted small">Brand: {prod.brand} &bull; Stock: <span className={prod.stock < 5 ? 'text-danger fw-bold' : 'text-success'}>{prod.stock}</span></div>
+                            <span className="fw-bold text-white me-2">{prod.name}</span>
+                            <span className="badge bg-primary me-2">{prod.model}</span>
+                            <div className="text-light small opacity-75 mt-1">
+                              Brand: {prod.brand} &bull; Available Stock: <span className={prod.stock < 5 ? 'text-danger fw-bold' : 'text-success fw-bold'}>{prod.stock} units</span>
+                            </div>
                           </div>
-                          <div className="text-end fw-bold text-primary">
+                          <div className="text-end fw-bold text-white fs-6">
                             Rs. {formatCurrency(prod.price)}
                           </div>
                         </div>
@@ -491,13 +505,13 @@ export default function AddOrder() {
 
                 {/* Cart Table */}
                 <div className="table-responsive">
-                  <table className="table table-dark align-middle mb-0">
+                  <table className="table align-middle mb-0">
                     <thead>
-                      <tr className="text-muted border-secondary">
+                      <tr>
                         <th>Product Item</th>
                         <th>Unit Price</th>
                         <th style={{ width: '100px' }}>Qty</th>
-                        {isAdmin && <th style={{ width: '110px' }}>Discount (%)</th>}
+                        {isAdmin && <th style={{ width: '130px' }}>Discount (%)</th>}
                         <th>Subtotal</th>
                         <th style={{ width: '40px' }}></th>
                       </tr>
@@ -505,9 +519,9 @@ export default function AddOrder() {
                     <tbody>
                       {cart.length === 0 ? (
                         <tr>
-                          <td colSpan={isAdmin ? 6 : 5} className="text-center py-4 text-muted">
-                            <Package size={32} className="d-block mb-2 text-secondary mx-auto" />
-                            No products added to the order yet. Search above to add items.
+                          <td colSpan={isAdmin ? 6 : 5} className="text-center py-4 text-light opacity-75">
+                            <Package size={36} className="d-block mb-2 text-primary opacity-50 mx-auto" />
+                            No products added to the order yet. Type product name in search bar above.
                           </td>
                         </tr>
                       ) : (
@@ -517,18 +531,18 @@ export default function AddOrder() {
                           const itemTotal = itemSubtotal - itemDiscount;
 
                           return (
-                            <tr key={item.id} className="border-secondary">
+                            <tr key={item.id}>
                               <td>
                                 <div className="fw-bold text-white">{item.name}</div>
-                                <div className="text-muted small">Model: {item.model} (In Stock: {item.stock})</div>
+                                <div className="text-light small opacity-75">Model: {item.model} (In Stock: {item.stock})</div>
                               </td>
-                              <td className="text-light">
+                              <td className="text-light fw-semibold">
                                 Rs. {formatCurrency(item.price)}
                               </td>
                               <td>
                                 <input 
                                   type="number"
-                                  className="form-control form-control-sm custom-input text-center"
+                                  className="form-control form-control-sm custom-input text-center fw-bold"
                                   min="1"
                                   max={item.stock}
                                   value={item.qty}
@@ -537,20 +551,20 @@ export default function AddOrder() {
                               </td>
                               {isAdmin && (
                                 <td>
-                                  <div className="input-group input-group-sm">
+                                  <div className="input-group input-group-sm" style={{ width: '100px' }}>
                                     <input 
                                       type="number"
-                                      className="form-control custom-input text-center"
+                                      className="form-control custom-input text-center fw-bold px-1"
                                       min="0"
                                       max="100"
                                       value={item.discount}
                                       onChange={e => updateDiscount(item.id, e.target.value)}
                                     />
-                                    <span className="input-group-text bg-dark border-secondary text-muted">%</span>
+                                    <span className="input-group-text px-2">%</span>
                                   </div>
                                 </td>
                               )}
-                              <td className="fw-bold text-primary">
+                              <td className="fw-bold text-white">
                                 Rs. {formatCurrency(itemTotal)}
                               </td>
                               <td>
@@ -582,25 +596,26 @@ export default function AddOrder() {
                 </h5>
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Subtotal</span>
-                  <span className="fw-semibold text-light">Rs. {formatCurrency(subtotal)}</span>
+                  <span style={{ color: '#cbd5e1', fontWeight: '600' }}>Subtotal</span>
+                  <span className="fw-bold text-white">Rs. {formatCurrency(subtotal)}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Total Discount</span>
-                  <span className="fw-semibold text-danger">- Rs. {formatCurrency(totalDiscount)}</span>
+                  <span style={{ color: '#cbd5e1', fontWeight: '600' }}>Total Discount</span>
+                  <span className="fw-bold text-danger">- Rs. {formatCurrency(totalDiscount)}</span>
                 </div>
-                <hr className="border-secondary my-3" />
-                <div className="d-flex justify-content-between mb-4">
+                <hr style={{ borderColor: 'rgba(255, 255, 255, 0.15)', margin: '1rem 0' }} />
+                
+                <div className="p-3 mb-4 rounded-3 d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.2))', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
                   <span className="h6 fw-bold text-white mb-0">Grand Total</span>
-                  <span className="h5 fw-bold text-primary mb-0">Rs. {formatCurrency(grandTotal)}</span>
+                  <span className="h4 fw-bold text-white mb-0" style={{ textShadow: '0 2px 10px rgba(99,102,241,0.5)' }}>Rs. {formatCurrency(grandTotal)}</span>
                 </div>
 
-                <h6 className="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                <h6 className="fw-bold text-white mb-3 d-flex align-items-center gap-2">
                   <CreditCard className="text-primary" /> Payment & Status
                 </h6>
 
                 <div className="mb-3">
-                  <label className="form-label text-muted small fw-semibold">Payment Method</label>
+                  <label className="form-label">Payment Method</label>
                   <select 
                     className="form-select custom-input"
                     value={paymentMethod}
@@ -612,7 +627,7 @@ export default function AddOrder() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label text-muted small fw-semibold">Order Status</label>
+                  <label className="form-label">Order Status</label>
                   <select 
                     className="form-select custom-input"
                     value={orderStatus}
@@ -624,8 +639,8 @@ export default function AddOrder() {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label text-muted small fw-semibold d-flex align-items-center gap-1">
-                    <Calendar /> Order Date (Optional Backdate)
+                  <label className="form-label d-flex align-items-center gap-1">
+                    <Calendar size={15} /> Order Date (Optional Backdate)
                   </label>
                   <input 
                     type="date"
@@ -634,11 +649,11 @@ export default function AddOrder() {
                     value={customOrderDate}
                     onChange={e => setCustomOrderDate(e.target.value)}
                   />
-                  <div className="form-text extra-small text-muted">Leave empty for current timestamp.</div>
+                  <div className="form-text extra-small" style={{ color: '#cbd5e1' }}>Leave empty for current timestamp.</div>
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label text-muted small fw-semibold">Transaction Notes</label>
+                  <label className="form-label">Transaction Notes</label>
                   <textarea 
                     className="form-control custom-input"
                     rows={2}

@@ -1,13 +1,53 @@
+/* User/Customer Orders Ledger Styling */
+
 .user-orders-container {
   color: #e2e8f0;
+  padding-bottom: 2.5rem;
 }
 
 .glass-card {
   background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45);
+}
+
+.user-orders-container table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #f8fafc;
+}
+
+.user-orders-container table th {
+  background: rgba(30, 41, 59, 0.6) !important;
+  color: #94a3b8 !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.user-orders-container table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  vertical-align: middle;
+  background: transparent !important;
+  color: #f8fafc;
+}
+
+.user-orders-container table tr:hover td {
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
 .pagination-dark .page-link {
@@ -15,15 +55,16 @@
   border-color: rgba(255, 255, 255, 0.1);
   color: #94a3b8;
   border-radius: 8px;
+  padding: 6px 14px;
 }
 
 .pagination-dark .page-item.active .page-link {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #6366f1;
+  border-color: #6366f1;
   color: #ffffff;
 }
 
 .pagination-dark .page-link:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(99, 102, 241, 0.2);
   color: #ffffff;
 }
