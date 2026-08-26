@@ -280,7 +280,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
 // 4. ADMIN ORDER MANAGEMENT - LIST (Paginated & Filtered)
 router.get('/admin/list', verifyStaff(['Admin', 'Sales person']), async (req, res) => {
-  const { status, page = 1, limit = 10 } = req.query;
+  const { status, search, page = 1, limit = 10 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   let countQuery = `
@@ -297,10 +297,18 @@ router.get('/admin/list', verifyStaff(['Admin', 'Sales person']), async (req, re
   `;
   const params = [];
 
-  if (status) {
+  if (status && status !== '') {
     countQuery += ' AND m.OrderStatus = ?';
     selectQuery += ' AND m.OrderStatus = ?';
     params.push(status);
+  }
+
+  if (search && search.trim() !== '') {
+    const q = `%${search.trim()}%`;
+    const searchClause = ' AND (m.OrderNumber LIKE ? OR u.FirstName LIKE ? OR u.LastName LIKE ? OR u.Email LIKE ? OR u.MobileNumber LIKE ? OR m.PaymentMethod LIKE ? OR m.ShippingName LIKE ?)';
+    countQuery += searchClause;
+    selectQuery += searchClause;
+    params.push(q, q, q, q, q, q, q);
   }
 
   selectQuery += ' ORDER BY m.OrderDate DESC LIMIT ? OFFSET ?';
