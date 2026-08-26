@@ -345,11 +345,11 @@ router.get('/inventory-aging', verifyStaff(['Admin', 'Sales person']), async (re
     const { aging_filter = '', page = 1, limit = 10 } = req.query;
 
     const [variants] = await pool.query(
-      `SELECT v.ID as VariantId, v.Stock, v.Color, v.RAM, v.ROM, v.Price, v.CreatedAt as VariantCreatedAt,
-              p.ProductName, p.BrandName, p.ModelNumber, p.PostingDate
+      `SELECT v.ID as VariantId, v.Stock, v.Color, v.RAM, v.ROM, v.Price, v.CreationDate as VariantCreatedAt,
+              p.ProductName, p.BrandName, p.ModelNumber, p.CreationDate as PostingDate
        FROM tblproduct_variants v
        JOIN tblproducts p ON v.ProductId = p.ID
-       WHERE p.Status = 1
+       WHERE p.Status = 1 OR p.Status = '1'
        ORDER BY v.Stock DESC`
     );
 
@@ -362,7 +362,7 @@ router.get('/inventory-aging', verifyStaff(['Admin', 'Sales person']), async (re
     const allItems = await Promise.all(variants.map(async (v) => {
       // Cost price
       const [[bRow]] = await pool.query(
-        `SELECT CostPrice, CreatedAt FROM tbl_stock_batches WHERE VariantId = ? LIMIT 1`,
+        `SELECT CostPrice, CreatedDate FROM tbl_stock_batches WHERE VariantId = ? LIMIT 1`,
         [v.VariantId]
       );
       const costPrice = bRow?.CostPrice ? parseFloat(bRow.CostPrice) : parseFloat(v.Price) * 0.75;
@@ -377,7 +377,7 @@ router.get('/inventory-aging', verifyStaff(['Admin', 'Sales person']), async (re
         [v.VariantId]
       );
 
-      const refDateStr = lastSaleRow?.LastSaleDate || bRow?.CreatedAt || v.VariantCreatedAt || v.PostingDate;
+      const refDateStr = lastSaleRow?.LastSaleDate || bRow?.CreatedDate || v.VariantCreatedAt || v.PostingDate;
       const refDate = refDateStr ? new Date(refDateStr) : now;
       const diffMs = now - refDate;
       const daysUnsold = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
