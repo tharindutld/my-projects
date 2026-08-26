@@ -273,9 +273,11 @@ export default function AddStock() {
               color: 'var(--primary)',
               background: 'rgba(99,102,241,0.12)',
               padding: '4px 10px',
-              borderRadius: '12px'
+              borderRadius: '12px',
+              display: 'inline-block',
+              marginBottom: '10px'
             }}>Inventory Control</span>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', marginTop: '8px', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Box size={28} className="text-primary" /> Receive New Stock Batch
             </h1>
           </div>
