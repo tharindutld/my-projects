@@ -15,35 +15,42 @@ let pool = null;
 export async function getPool() {
   if (pool) return pool;
 
+  const dbToUse = DB_NAME || 'defaultdb';
+
   try {
-    // First connect without database selected to ensure DB exists
-    const tempConnection = await mysql.createConnection({
-      host: DB_HOST,
-      user: DB_USER,
-      password: DB_PASS,
-      port: DB_PORT,
-      ssl: sslConfig
-    });
+    // Attempt temp connection to create database if permitted by host
+    try {
+      const tempConnection = await mysql.createConnection({
+        host: DB_HOST,
+        user: DB_USER,
+        password: DB_PASS,
+        port: DB_PORT,
+        ssl: sslConfig,
+        connectTimeout: 10000
+      });
+      await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbToUse}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+      await tempConnection.end();
+    } catch (createDbErr) {
+      console.warn(`[MySQL] Notice: Could not run CREATE DATABASE query (cloud DB restricted): ${createDbErr.message}`);
+    }
 
-    await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
-    await tempConnection.end();
-
-    // Now create pool with selected database
+    // Create pool directly connecting to the database
     pool = mysql.createPool({
       host: DB_HOST,
       user: DB_USER,
       password: DB_PASS,
-      database: DB_NAME,
+      database: dbToUse,
       port: DB_PORT,
       ssl: sslConfig,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+      connectTimeout: 10000
     });
 
     // Initialize tables if needed
     await initDB(pool);
-    console.log(`[MySQL] Connected successfully to database "${DB_NAME}"`);
+    console.log(`[MySQL] Connected successfully to database "${dbToUse}"`);
     return pool;
   } catch (error) {
     console.error(`[MySQL] Connection failed: ${error.message}`);
