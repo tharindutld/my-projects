@@ -42,8 +42,13 @@ export default function ConfirmModal({
   return (
     <div style={{
       position: 'fixed',
-      inset: 0,
-      zIndex: 1000,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh',
+      zIndex: 999999,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

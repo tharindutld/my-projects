@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Cart() {
   const {
@@ -14,6 +15,16 @@ export default function Cart() {
   } = useCart();
   const navigate = useNavigate();
 
+  // Confirmation Modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Remove',
+    variant: 'danger',
+    onConfirm: null
+  });
+
   const handleQtyChange = async (orderId, currentQty, stock, direction) => {
     const newQty = direction === 'inc' ? currentQty + 1 : currentQty - 1;
     if (newQty < 1) return;
@@ -23,6 +34,24 @@ export default function Cart() {
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const requestRemoveFromCart = (item) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Item from Cart',
+      message: `Are you sure you want to remove "${item.ProductName}" (${item.Color || 'Standard'}, ${item.ROM || ''}) from your shopping cart?`,
+      confirmText: 'Remove Item',
+      variant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await removeFromCart(item.OrderID);
+        } catch (err) {
+          alert(err.message || 'Error removing item from cart');
+        }
+      }
+    });
   };
 
   if (cartItems.length === 0) {
@@ -44,6 +73,18 @@ export default function Cart() {
 
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+      
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '30px' }}>Shopping Cart</h1>
 
       <div style={{
@@ -116,7 +157,7 @@ export default function Cart() {
 
               {/* Remove */}
               <button
-                onClick={() => removeFromCart(item.OrderID)}
+                onClick={() => requestRemoveFromCart(item)}
                 style={{
                   background: 'rgba(239, 68, 68, 0.1)',
                   border: '1px solid rgba(239, 68, 68, 0.2)',
@@ -125,6 +166,7 @@ export default function Cart() {
                   borderRadius: '8px',
                   cursor: 'pointer'
                 }}
+                title="Remove Item from Cart"
               >
                 <Trash2 size={16} />
               </button>

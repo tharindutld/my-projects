@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import ConfirmModal from '../components/ConfirmModal';
+
+const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
 
 export default function Wishlist() {
   const { token, loading: authLoading, API_URL } = useAuth();
@@ -13,6 +16,16 @@ export default function Wishlist() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Confirmation Modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    variant: 'danger',
+    onConfirm: null
+  });
 
   const fetchWishlist = async () => {
     if (!token) {
@@ -39,11 +52,27 @@ export default function Wishlist() {
     fetchWishlist();
   }, [token, authLoading]);
 
-  const handleRemove = async (productId) => {
+  const requestRemove = (item) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Bookmark',
+      message: `Are you sure you want to remove "${item.ProductName}" from your wishlist?`,
+      confirmText: 'Remove',
+      variant: 'danger',
+      onConfirm: () => handleRemove(item)
+    });
+  };
+
+  const handleRemove = async (item) => {
     setError('');
     setSuccess('');
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
     try {
-      const res = await fetch(`${API_URL}/wishlist/${productId}`, {
+      const wishId = item.WishID || item.WishlistID || item.ID;
+      const prodId = item.PID || item.ProductId;
+      const endpoint = wishId ? `${API_URL}/wishlist/${wishId}` : `${API_URL}/wishlist/product/${prodId}`;
+
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -67,7 +96,7 @@ export default function Wishlist() {
     }
     try {
       const msg = await addToCart(variantId, 1);
-      setSuccess(msg);
+      setSuccess(msg || 'Added to cart successfully!');
     } catch (err) {
       setError(err.message);
     }
@@ -79,6 +108,18 @@ export default function Wishlist() {
 
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+      
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <Heart size={32} className="text-accent" fill="var(--accent)" /> My Bookmarked Items
       </h1>
@@ -101,58 +142,73 @@ export default function Wishlist() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: '30px'
         }}>
-          {wishlistItems.map((item) => (
-            <div key={item.WishlistID} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ position: 'relative', height: '180px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '50px' }}>📱</span>
-                
-                <button
-                  onClick={() => handleRemove(item.ProductId)}
-                  style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    background: 'rgba(239,68,68,0.1)',
-                    border: '1px solid rgba(239,68,68,0.2)',
-                    color: 'var(--danger)',
-                    padding: '8px',
-                    borderRadius: '50%',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+          {wishlistItems.map((item) => {
+            const wishKey = item.WishID || item.WishlistID || item.PID;
+            const price = parseFloat(item.MinPrice || item.Price || 0);
 
-              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '8px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>
-                  {item.BrandName}
-                </span>
-                <h3 style={{ fontSize: '17px', fontWeight: '700' }}>{item.ProductName}</h3>
-                
-                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ fontWeight: '800', fontSize: '16px' }}>
-                    Rs. {parseFloat(item.Price || 0).toLocaleString('en-US')}
-                  </div>
+            return (
+              <div key={wishKey} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'relative', height: '180px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {item.Image1 ? (
+                    <img 
+                      src={IMAGE_BASE + item.Image1} 
+                      alt={item.ProductName} 
+                      style={{ maxHeight: '160px', maxWidth: '90%', objectFit: 'contain' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '50px' }}>📱</span>
+                  )}
+                  
+                  <button
+                    onClick={() => requestRemove(item)}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      background: 'rgba(239,68,68,0.15)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      color: 'var(--danger)',
+                      padding: '8px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      zIndex: 3
+                    }}
+                    title="Remove from Wishlist"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px' }}>
-                    <button
-                      onClick={() => handleAddToCart(item.VariantId)}
-                      disabled={!item.VariantId}
-                      className="glass-btn"
-                      style={{ fontSize: '13px', padding: '10px', borderRadius: '8px' }}
-                    >
-                      Quick Add <ShoppingCart size={14} />
-                    </button>
-                    
-                    <Link to={`/product/${item.ProductId}`} className="glass-btn glass-btn-secondary" style={{ fontSize: '13px', padding: '10px', borderRadius: '8px' }}>
-                      Specs
-                    </Link>
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '8px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>
+                    {item.BrandName}
+                  </span>
+                  <h3 style={{ fontSize: '17px', fontWeight: '700' }}>{item.ProductName}</h3>
+                  
+                  <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontWeight: '800', fontSize: '16px', color: '#06b6d4' }}>
+                      {price > 0 ? `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'Price on request'}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px' }}>
+                      <button
+                        onClick={() => handleAddToCart(item.VariantId)}
+                        className="glass-btn"
+                        style={{ fontSize: '13px', padding: '10px', borderRadius: '8px' }}
+                      >
+                        Quick Add <ShoppingCart size={14} />
+                      </button>
+                      
+                      <Link to={`/product/${item.PID || item.ProductId}`} className="glass-btn glass-btn-secondary" style={{ fontSize: '13px', padding: '10px', borderRadius: '8px', textDecoration: 'none' }}>
+                        View
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

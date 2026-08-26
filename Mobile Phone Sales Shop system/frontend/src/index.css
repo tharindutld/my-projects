@@ -42,11 +42,78 @@
 
 body {
   font-family: var(--font-sans) !important;
-  background: var(--bg-gradient) !important;
+  background-color: #0f172a !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+    radial-gradient(rgba(255, 255, 255, 0.08) 0.85px, transparent 0.85px) !important;
+  background-size: 100% 100%, 100% 100%, 20px 20px !important;
   color: var(--text-primary) !important;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
+}
+
+/* Wishlist Floating Button */
+.wishlist-btn-floating {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 10;
+}
+.wishlist-btn-floating:hover {
+  background: #ef4444;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Pagination Custom */
+.pagination-custom {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+}
+.pagination-custom .page-link-custom {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pagination-custom .page-link-custom:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.pagination-custom .page-link-custom.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+.pagination-custom .page-link-custom:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Glassmorphic Classes */
