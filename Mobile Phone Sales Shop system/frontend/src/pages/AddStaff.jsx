@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, ArrowLeft, Eye, EyeOff, User, Mail, Phone, Calendar, Shield, CheckCircle } from 'lucide-react';
+import { UserPlus, ArrowLeft, Eye, EyeOff, User, Mail, Phone, Calendar, Shield, CheckCircle, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
 import ToastAlert from '../components/ToastAlert';
@@ -159,7 +159,7 @@ export default function AddStaff() {
 
   return (
     <AdminLayout>
-      <div className="container-fluid py-4" style={{ maxWidth: '1100px' }}>
+      <div className="container-fluid py-4 animate-fade-in" style={{ maxWidth: '1000px' }}>
         {toast.message && (
           <ToastAlert type={toast.type} message={toast.message} onClose={() => setToast({ type: '', message: '' })} />
         )}
@@ -173,50 +173,63 @@ export default function AddStaff() {
         />
 
         {/* Top Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div>
             <span style={{
               fontSize: '12px',
-              fontWeight: '700',
+              fontWeight: '800',
               textTransform: 'uppercase',
               letterSpacing: '1px',
-              color: '#818cf8',
-              background: 'rgba(99,102,241,0.15)',
+              color: '#38bdf8',
+              background: 'rgba(56,189,248,0.12)',
               padding: '4px 12px',
-              borderRadius: '12px',
+              borderRadius: '20px',
               display: 'inline-block',
               marginBottom: '8px'
-            }}>Staff Management</span>
-            <h2 className="text-white fw-bold m-0 d-flex align-items-center gap-2">
-              <UserPlus className="text-primary" /> Add New Staff Member
-            </h2>
+            }}>Staff Administration</span>
+            <h1 className="text-white fw-bold m-0 d-flex align-items-center gap-2" style={{ fontSize: '26px' }}>
+              <UserPlus style={{ color: '#818cf8' }} size={28} /> Add New Staff Member
+            </h1>
           </div>
 
-          <Link to="/admin/staff" className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+          <Link to="/admin/staff" className="glass-btn glass-btn-secondary" style={{ borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '10px 18px' }}>
             <ArrowLeft size={16} /> Back to Staff Directory
           </Link>
         </div>
 
         {/* Main Glass Form Container */}
-        <div className="glass-card" style={{ padding: '32px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)' }}>
+        <div 
+          className="glass-card" 
+          style={{ 
+            padding: '36px', 
+            borderRadius: '20px', 
+            background: 'rgba(15, 23, 42, 0.85)', 
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+          }}
+        >
           <form noValidate onSubmit={handleSubmitAttempt}>
             <div className="row g-4">
               
               {/* First Name */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   First Name <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  className={`custom-glass-input w-100 ${fieldErrors.firstName ? 'is-invalid' : ''}`}
-                  placeholder="Enter first name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="firstName"
+                    className={`custom-glass-input w-100 ${fieldErrors.firstName ? 'border-danger' : ''}`}
+                    placeholder="Enter first name"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    style={{ paddingLeft: '38px' }}
+                  />
+                  <User size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: '#94a3b8' }} />
+                </div>
                 {fieldErrors.firstName && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.firstName}
                   </div>
                 )}
@@ -224,19 +237,23 @@ export default function AddStaff() {
 
               {/* Last Name */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Last Name <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  className={`custom-glass-input w-100 ${fieldErrors.lastName ? 'is-invalid' : ''}`}
-                  placeholder="Enter last name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="lastName"
+                    className={`custom-glass-input w-100 ${fieldErrors.lastName ? 'border-danger' : ''}`}
+                    placeholder="Enter last name"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    style={{ paddingLeft: '38px' }}
+                  />
+                  <User size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: '#94a3b8' }} />
+                </div>
                 {fieldErrors.lastName && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.lastName}
                   </div>
                 )}
@@ -244,19 +261,23 @@ export default function AddStaff() {
 
               {/* Email Address */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Email Address <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  className={`custom-glass-input w-100 ${fieldErrors.email ? 'is-invalid' : ''}`}
-                  placeholder="example@mail.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="email"
+                    name="email"
+                    className={`custom-glass-input w-100 ${fieldErrors.email ? 'border-danger' : ''}`}
+                    placeholder="example@mail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    style={{ paddingLeft: '38px' }}
+                  />
+                  <Mail size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: '#94a3b8' }} />
+                </div>
                 {fieldErrors.email && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.email}
                   </div>
                 )}
@@ -264,19 +285,23 @@ export default function AddStaff() {
 
               {/* Phone Number */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Phone Number <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="phone"
-                  className={`custom-glass-input w-100 ${fieldErrors.phone ? 'is-invalid' : ''}`}
-                  placeholder="07xxxxxxxx"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="phone"
+                    className={`custom-glass-input w-100 ${fieldErrors.phone ? 'border-danger' : ''}`}
+                    placeholder="07xxxxxxxx"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    style={{ paddingLeft: '38px' }}
+                  />
+                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: '#94a3b8' }} />
+                </div>
                 {fieldErrors.phone && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.phone}
                   </div>
                 )}
@@ -284,12 +309,12 @@ export default function AddStaff() {
 
               {/* Gender */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Gender <span className="text-danger">*</span>
                 </label>
                 <select
                   name="gender"
-                  className={`custom-glass-input w-100 ${fieldErrors.gender ? 'is-invalid' : ''}`}
+                  className={`custom-glass-input w-100 ${fieldErrors.gender ? 'border-danger' : ''}`}
                   value={formData.gender}
                   onChange={handleChange}
                   style={{ color: formData.gender ? '#ffffff' : '#94a3b8' }}
@@ -299,7 +324,7 @@ export default function AddStaff() {
                   <option value="Female" style={{ background: '#0f172a', color: '#ffffff' }}>Female</option>
                 </select>
                 {fieldErrors.gender && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.gender}
                   </div>
                 )}
@@ -307,19 +332,21 @@ export default function AddStaff() {
 
               {/* Birth Date */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Birth Date <span className="text-danger">*</span>
                 </label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  max={maxBirthDate}
-                  className={`custom-glass-input w-100 ${fieldErrors.birthDate ? 'is-invalid' : ''}`}
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    max={maxBirthDate}
+                    className={`custom-glass-input w-100 ${fieldErrors.birthDate ? 'border-danger' : ''}`}
+                    value={formData.birthDate}
+                    onChange={handleChange}
+                  />
+                </div>
                 {fieldErrors.birthDate && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.birthDate}
                   </div>
                 )}
@@ -327,12 +354,12 @@ export default function AddStaff() {
 
               {/* Role */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Role <span className="text-danger">*</span>
                 </label>
                 <select
                   name="role"
-                  className={`custom-glass-input w-100 ${fieldErrors.role ? 'is-invalid' : ''}`}
+                  className={`custom-glass-input w-100 ${fieldErrors.role ? 'border-danger' : ''}`}
                   value={formData.role}
                   onChange={handleChange}
                   style={{ color: formData.role ? '#ffffff' : '#94a3b8' }}
@@ -343,7 +370,7 @@ export default function AddStaff() {
                   <option value="Technician" style={{ background: '#0f172a', color: '#ffffff' }}>Technician</option>
                 </select>
                 {fieldErrors.role && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.role}
                   </div>
                 )}
@@ -351,12 +378,12 @@ export default function AddStaff() {
 
               {/* Status */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Status <span className="text-danger">*</span>
                 </label>
                 <select
                   name="status"
-                  className={`custom-glass-input w-100 ${fieldErrors.status ? 'is-invalid' : ''}`}
+                  className={`custom-glass-input w-100 ${fieldErrors.status ? 'border-danger' : ''}`}
                   value={formData.status}
                   onChange={handleChange}
                   style={{ color: formData.status ? '#ffffff' : '#94a3b8' }}
@@ -366,7 +393,7 @@ export default function AddStaff() {
                   <option value="Inactive" style={{ background: '#0f172a', color: '#ffffff' }}>Inactive</option>
                 </select>
                 {fieldErrors.status && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.status}
                   </div>
                 )}
@@ -374,19 +401,20 @@ export default function AddStaff() {
 
               {/* Password */}
               <div className="col-md-6">
-                <label className="form-label text-light fw-semibold" style={{ fontSize: '14px' }}>
+                <label className="form-label text-light fw-semibold" style={{ fontSize: '13px' }}>
                   Password <span className="text-danger">*</span>
                 </label>
                 <div className="position-relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
-                    className={`custom-glass-input w-100 ${fieldErrors.password ? 'is-invalid' : ''}`}
+                    className={`custom-glass-input w-100 ${fieldErrors.password ? 'border-danger' : ''}`}
                     placeholder="At least 8 characters"
                     value={formData.password}
                     onChange={handleChange}
-                    style={{ paddingRight: '42px' }}
+                    style={{ paddingLeft: '38px', paddingRight: '42px' }}
                   />
+                  <Lock size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: '#94a3b8' }} />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -405,7 +433,7 @@ export default function AddStaff() {
                   </button>
                 </div>
                 {fieldErrors.password && (
-                  <div className="invalid-feedback d-block mt-1" style={{ color: '#f87171', fontSize: '12px' }}>
+                  <div className="mt-1" style={{ color: '#f87171', fontSize: '12px', fontWeight: '500' }}>
                     {fieldErrors.password}
                   </div>
                 )}
@@ -420,7 +448,7 @@ export default function AddStaff() {
               <button
                 type="button"
                 className="glass-btn glass-btn-secondary"
-                style={{ padding: '10px 24px', borderRadius: '10px' }}
+                style={{ padding: '10px 24px', borderRadius: '10px', fontSize: '13px' }}
                 onClick={() => navigate('/admin/staff')}
               >
                 Cancel
@@ -428,7 +456,7 @@ export default function AddStaff() {
               <button
                 type="submit"
                 className="glass-btn glass-btn-primary"
-                style={{ padding: '10px 28px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ padding: '10px 28px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700' }}
               >
                 <CheckCircle size={16} /> Save Staff Member
               </button>

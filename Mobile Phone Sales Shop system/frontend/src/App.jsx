@@ -44,6 +44,16 @@ import Inventory from './pages/Inventory';
 import AddStock from './pages/AddStock';
 import StockList from './pages/StockList';
 
+// Report Sub-Pages
+import DailySalesPage from './pages/reports/DailySalesPage';
+import InventoryAgingPage from './pages/reports/InventoryAgingPage';
+import ProfitMarginsPage from './pages/reports/ProfitMarginsPage';
+import CustomerBehaviorPage from './pages/reports/CustomerBehaviorPage';
+import BrandPerformancePage from './pages/reports/BrandPerformancePage';
+import EmployeePerformancePage from './pages/reports/EmployeePerformancePage';
+import SeasonalTrendsPage from './pages/reports/SeasonalTrendsPage';
+import GeographicDistributionPage from './pages/reports/GeographicDistributionPage';
+
 // Order Pages
 import AddOrder from './pages/AddOrder';
 import UserOrders from './pages/UserOrders';
@@ -169,6 +179,32 @@ function AppContent() {
         <Route path="/admin/pricing.php" element={<AdminPricing />} />
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/reports.php" element={<AdminReports />} />
+
+        {/* Reports Sub-Routes & Legacy PHP Aliases */}
+        <Route path="/admin/reports/daily-sales" element={<DailySalesPage />} />
+        <Route path="/admin/reports/daily_sales.php" element={<DailySalesPage />} />
+
+        <Route path="/admin/reports/inventory-aging" element={<InventoryAgingPage />} />
+        <Route path="/admin/reports/inventory_aging.php" element={<InventoryAgingPage />} />
+
+        <Route path="/admin/reports/profit-margins" element={<ProfitMarginsPage />} />
+        <Route path="/admin/reports/profit_margins.php" element={<ProfitMarginsPage />} />
+
+        <Route path="/admin/reports/customer-behavior" element={<CustomerBehaviorPage />} />
+        <Route path="/admin/reports/customer_behavior.php" element={<CustomerBehaviorPage />} />
+
+        <Route path="/admin/reports/brand-performance" element={<BrandPerformancePage />} />
+        <Route path="/admin/reports/brand_performance.php" element={<BrandPerformancePage />} />
+
+        <Route path="/admin/reports/employee-performance" element={<EmployeePerformancePage />} />
+        <Route path="/admin/reports/employee_performance.php" element={<EmployeePerformancePage />} />
+
+        <Route path="/admin/reports/seasonal-trends" element={<SeasonalTrendsPage />} />
+        <Route path="/admin/reports/seasonal_trends.php" element={<SeasonalTrendsPage />} />
+
+        <Route path="/admin/reports/geographic-distribution" element={<GeographicDistributionPage />} />
+        <Route path="/admin/reports/geographic_distribution.php" element={<GeographicDistributionPage />} />
+
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users.php" element={<AdminUsers />} />
         <Route path="/admin/reg-users" element={<AdminUsers />} />

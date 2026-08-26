@@ -82,25 +82,29 @@ body {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
-.glass-input {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  padding: 12px 16px;
-  border-radius: var(--border-radius-sm);
+.glass-input,
+.custom-glass-input {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #f8fafc !important;
+  padding: 11px 16px;
+  border-radius: 10px;
   outline: none;
   font-family: var(--font-sans);
+  font-size: 14px;
   transition: var(--transition);
 }
 
-.glass-input:focus {
-  border-color: var(--primary);
-  background: rgba(15, 23, 42, 0.6);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+.glass-input:focus,
+.custom-glass-input:focus {
+  border-color: #818cf8 !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
 }
 
 /* Custom High-Contrast Dropdown Chevron Arrow for Dark Mode */
 select.glass-input,
+select.custom-glass-input,
 select.form-select,
 .form-select {
   appearance: none !important;
