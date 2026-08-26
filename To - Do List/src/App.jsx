@@ -9,6 +9,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 import TaskModal from './components/TaskModal';
 import CategoryModal from './components/CategoryModal';
 import AuthModal from './components/AuthModal';
+import ConfirmModal from './components/ConfirmModal';
 import { api } from './services/api';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   // Apply Theme to Document root
   useEffect(() => {
@@ -134,9 +136,20 @@ export default function App() {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, is_pinned: isPinned ? 1 : 0 } : t)));
   };
 
-  const handleDeleteTask = async (id) => {
-    await api.deleteTask(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const handleDeleteTask = (id) => {
+    const foundTask = tasks.find((t) => t.id === id);
+    if (foundTask) {
+      setTaskToDelete(foundTask);
+    } else {
+      setTaskToDelete({ id, title: 'Selected Task' });
+    }
+  };
+
+  const handleConfirmDeleteTask = async () => {
+    if (!taskToDelete) return;
+    await api.deleteTask(taskToDelete.id);
+    setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
+    setTaskToDelete(null);
   };
 
   // Category Operations
@@ -346,6 +359,19 @@ export default function App() {
           setUser(res.user);
           localStorage.setItem('task_pulse_user', JSON.stringify(res.user));
         }}
+      />
+
+      <ConfirmModal
+        isOpen={!!taskToDelete}
+        onClose={() => setTaskToDelete(null)}
+        onConfirm={handleConfirmDeleteTask}
+        title="Confirm Task Deletion"
+        message={
+          <>
+            Are you sure you want to delete task <strong>"{taskToDelete?.title}"</strong>?
+          </>
+        }
+        confirmText="Delete Task"
       />
     </div>
   );

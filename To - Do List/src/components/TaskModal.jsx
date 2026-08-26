@@ -11,6 +11,7 @@ const getTodayString = () => {
 
 export default function TaskModal({ isOpen, onClose, onSave, task, categories }) {
   const [title, setTitle] = useState('');
+  const [titleError, setTitleError] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
   const [status, setStatus] = useState('todo');
@@ -25,6 +26,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
   const todayStr = getTodayString();
 
   useEffect(() => {
+    setTitleError('');
     setDueDateError('');
     if (task) {
       setTitle(task.title || '');
@@ -51,14 +53,44 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
 
   if (!isOpen) return null;
 
+  const validateTitle = (val) => {
+    const trimmed = val.trim();
+    if (!trimmed) {
+      return 'Task title is required.';
+    }
+    if (trimmed.length < 3) {
+      return 'Task title must be at least 3 characters long.';
+    }
+    if (trimmed.length > 255) {
+      return 'Task title cannot exceed 255 characters.';
+    }
+    if (!/[A-Za-z]/.test(trimmed)) {
+      return 'Task title must contain letters (cannot be only numbers or special characters).';
+    }
+    const validCharsRegex = /^[A-Za-z0-9\s]+$/;
+    if (!validCharsRegex.test(trimmed)) {
+      return 'Task title can only contain letters, numbers, and spaces (no special characters, minus, or plus).';
+    }
+    return '';
+  };
+
+  const validateDueDate = (val) => {
+    if (val && val < todayStr) {
+      return 'Due date cannot be a past date.';
+    }
+    return '';
+  };
+
+  const handleTitleChange = (e) => {
+    const val = e.target.value;
+    setTitle(val);
+    setTitleError(validateTitle(val));
+  };
+
   const handleDueDateChange = (e) => {
     const val = e.target.value;
     setDueDate(val);
-    if (val && val < todayStr) {
-      setDueDateError('Due date cannot be a past date.');
-    } else {
-      setDueDateError('');
-    }
+    setDueDateError(validateDueDate(val));
   };
 
   const handleAddSubtask = () => {
@@ -74,10 +106,14 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
 
-    if (dueDate && dueDate < todayStr) {
-      setDueDateError('Due date cannot be a past date.');
+    const tErr = validateTitle(title);
+    const dErr = validateDueDate(dueDate);
+
+    setTitleError(tErr);
+    setDueDateError(dErr);
+
+    if (tErr || dErr) {
       return;
     }
 
@@ -119,10 +155,15 @@ export default function TaskModal({ isOpen, onClose, onSave, task, categories })
               className="form-input"
               placeholder="What needs to be accomplished?"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
+              onChange={handleTitleChange}
+              style={{ border: titleError ? '1px solid #ef4444' : undefined }}
               autoFocus
             />
+            {titleError && (
+              <span style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: '0.25rem', display: 'block', fontWeight: 500 }}>
+                ⚠️ {titleError}
+              </span>
+            )}
           </div>
 
           {/* Description */}

@@ -96,8 +96,14 @@ router.post('/', async (req, res) => {
       subtasks = []
     } = req.body;
 
-    if (!title) {
+    if (!title || !title.trim()) {
       return res.status(400).json({ error: 'Task title is required.' });
+    }
+
+    if (!/[A-Za-z]/.test(title.trim()) || !/^[A-Za-z0-9\s]+$/.test(title.trim())) {
+      return res.status(400).json({
+        error: 'Task title must contain letters (can include numbers, but no special characters, minus, or plus).'
+      });
     }
 
     if (due_date) {
