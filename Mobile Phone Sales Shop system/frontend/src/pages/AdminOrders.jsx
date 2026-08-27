@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShoppingBag, Search, Filter, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, 
   FileText, Printer, CheckCircle, Clock, XCircle, Truck, Compass, CheckCheck, 
-  RotateCcw, Trash2, Plus, Eye, MapPin, Package, CreditCard, ShieldAlert 
+  RotateCcw, RefreshCw, Trash2, Plus, Eye, MapPin, Package, CreditCard, ShieldAlert 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AdminLayout from '../components/AdminLayout';
@@ -26,6 +26,7 @@ export default function AdminOrders() {
   const [totalResults, setTotalResults] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Collapsible expanded rows state: set of order IDs
   const [expandedRows, setExpandedRows] = useState(new Set());
@@ -57,8 +58,12 @@ export default function AdminOrders() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [activeDropdownId]);
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const fetchOrders = async (isInitial = false) => {
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setError('');
     try {
       const url = new URL(`${API_URL}/orders/admin/list`);
@@ -83,6 +88,7 @@ export default function AdminOrders() {
       setError('Connection error while fetching orders.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -97,7 +103,7 @@ export default function AdminOrders() {
       navigate('/');
       return;
     }
-    fetchOrders();
+    fetchOrders(true);
   }, [token, user, authLoading, searchParams]);
 
   // Handle Search & Filter submit
@@ -278,13 +284,26 @@ export default function AdminOrders() {
             </h1>
           </div>
 
-          <Link 
-            to="/admin/add-order" 
-            className="glass-btn glass-btn-primary" 
-            style={{ borderRadius: '12px', padding: '10px 20px', fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
-          >
-            <Plus size={18} /> Create In-Store Order (POS)
-          </Link>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              onClick={() => fetchOrders(false)}
+              disabled={isRefreshing}
+              className="glass-btn glass-btn-secondary"
+              style={{ borderRadius: '12px', padding: '10px 16px', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', opacity: isRefreshing ? 0.7 : 1, cursor: isRefreshing ? 'wait' : 'pointer' }}
+            >
+              <RefreshCw size={16} className={isRefreshing ? "animate-spin text-primary" : ""} /> 
+              {isRefreshing ? 'Refreshing...' : 'Refresh List'}
+            </button>
+
+            <Link 
+              to="/admin/add-order" 
+              className="glass-btn glass-btn-primary" 
+              style={{ borderRadius: '12px', padding: '10px 20px', fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+            >
+              <Plus size={18} /> Create In-Store Order (POS)
+            </Link>
+          </div>
         </div>
 
         {/* ── Filter Toolbar ── */}

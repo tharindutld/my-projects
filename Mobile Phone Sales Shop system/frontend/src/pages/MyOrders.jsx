@@ -22,6 +22,7 @@ export default function MyOrders() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [ratings, setRatings] = useState({});
@@ -37,8 +38,12 @@ export default function MyOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
-  const fetchMyOrders = async () => {
-    setLoading(true);
+  const fetchMyOrders = async (isInitial = false) => {
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     try {
       const res = await fetch(`${API_URL}/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -59,6 +64,7 @@ export default function MyOrders() {
       setError('Connection error fetching orders.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -68,7 +74,7 @@ export default function MyOrders() {
       navigate('/login');
       return;
     }
-    fetchMyOrders();
+    fetchMyOrders(true);
   }, [token, authLoading]);
 
   // Reset pagination when tab or search changes
@@ -174,70 +180,112 @@ export default function MyOrders() {
             </h2>
             <p className="text-slate-300 mb-0 fs-6">Track active shipments and view complete purchase history</p>
           </div>
-          <button className="glass-btn-secondary py-2 px-3.5 rounded-pill d-flex align-items-center gap-2 fw-semibold" onClick={fetchMyOrders}>
-            <RefreshCw size={16} /> Refresh List
+          <button 
+            type="button"
+            className="glass-btn glass-btn-secondary" 
+            onClick={() => fetchMyOrders(false)}
+            disabled={isRefreshing}
+            style={{ 
+              padding: '10px 22px', 
+              borderRadius: '24px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              fontWeight: '600',
+              fontSize: '14px',
+              opacity: isRefreshing ? 0.7 : 1, 
+              cursor: isRefreshing ? 'wait' : 'pointer' 
+            }}
+          >
+            <RefreshCw size={16} className={isRefreshing ? "animate-spin text-primary-light" : ""} /> 
+            {isRefreshing ? 'Refreshing...' : 'Refresh List'}
           </button>
         </div>
       </div>
 
       <div className="container mb-5 p-0">
-        {/* Responsive Navigation Tabs Container */}
-        <div className="orders-tabs-wrapper mb-4">
-          <div className="d-flex flex-wrap gap-2 p-2 glass-panel rounded-4">
-            <button
-              className={`order-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 ${activeTab === 'current' ? 'active' : ''}`}
-              onClick={() => {
-                setSearchParams({ tab: 'current' });
-                setActiveSearch('');
-                setSearchQuery('');
-              }}
-            >
-              <ShoppingBag size={20} /> Current Orders
-            </button>
-            <button
-              className={`order-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => setSearchParams({ tab: 'history' })}
-            >
-              <History size={20} /> Order History
-            </button>
+        {/* Unified Control Bar: Tabs & Search Filter */}
+        <div className="glass-panel p-3 mb-4 rounded-4" style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid var(--glass-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '8px', background: 'rgba(255, 255, 255, 0.04)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button
+                type="button"
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  background: activeTab === 'current' ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : 'transparent',
+                  color: activeTab === 'current' ? '#ffffff' : '#94a3b8',
+                  boxShadow: activeTab === 'current' ? '0 4px 12px rgba(99, 102, 241, 0.35)' : 'none'
+                }}
+                onClick={() => {
+                  setSearchParams({ tab: 'current' });
+                  setActiveSearch('');
+                  setSearchQuery('');
+                }}
+              >
+                <ShoppingBag size={18} /> Current Orders
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  background: activeTab === 'history' ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : 'transparent',
+                  color: activeTab === 'history' ? '#ffffff' : '#94a3b8',
+                  boxShadow: activeTab === 'history' ? '0 4px 12px rgba(99, 102, 241, 0.35)' : 'none'
+                }}
+                onClick={() => setSearchParams({ tab: 'history' })}
+              >
+                <History size={18} /> Order History
+              </button>
+            </div>
+
+            {/* Integrated History Search Filter (Seamlessly rendered in same panel) */}
+            {activeTab === 'history' && (
+              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, maxWidth: '520px' }}>
+                <div style={{ position: 'relative', flexGrow: 1 }}>
+                  <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    className="glass-input"
+                    style={{ width: '100%', paddingLeft: '42px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', fontSize: '13px', borderRadius: '12px' }}
+                    placeholder="Search past orders by #, product name, or brand..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="glass-btn glass-btn-primary" style={{ padding: '8px 18px', borderRadius: '12px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                  Filter
+                </button>
+                {searchQuery && (
+                  <button type="button" onClick={handleClearSearch} className="glass-btn glass-btn-secondary" style={{ padding: '8px 14px', borderRadius: '12px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                    Clear
+                  </button>
+                )}
+              </form>
+            )}
+
           </div>
         </div>
-
-        {/* History Search Filter Bar */}
-        {activeTab === 'history' && (
-          <div className="glass-panel p-3.5 mb-4 rounded-4">
-            <form onSubmit={handleSearchSubmit}>
-              <div className="row g-2.5 align-items-center">
-                <div className="col-md-9">
-                  <div className="search-input-wrapper">
-                    <Search size={20} className="search-icon-dark" />
-                    <input
-                      type="text"
-                      className="glass-input ps-5 w-100 fs-6 py-2.5"
-                      placeholder="Search past orders by order number, product name, or brand..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-3 d-flex gap-2 align-items-center">
-                  <button type="submit" className="glass-btn flex-grow-1 py-2.5 rounded-pill fw-semibold fs-6">
-                    Filter
-                  </button>
-                  {searchQuery && (
-                    <button 
-                      type="button" 
-                      className="glass-btn-secondary py-2.5 px-3.5 rounded-pill fs-6"
-                      onClick={handleClearSearch}
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
 
         {/* Orders List / Empty State */}
         {filteredOrders.length === 0 ? (
