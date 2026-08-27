@@ -302,7 +302,7 @@ export default function Products() {
                       </div>
 
                       <Link to={`/product/${p.ID}`} className="glass-btn" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', fontSize: '14px' }}>
-                        View Configuration
+                        View Product
                       </Link>
                     </div>
 
