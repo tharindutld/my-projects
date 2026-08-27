@@ -174,7 +174,7 @@ export default function Wishlist() {
 
             return (
               <div key={wishKey} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ position: 'relative', height: '180px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div style={{ position: 'relative', height: '180px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 48px 16px 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
                   {item.Image1 ? (
                     <img 
                       src={IMAGE_BASE + item.Image1} 

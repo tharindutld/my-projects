@@ -15,7 +15,7 @@ function ProductImage({ src, alt, isOutOfStock }) {
   const [error, setError] = useState(false);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.02)', padding: '16px', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.02)', padding: '16px 48px 16px 16px', boxSizing: 'border-box', overflow: 'hidden' }}>
       {isOutOfStock && (
         <span style={{
           position: 'absolute',
@@ -41,7 +41,7 @@ function ProductImage({ src, alt, isOutOfStock }) {
           alt={alt}
           onError={() => setError(true)}
           style={{
-            maxHeight: '180px',
+            maxHeight: '168px',
             maxWidth: '100%',
             objectFit: 'contain',
             borderRadius: '8px',
