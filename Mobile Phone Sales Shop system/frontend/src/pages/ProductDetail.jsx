@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, Flame, Shield, ArrowLeft } from 'lucide-react';
+import { 
+  ShoppingCart, Heart, Flame, Shield, ArrowLeft, 
+  Palette, Cpu, HardDrive, Smartphone, Camera, Tv, 
+  ChevronRight, Home, CheckCircle2, List 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -36,6 +40,7 @@ export default function ProductDetail() {
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [activeImage, setActiveImage] = useState('');
+  const [activeTab, setActiveTab] = useState('features'); // 'features' | 'specs'
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -182,6 +187,20 @@ export default function ProductDetail() {
 
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+      
+      {/* Breadcrumbs Navigation */}
+      <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '14px', color: 'var(--text-muted)' }}>
+        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+          <Home size={15} /> Home
+        </button>
+        <ChevronRight size={14} />
+        <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}>
+          Shop
+        </button>
+        <ChevronRight size={14} />
+        <span style={{ color: '#fff', fontWeight: '600' }}>{product.ProductName}</span>
+      </nav>
+
       <button onClick={() => navigate(-1)} className="glass-btn glass-btn-secondary" style={{ marginBottom: '30px', borderRadius: '20px' }}>
         <ArrowLeft size={16} /> Back
       </button>
@@ -276,18 +295,53 @@ export default function ProductDetail() {
             <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Model: {product.ModelNumber}</p>
           </div>
 
-          {/* Specs List */}
+          {/* Comprehensive Specifications List (Matching legacy single.php) */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '12px',
             fontSize: '14px',
             background: 'rgba(255,255,255,0.02)',
-            padding: '16px',
-            borderRadius: '12px'
+            border: '1px solid rgba(255,255,255,0.05)',
+            padding: '18px',
+            borderRadius: '16px'
           }}>
-            <div><strong>Display:</strong> {product.Display || 'Unspecified'}</div>
-            <div><strong>Sim Type:</strong> {product.SimType || 'Unspecified'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Palette size={16} style={{ color: '#06b6d4' }} />
+              <span><strong>Color:</strong> {selectedVariant?.Color || 'Unspecified'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Cpu size={16} style={{ color: '#06b6d4' }} />
+              <span><strong>RAM:</strong> {selectedVariant?.RAM || 'Unspecified'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <HardDrive size={16} style={{ color: '#06b6d4' }} />
+              <span><strong>Storage:</strong> {selectedVariant?.ROM || 'Unspecified'}</span>
+            </div>
+            {product.SimType && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Smartphone size={16} style={{ color: '#06b6d4' }} />
+                <span><strong>SIM Support:</strong> {product.SimType}</span>
+              </div>
+            )}
+            {product.Processor && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Cpu size={16} style={{ color: '#06b6d4' }} />
+                <span><strong>Processor:</strong> {product.Processor}</span>
+              </div>
+            )}
+            {product.Display && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Tv size={16} style={{ color: '#06b6d4' }} />
+                <span><strong>Display:</strong> {product.Display}</span>
+              </div>
+            )}
+            {product.FrontCamera && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Camera size={16} style={{ color: '#06b6d4' }} />
+                <span><strong>Camera:</strong> {product.FrontCamera}</span>
+              </div>
+            )}
           </div>
 
           {/* Variants Select */}
@@ -400,6 +454,71 @@ export default function ProductDetail() {
               <Heart size={20} fill={wishlisted ? 'var(--accent)' : 'none'} />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Lower Section: Key Features & Technical Specifications Tabs (Matching single.php) */}
+      <div className="glass-panel" style={{ marginTop: '45px', padding: '30px', borderRadius: '24px' }}>
+        <div style={{
+          display: 'flex',
+          gap: '15px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          paddingBottom: '15px',
+          marginBottom: '25px'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('features')}
+            className={`glass-btn ${activeTab === 'features' ? '' : 'glass-btn-secondary'}`}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '20px',
+              fontSize: '15px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <CheckCircle2 size={18} /> Key Features
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('specs')}
+            className={`glass-btn ${activeTab === 'specs' ? '' : 'glass-btn-secondary'}`}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '20px',
+              fontSize: '15px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <List size={18} /> Technical Specifications
+          </button>
+        </div>
+
+        <div>
+          {activeTab === 'features' ? (
+            <div style={{ lineHeight: '1.8', color: '#e2e8f0', fontSize: '15px', whiteSpace: 'pre-line' }}>
+              {product.KeyFeature && product.KeyFeature.trim() !== '' ? (
+                product.KeyFeature
+              ) : (
+                <p style={{ color: 'var(--text-muted)' }}>No key features specified for this mobile model.</p>
+              )}
+            </div>
+          ) : (
+            <div style={{ lineHeight: '1.8', color: '#e2e8f0', fontSize: '15px', whiteSpace: 'pre-line' }}>
+              {product.Specification && product.Specification.trim() !== '' ? (
+                product.Specification
+              ) : (
+                <p style={{ color: 'var(--text-muted)' }}>No additional technical specifications provided for this model.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

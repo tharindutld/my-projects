@@ -4,6 +4,8 @@ import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ConfirmModal from '../components/ConfirmModal';
 
+const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
+
 export default function Cart() {
   const {
     cartItems,
@@ -103,7 +105,35 @@ export default function Cart() {
               alignItems: 'center',
               flexWrap: 'wrap'
             }}>
-              <div style={{ fontSize: '40px' }}>📱</div>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--glass-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                flexShrink: 0
+              }}>
+                {item.Image1 ? (
+                  <img
+                    src={IMAGE_BASE + item.Image1}
+                    alt={item.ProductName}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      if (e.target.parentNode) {
+                        e.target.parentNode.innerHTML = '<span style="font-size:32px">📱</span>';
+                      }
+                    }}
+                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: '32px' }}>📱</span>
+                )}
+              </div>
               
               <div style={{ flexGrow: 1, minWidth: '200px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
