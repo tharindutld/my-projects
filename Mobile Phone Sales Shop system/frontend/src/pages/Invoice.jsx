@@ -79,7 +79,7 @@ export default function Invoice() {
       
       {/* Action buttons (hidden on print) */}
       <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <button onClick={() => navigate(isAdminView ? '/admin/orders' : '/profile')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button onClick={() => navigate(isAdminView ? '/admin/orders' : '/my-orders')} className="glass-btn glass-btn-secondary" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <ArrowLeft size={14} /> Back to Orders
         </button>
         <button onClick={handlePrint} className="glass-btn" style={{ borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>

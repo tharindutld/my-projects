@@ -239,9 +239,20 @@
   }
 }
 
+/* Rating Container - Spacious Padding & Glass Styling */
 .dark-rating-box {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 20px 24px !important;
+  border-radius: 16px !important;
+  margin-top: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dark-rating-box:hover {
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
 }
 
 .rating-star-btn {
@@ -278,5 +289,8 @@
   .step-counter-dark {
     width: 28px;
     height: 28px;
+  }
+  .dark-rating-box {
+    padding: 16px 18px !important;
   }
 }
