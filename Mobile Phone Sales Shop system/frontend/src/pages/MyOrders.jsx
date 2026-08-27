@@ -26,6 +26,13 @@ export default function MyOrders() {
   const [success, setSuccess] = useState('');
   const [ratings, setRatings] = useState({});
 
+  // Auto scroll to top when alert occurs so user sees popup and top message
+  useEffect(() => {
+    if (error || success) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [error, success]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
@@ -86,6 +93,8 @@ export default function MyOrders() {
   };
 
   const handleRateOrder = async (orderId, ratingValue) => {
+    setError('');
+    setSuccess('');
     try {
       const res = await fetch(`${API_URL}/orders/rate`, {
         method: 'POST',
@@ -99,12 +108,15 @@ export default function MyOrders() {
       if (res.ok && data.success) {
         setRatings(prev => ({ ...prev, [orderId]: ratingValue }));
         setSuccess('Thank you for rating your order!');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setError(data.message || 'Failed to submit rating.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       console.error(err);
       setError('Error submitting rating.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

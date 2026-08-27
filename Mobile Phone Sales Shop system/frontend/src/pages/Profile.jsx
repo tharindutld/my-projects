@@ -3,10 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   User, MapPin, Lock, Crown, ShieldAlert, 
   CheckCircle, Eye, EyeOff, Mail, KeyRound, 
-  Save
+  Save, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import ToastAlert from '../components/ToastAlert';
 import './Profile.css';
 
 export default function Profile() {
@@ -25,11 +24,11 @@ export default function Profile() {
     }
   }, [location]);
 
-  // Global Alerts
+  // General Status Messages (inline inside tab panels, no popups)
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // TAB 1: PERSONAL INFO STATE
+  // TAB 1: PERSONAL INFO STATE & INLINE ERRORS
   const [personalData, setPersonalData] = useState({
     firstname: '',
     lastname: '',
@@ -38,9 +37,10 @@ export default function Profile() {
     gender: 'Male',
     birthdate: ''
   });
+  const [personalErrors, setPersonalErrors] = useState({});
   const [loadingPersonal, setLoadingPersonal] = useState(false);
 
-  // TAB 2: ADDRESS STATE
+  // TAB 2: ADDRESS STATE & INLINE ERRORS
   const [addressData, setAddressData] = useState({
     country: 'Sri Lanka',
     street_address: '',
@@ -49,6 +49,7 @@ export default function Profile() {
     postal_code: '',
     addr_mobile: ''
   });
+  const [addressErrors, setAddressErrors] = useState({});
   const [hasExistingAddress, setHasExistingAddress] = useState(false);
   const [loadingAddress, setLoadingAddress] = useState(false);
 
@@ -65,18 +66,20 @@ export default function Profile() {
     'Canada', 'Singapore', 'Malaysia', 'Germany', 'France'
   ];
 
-  // TAB 3: PASSWORD & OTP STATE
+  // TAB 3: PASSWORD & OTP STATE & INLINE ERRORS
   const [passwordData, setPasswordData] = useState({
     current_password: '',
     new_password: '',
     confirm_password: ''
   });
+  const [passwordErrors, setPasswordErrors] = useState({});
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   const [otpRequested, setOtpRequested] = useState(false);
   const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
   const [targetEmail, setTargetEmail] = useState('');
   const [simulatedOtpCode, setSimulatedOtpCode] = useState('');
   const [loadingOtp, setLoadingOtp] = useState(false);
@@ -138,33 +141,67 @@ export default function Profile() {
     fetchProfileData();
   }, [token, authLoading]);
 
+  // Clear messages when tab changes
+  useEffect(() => {
+    setError('');
+    setSuccess('');
+  }, [activeTab]);
+
+  // Validate Personal Info
+  const validatePersonal = () => {
+    const errors = {};
+    const { firstname, lastname, mobilenumber, email, birthdate } = personalData;
+
+    if (!firstname || !firstname.trim()) {
+      errors.firstname = 'First name is required.';
+    } else if (!/^[a-zA-Z\s]+$/.test(firstname.trim())) {
+      errors.firstname = 'First name can only contain letters and spaces.';
+    }
+
+    if (!lastname || !lastname.trim()) {
+      errors.lastname = 'Last name is required.';
+    } else if (!/^[a-zA-Z\s]+$/.test(lastname.trim())) {
+      errors.lastname = 'Last name can only contain letters and spaces.';
+    }
+
+    if (!mobilenumber || !mobilenumber.trim()) {
+      errors.mobilenumber = 'Mobile number is required.';
+    } else if (!/^0[0-9]{9}$/.test(mobilenumber.trim())) {
+      errors.mobilenumber = 'Mobile number must be exactly 10 digits starting with 0.';
+    }
+
+    if (!email || !email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    if (!birthdate) {
+      errors.birthdate = 'Birth date is required.';
+    } else {
+      const dob = new Date(birthdate);
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      if (age < 12) {
+        errors.birthdate = 'You must be 12 years or older to register/update profile.';
+      }
+    }
+
+    setPersonalErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Submit Personal Info
   const handleUpdatePersonalInfo = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    const { firstname, lastname, mobilenumber, email, gender, birthdate } = personalData;
-
-    if (!firstname || !lastname || !mobilenumber || !email || !birthdate) {
-      setError('Please fill in all personal information fields.');
-      return;
-    }
-
-    if (!/^0[0-9]{9}$/.test(mobilenumber)) {
-      setError('Mobile number must be exactly 10 digits starting with 0.');
-      return;
-    }
-
-    const dob = new Date(birthdate);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    if (age < 12) {
-      setError('You must be 12 years or older to register/update profile.');
+    if (!validatePersonal()) {
       return;
     }
 
@@ -177,17 +214,18 @@ export default function Profile() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          FirstName: firstname,
-          LastName: lastname,
-          MobileNumber: mobilenumber,
-          Email: email,
-          Gender: gender,
-          BirthDate: birthdate
+          FirstName: personalData.firstname.trim(),
+          LastName: personalData.lastname.trim(),
+          MobileNumber: personalData.mobilenumber.trim(),
+          Email: personalData.email.trim(),
+          Gender: personalData.gender,
+          BirthDate: personalData.birthdate
         })
       });
       const data = await res.json();
       if (res.ok) {
         setSuccess(data.message || 'Profile updated successfully!');
+        setPersonalErrors({});
         fetchProfileData();
       } else {
         setError(data.message || 'Failed to update profile.');
@@ -200,36 +238,50 @@ export default function Profile() {
     }
   };
 
+  // Validate Delivery Address
+  const validateAddress = () => {
+    const errors = {};
+    const { street_address, city, district, postal_code, addr_mobile } = addressData;
+
+    if (!addr_mobile || !addr_mobile.trim()) {
+      errors.addr_mobile = 'Mobile phone is required.';
+    } else if (!/^0[0-9]{9}$/.test(addr_mobile.trim())) {
+      errors.addr_mobile = 'Mobile phone must be exactly 10 digits starting with 0.';
+    }
+
+    if (!street_address || !street_address.trim()) {
+      errors.street_address = 'Street address is required.';
+    } else if (!/^[a-zA-Z0-9\s,\.\-\/]+$/.test(street_address.trim())) {
+      errors.street_address = 'Only letters, numbers, spaces, commas, periods, hyphens, and slashes are allowed.';
+    }
+
+    if (!city || !city.trim()) {
+      errors.city = 'City name is required.';
+    } else if (!/^[a-zA-Z\s]+$/.test(city.trim())) {
+      errors.city = 'City name must contain only letters and spaces.';
+    }
+
+    if (!district || !sriLankaDistricts.includes(district)) {
+      errors.district = 'Please select a valid district from the list.';
+    }
+
+    if (!postal_code || !postal_code.trim()) {
+      errors.postal_code = 'Postal code is required.';
+    } else if (!/^[0-9]{5}$/.test(postal_code.trim())) {
+      errors.postal_code = 'Postal code must be exactly 5 digits.';
+    }
+
+    setAddressErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Submit Address
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    const { country, street_address, city, district, postal_code, addr_mobile } = addressData;
-
-    if (!/^0[0-9]{9}$/.test(addr_mobile)) {
-      setError('Mobile phone must be exactly 10 digits starting with 0.');
-      return;
-    }
-
-    if (!sriLankaDistricts.includes(district)) {
-      setError('Please select a valid district from the list.');
-      return;
-    }
-
-    if (!/^[0-9]{5}$/.test(postal_code)) {
-      setError('Postal code must be exactly 5 digits.');
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9\s,\.\-\/]+$/.test(street_address)) {
-      setError('Street address contains invalid characters. Only letters, numbers, spaces, commas, periods, hyphens, and slashes are allowed.');
-      return;
-    }
-
-    if (!/^[a-zA-Z\s]+$/.test(city)) {
-      setError('City name must contain only letters and spaces.');
+    if (!validateAddress()) {
       return;
     }
 
@@ -242,17 +294,18 @@ export default function Profile() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          Country: country,
-          StreetAddress: street_address,
-          City: city,
-          District: district,
-          PostalCode: postal_code,
-          MobilePhone: addr_mobile
+          Country: addressData.country,
+          StreetAddress: addressData.street_address.trim(),
+          City: addressData.city.trim(),
+          District: addressData.district,
+          PostalCode: addressData.postal_code.trim(),
+          MobilePhone: addressData.addr_mobile.trim()
         })
       });
       const data = await res.json();
       if (res.ok) {
         setSuccess(data.message || 'Delivery address saved successfully!');
+        setAddressErrors({});
         setHasExistingAddress(true);
       } else {
         setError(data.message || 'Failed to save address.');
@@ -265,26 +318,40 @@ export default function Profile() {
     }
   };
 
+  // Validate Change Password
+  const validatePassword = () => {
+    const errors = {};
+    const { current_password, new_password, confirm_password } = passwordData;
+
+    if (!current_password) {
+      errors.current_password = 'Current password is required.';
+    }
+
+    if (!new_password) {
+      errors.new_password = 'New password is required.';
+    } else if (new_password.length < 8) {
+      errors.new_password = 'New password must be at least 8 characters long.';
+    } else if (new_password === current_password) {
+      errors.new_password = 'New password cannot be the same as current password.';
+    }
+
+    if (!confirm_password) {
+      errors.confirm_password = 'Confirm password is required.';
+    } else if (new_password !== confirm_password) {
+      errors.confirm_password = 'New password and confirm password do not match.';
+    }
+
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Submit Password OTP Request
   const handleRequestPasswordOtp = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    const { current_password, new_password, confirm_password } = passwordData;
-
-    if (!current_password || !new_password || !confirm_password) {
-      setError('All password fields are required.');
-      return;
-    }
-
-    if (new_password !== confirm_password) {
-      setError('New passwords do not match.');
-      return;
-    }
-
-    if (new_password.length < 8) {
-      setError('New password must be at least 8 characters.');
+    if (!validatePassword()) {
       return;
     }
 
@@ -297,14 +364,15 @@ export default function Profile() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          currentPassword: current_password,
-          newPassword: new_password,
-          confirmPassword: confirm_password
+          currentPassword: passwordData.current_password,
+          newPassword: passwordData.new_password,
+          confirmPassword: passwordData.confirm_password
         })
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setOtpRequested(true);
+        setPasswordErrors({});
         setTargetEmail(data.email || personalData.email);
         if (data.simulatedOtp) {
           setSimulatedOtpCode(data.simulatedOtp);
@@ -326,9 +394,10 @@ export default function Profile() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setOtpError('');
 
-    if (!otpInput || otpInput.trim().length !== 6) {
-      setError('Please enter a valid 6-digit OTP code.');
+    if (!otpInput || !/^[0-9]{6}$/.test(otpInput.trim())) {
+      setOtpError('Please enter a valid 6-digit OTP code.');
       return;
     }
 
@@ -347,13 +416,15 @@ export default function Profile() {
         setSuccess(data.message || 'Password changed successfully!');
         setOtpRequested(false);
         setOtpInput('');
+        setOtpError('');
+        setPasswordErrors({});
         setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
       } else {
-        setError(data.message || 'Invalid OTP code.');
+        setOtpError(data.message || 'Invalid OTP code.');
       }
     } catch (err) {
       console.error(err);
-      setError('Connection error verifying OTP.');
+      setOtpError('Connection error verifying OTP.');
     } finally {
       setLoadingOtp(false);
     }
@@ -362,15 +433,13 @@ export default function Profile() {
   const handleCancelOtp = () => {
     setOtpRequested(false);
     setOtpInput('');
+    setOtpError('');
     setError('');
     setSuccess('');
   };
 
   return (
     <div className="profile-page-dark animate-fade-in py-3 mb-5">
-      <ToastAlert message={error} type="danger" onClose={() => setError('')} />
-      <ToastAlert message={success} type="success" onClose={() => setSuccess('')} />
-
       <div className="container">
         
         {/* Profile Hero Glass Card */}
@@ -437,34 +506,68 @@ export default function Profile() {
               <p className="text-slate-300 small mb-0">Manage your name, mobile contact, gender, and birthdate</p>
             </div>
 
-            <form onSubmit={handleUpdatePersonalInfo}>
+            {/* Inline Error Alert */}
+            {error && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', color: '#f87171', fontSize: '14px' }}>
+                <AlertCircle size={20} className="flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Inline Success Alert */}
+            {success && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.35)', color: '#4ade80', fontSize: '14px' }}>
+                <CheckCircle size={20} className="flex-shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdatePersonalInfo} noValidate>
               <div className="row g-3">
+                
+                {/* First Name */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">First Name <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="glass-input w-100"
-                    pattern="[a-zA-Z\s]+"
-                    title="Letters only."
                     value={personalData.firstname}
-                    onChange={(e) => setPersonalData({ ...personalData, firstname: e.target.value })}
+                    onChange={(e) => {
+                      setPersonalData({ ...personalData, firstname: e.target.value });
+                      if (personalErrors.firstname) setPersonalErrors({ ...personalErrors, firstname: null });
+                    }}
+                    style={{ borderColor: personalErrors.firstname ? '#f87171' : undefined }}
                     required
                   />
+                  {personalErrors.firstname && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {personalErrors.firstname}
+                    </span>
+                  )}
                 </div>
 
+                {/* Last Name */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Last Name <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="glass-input w-100"
-                    pattern="[a-zA-Z\s]+"
-                    title="Letters only."
                     value={personalData.lastname}
-                    onChange={(e) => setPersonalData({ ...personalData, lastname: e.target.value })}
+                    onChange={(e) => {
+                      setPersonalData({ ...personalData, lastname: e.target.value });
+                      if (personalErrors.lastname) setPersonalErrors({ ...personalErrors, lastname: null });
+                    }}
+                    style={{ borderColor: personalErrors.lastname ? '#f87171' : undefined }}
                     required
                   />
+                  {personalErrors.lastname && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {personalErrors.lastname}
+                    </span>
+                  )}
                 </div>
 
+                {/* Mobile Number */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Mobile Number <span className="text-danger">*</span></label>
                   <input
@@ -472,16 +575,24 @@ export default function Profile() {
                     className="glass-input w-100"
                     placeholder="07XXXXXXXX"
                     maxLength={10}
-                    minLength={10}
-                    pattern="0[0-9]{9}"
-                    title="Must be exactly 10 digits starting with 0"
                     value={personalData.mobilenumber}
-                    onChange={(e) => setPersonalData({ ...personalData, mobilenumber: e.target.value.replace(/[^0-9]/g, '') })}
+                    onChange={(e) => {
+                      setPersonalData({ ...personalData, mobilenumber: e.target.value.replace(/[^0-9]/g, '') });
+                      if (personalErrors.mobilenumber) setPersonalErrors({ ...personalErrors, mobilenumber: null });
+                    }}
+                    style={{ borderColor: personalErrors.mobilenumber ? '#f87171' : undefined }}
                     required
                   />
-                  <span className="extra-small text-slate-400 d-block mt-1">Exactly 10 digits starting with 0 (e.g. 0719108628)</span>
+                  {personalErrors.mobilenumber ? (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {personalErrors.mobilenumber}
+                    </span>
+                  ) : (
+                    <span className="extra-small text-slate-400 d-block mt-1">Exactly 10 digits starting with 0 (e.g. 0719108628)</span>
+                  )}
                 </div>
 
+                {/* Gender */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Gender <span className="text-danger">*</span></label>
                   <select
@@ -496,6 +607,7 @@ export default function Profile() {
                   </select>
                 </div>
 
+                {/* Birth Date */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Birth Date <span className="text-danger">*</span></label>
                   <input
@@ -503,21 +615,41 @@ export default function Profile() {
                     className="glass-input w-100"
                     max={getMaxBirthdate()}
                     value={personalData.birthdate}
-                    onChange={(e) => setPersonalData({ ...personalData, birthdate: e.target.value })}
+                    onChange={(e) => {
+                      setPersonalData({ ...personalData, birthdate: e.target.value });
+                      if (personalErrors.birthdate) setPersonalErrors({ ...personalErrors, birthdate: null });
+                    }}
+                    style={{ borderColor: personalErrors.birthdate ? '#f87171' : undefined }}
                     required
                   />
-                  <span className="extra-small text-slate-400 d-block mt-1">You must be at least 12 years old</span>
+                  {personalErrors.birthdate ? (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {personalErrors.birthdate}
+                    </span>
+                  ) : (
+                    <span className="extra-small text-slate-400 d-block mt-1">You must be at least 12 years old</span>
+                  )}
                 </div>
 
+                {/* Email Address */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Email Address <span className="text-danger">*</span></label>
                   <input
                     type="email"
                     className="glass-input w-100"
                     value={personalData.email}
-                    onChange={(e) => setPersonalData({ ...personalData, email: e.target.value })}
+                    onChange={(e) => {
+                      setPersonalData({ ...personalData, email: e.target.value });
+                      if (personalErrors.email) setPersonalErrors({ ...personalErrors, email: null });
+                    }}
+                    style={{ borderColor: personalErrors.email ? '#f87171' : undefined }}
                     required
                   />
+                  {personalErrors.email && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {personalErrors.email}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -553,8 +685,26 @@ export default function Profile() {
               <p className="text-slate-300 small mb-0">Update your primary delivery address for smooth checkout processing</p>
             </div>
 
-            <form onSubmit={handleSaveAddress}>
+            {/* Inline Error Alert */}
+            {error && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', color: '#f87171', fontSize: '14px' }}>
+                <AlertCircle size={20} className="flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Inline Success Alert */}
+            {success && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.35)', color: '#4ade80', fontSize: '14px' }}>
+                <CheckCircle size={20} className="flex-shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveAddress} noValidate>
               <div className="row g-3">
+                
+                {/* Country */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Country <span className="text-danger">*</span></label>
                   <select
@@ -569,6 +719,7 @@ export default function Profile() {
                   </select>
                 </div>
 
+                {/* Mobile Phone */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold small text-slate-200">Mobile Phone <span className="text-danger">*</span></label>
                   <input
@@ -576,57 +727,91 @@ export default function Profile() {
                     className="glass-input w-100"
                     placeholder="07XXXXXXXX"
                     maxLength={10}
-                    minLength={10}
-                    pattern="0[0-9]{9}"
-                    title="Must be exactly 10 digits starting with 0"
                     value={addressData.addr_mobile}
-                    onChange={(e) => setAddressData({ ...addressData, addr_mobile: e.target.value.replace(/[^0-9]/g, '') })}
+                    onChange={(e) => {
+                      setAddressData({ ...addressData, addr_mobile: e.target.value.replace(/[^0-9]/g, '') });
+                      if (addressErrors.addr_mobile) setAddressErrors({ ...addressErrors, addr_mobile: null });
+                    }}
+                    style={{ borderColor: addressErrors.addr_mobile ? '#f87171' : undefined }}
                     required
                   />
-                  <span className="extra-small text-slate-400 d-block mt-1">Recipient phone number (10 digits starting with 0)</span>
+                  {addressErrors.addr_mobile ? (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {addressErrors.addr_mobile}
+                    </span>
+                  ) : (
+                    <span className="extra-small text-slate-400 d-block mt-1">Recipient phone number (10 digits starting with 0)</span>
+                  )}
                 </div>
 
+                {/* Street Address */}
                 <div className="col-12">
                   <label className="form-label fw-semibold small text-slate-200">Street Address <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="glass-input w-100"
                     placeholder="House No, Street Name, Locality"
-                    pattern="[a-zA-Z0-9\s,\.\-\/]+"
-                    title="Only alphanumeric characters, spaces, commas, periods, hyphens, and slashes are allowed"
                     value={addressData.street_address}
-                    onChange={(e) => setAddressData({ ...addressData, street_address: e.target.value })}
+                    onChange={(e) => {
+                      setAddressData({ ...addressData, street_address: e.target.value });
+                      if (addressErrors.street_address) setAddressErrors({ ...addressErrors, street_address: null });
+                    }}
+                    style={{ borderColor: addressErrors.street_address ? '#f87171' : undefined }}
                     required
                   />
+                  {addressErrors.street_address && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {addressErrors.street_address}
+                    </span>
+                  )}
                 </div>
 
+                {/* City */}
                 <div className="col-md-4">
                   <label className="form-label fw-semibold small text-slate-200">City <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="glass-input w-100"
-                    pattern="[a-zA-Z\s]+"
-                    title="Only letters and spaces are allowed"
                     value={addressData.city}
-                    onChange={(e) => setAddressData({ ...addressData, city: e.target.value })}
+                    onChange={(e) => {
+                      setAddressData({ ...addressData, city: e.target.value });
+                      if (addressErrors.city) setAddressErrors({ ...addressErrors, city: null });
+                    }}
+                    style={{ borderColor: addressErrors.city ? '#f87171' : undefined }}
                     required
                   />
+                  {addressErrors.city && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {addressErrors.city}
+                    </span>
+                  )}
                 </div>
 
+                {/* District */}
                 <div className="col-md-4">
                   <label className="form-label fw-semibold small text-slate-200">District <span className="text-danger">*</span></label>
                   <select
                     className="glass-input w-100"
                     value={addressData.district}
-                    onChange={(e) => setAddressData({ ...addressData, district: e.target.value })}
+                    onChange={(e) => {
+                      setAddressData({ ...addressData, district: e.target.value });
+                      if (addressErrors.district) setAddressErrors({ ...addressErrors, district: null });
+                    }}
+                    style={{ borderColor: addressErrors.district ? '#f87171' : undefined }}
                     required
                   >
                     {sriLankaDistricts.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
+                  {addressErrors.district && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {addressErrors.district}
+                    </span>
+                  )}
                 </div>
 
+                {/* Postal Code */}
                 <div className="col-md-4">
                   <label className="form-label fw-semibold small text-slate-200">Postal Code <span className="text-danger">*</span></label>
                   <input
@@ -634,13 +819,19 @@ export default function Profile() {
                     className="glass-input w-100"
                     placeholder="60300"
                     maxLength={5}
-                    minLength={5}
-                    pattern="[0-9]{5}"
-                    title="Postal code must be exactly 5 digits"
                     value={addressData.postal_code}
-                    onChange={(e) => setAddressData({ ...addressData, postal_code: e.target.value.replace(/[^0-9]/g, '') })}
+                    onChange={(e) => {
+                      setAddressData({ ...addressData, postal_code: e.target.value.replace(/[^0-9]/g, '') });
+                      if (addressErrors.postal_code) setAddressErrors({ ...addressErrors, postal_code: null });
+                    }}
+                    style={{ borderColor: addressErrors.postal_code ? '#f87171' : undefined }}
                     required
                   />
+                  {addressErrors.postal_code && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {addressErrors.postal_code}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -684,9 +875,25 @@ export default function Profile() {
               </div>
             </div>
 
+            {/* Inline Error Alert */}
+            {error && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.35)', color: '#f87171', fontSize: '14px' }}>
+                <AlertCircle size={20} className="flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Inline Success Alert */}
+            {success && (
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.35)', color: '#4ade80', fontSize: '14px' }}>
+                <CheckCircle size={20} className="flex-shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
             {!otpRequested ? (
               /* STEP 1: REQUEST OTP FORM */
-              <form onSubmit={handleRequestPasswordOtp}>
+              <form onSubmit={handleRequestPasswordOtp} noValidate>
                 <div className="row g-3">
                   
                   {/* Current Password */}
@@ -697,7 +904,11 @@ export default function Profile() {
                         type={showCurrentPw ? 'text' : 'password'}
                         className="glass-input w-100"
                         value={passwordData.current_password}
-                        onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                        onChange={(e) => {
+                          setPasswordData({ ...passwordData, current_password: e.target.value });
+                          if (passwordErrors.current_password) setPasswordErrors({ ...passwordErrors, current_password: null });
+                        }}
+                        style={{ borderColor: passwordErrors.current_password ? '#f87171' : undefined }}
                         required
                       />
                       <button
@@ -708,6 +919,11 @@ export default function Profile() {
                         {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    {passwordErrors.current_password && (
+                      <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                        {passwordErrors.current_password}
+                      </span>
+                    )}
                   </div>
 
                   {/* New Password */}
@@ -717,10 +933,13 @@ export default function Profile() {
                       <input
                         type={showNewPw ? 'text' : 'password'}
                         className="glass-input w-100"
-                        minLength={8}
                         placeholder="At least 8 characters"
                         value={passwordData.new_password}
-                        onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                        onChange={(e) => {
+                          setPasswordData({ ...passwordData, new_password: e.target.value });
+                          if (passwordErrors.new_password) setPasswordErrors({ ...passwordErrors, new_password: null });
+                        }}
+                        style={{ borderColor: passwordErrors.new_password ? '#f87171' : undefined }}
                         required
                       />
                       <button
@@ -731,6 +950,11 @@ export default function Profile() {
                         {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    {passwordErrors.new_password && (
+                      <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                        {passwordErrors.new_password}
+                      </span>
+                    )}
                   </div>
 
                   {/* Confirm New Password */}
@@ -740,9 +964,12 @@ export default function Profile() {
                       <input
                         type={showConfirmPw ? 'text' : 'password'}
                         className="glass-input w-100"
-                        minLength={8}
                         value={passwordData.confirm_password}
-                        onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                        onChange={(e) => {
+                          setPasswordData({ ...passwordData, confirm_password: e.target.value });
+                          if (passwordErrors.confirm_password) setPasswordErrors({ ...passwordErrors, confirm_password: null });
+                        }}
+                        style={{ borderColor: passwordErrors.confirm_password ? '#f87171' : undefined }}
                         required
                       />
                       <button
@@ -753,6 +980,11 @@ export default function Profile() {
                         {showConfirmPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    {passwordErrors.confirm_password && (
+                      <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                        {passwordErrors.confirm_password}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -793,7 +1025,7 @@ export default function Profile() {
                   </div>
                 )}
 
-                <form onSubmit={handleVerifyOtp} className="max-w-xs mx-auto">
+                <form onSubmit={handleVerifyOtp} className="max-w-xs mx-auto" noValidate>
                   <div className="mb-4">
                     <input
                       type="text"
@@ -801,9 +1033,18 @@ export default function Profile() {
                       placeholder="000000"
                       maxLength={6}
                       value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                      onChange={(e) => {
+                        setOtpInput(e.target.value.replace(/[^0-9]/g, ''));
+                        if (otpError) setOtpError('');
+                      }}
+                      style={{ borderColor: otpError ? '#f87171' : undefined }}
                       required
                     />
+                    {otpError && (
+                      <span className="text-danger mt-2 d-block text-center" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                        {otpError}
+                      </span>
+                    )}
                   </div>
 
                   <div className="d-flex justify-content-center align-items-center gap-3">

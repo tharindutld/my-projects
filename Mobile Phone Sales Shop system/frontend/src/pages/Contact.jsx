@@ -26,7 +26,7 @@ export default function Contact() {
     if (!name.trim()) {
       errors.name = 'Your name is required.';
     } else if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-      errors.name = 'Your name can only contain letters and spaces (no numbers or special characters).';
+      errors.name = 'Your name can only contain letters and spaces.';
     }
 
     // Email validation
@@ -60,7 +60,6 @@ export default function Contact() {
     setSuccess('');
 
     if (!validateFields()) {
-      setError('Please resolve the errors highlighted below before submitting.');
       return;
     }
 
@@ -127,13 +126,13 @@ export default function Contact() {
             )}
 
             {success && (
-              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.35)', color: '#34d399', fontSize: '14px' }}>
+              <div className="d-flex align-items-center gap-2 p-3 mb-4 rounded-3" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.35)', color: '#4ade80', fontSize: '14px' }}>
                 <CheckCircle2 size={20} className="flex-shrink-0" />
                 <span>{success}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} novalidate>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="row g-3">
                 
                 {/* Your Name */}
