@@ -11,34 +11,56 @@ export default function Contact() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
 
-  // Status
+  // Field Errors
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // Form Status
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const validateFields = () => {
+    const errors = {};
+
+    // Name validation
+    if (!name.trim()) {
+      errors.name = 'Your name is required.';
+    } else if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      errors.name = 'Your name can only contain letters and spaces (no numbers or special characters).';
+    }
+
+    // Email validation
+    if (!email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+
+    // Subject validation
+    if (!subject.trim()) {
+      errors.subject = 'Subject is required.';
+    } else if (subject.trim().length <= 3) {
+      errors.subject = 'Subject must be greater than 3 characters.';
+    }
+
+    // Message validation
+    if (!message.trim()) {
+      errors.message = 'Message is required.';
+    } else if (message.trim().length <= 5) {
+      errors.message = 'Message must be greater than 5 characters.';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Field Validations matching legacy contact.php
-    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
-      setError('All fields are required. Please fill in all fields.');
-      return;
-    }
-
-    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-      setError('Your name can only contain letters and spaces (no numbers or special characters).');
-      return;
-    }
-
-    if (subject.trim().length <= 3) {
-      setError('Subject must be greater than 3 characters.');
-      return;
-    }
-
-    if (message.trim().length <= 5) {
-      setError('Message must be greater than 5 characters.');
+    if (!validateFields()) {
+      setError('Please resolve the errors highlighted below before submitting.');
       return;
     }
 
@@ -58,6 +80,7 @@ export default function Contact() {
         setEmail('');
         setSubject('');
         setMessage('');
+        setFieldErrors({});
       } else {
         setError(data.message || 'Error sending contact message.');
       }
@@ -68,6 +91,7 @@ export default function Contact() {
       setEmail('');
       setSubject('');
       setMessage('');
+      setFieldErrors({});
     } finally {
       setSubmitting(false);
     }
@@ -109,8 +133,10 @@ export default function Contact() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} novalidate>
               <div className="row g-3">
+                
+                {/* Your Name */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold text-slate-300 fs-6">Your Name *</label>
                   <input
@@ -118,10 +144,20 @@ export default function Contact() {
                     className="glass-input w-100 py-2.5 fs-6"
                     placeholder="John Doe"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: null });
+                    }}
+                    style={{ borderColor: fieldErrors.name ? '#f87171' : undefined }}
                   />
+                  {fieldErrors.name && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {fieldErrors.name}
+                    </span>
+                  )}
                 </div>
+
+                {/* Email Address */}
                 <div className="col-md-6">
                   <label className="form-label fw-semibold text-slate-300 fs-6">Email Address *</label>
                   <input
@@ -129,10 +165,20 @@ export default function Contact() {
                     className="glass-input w-100 py-2.5 fs-6"
                     placeholder="john@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: null });
+                    }}
+                    style={{ borderColor: fieldErrors.email ? '#f87171' : undefined }}
                   />
+                  {fieldErrors.email && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {fieldErrors.email}
+                    </span>
+                  )}
                 </div>
+
+                {/* Subject */}
                 <div className="col-12">
                   <label className="form-label fw-semibold text-slate-300 fs-6">Subject *</label>
                   <input
@@ -140,10 +186,20 @@ export default function Contact() {
                     className="glass-input w-100 py-2.5 fs-6"
                     placeholder="How can we help you?"
                     value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setSubject(e.target.value);
+                      if (fieldErrors.subject) setFieldErrors({ ...fieldErrors, subject: null });
+                    }}
+                    style={{ borderColor: fieldErrors.subject ? '#f87171' : undefined }}
                   />
+                  {fieldErrors.subject && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {fieldErrors.subject}
+                    </span>
+                  )}
                 </div>
+
+                {/* Message */}
                 <div className="col-12">
                   <label className="form-label fw-semibold text-slate-300 fs-6">Message *</label>
                   <textarea
@@ -151,10 +207,19 @@ export default function Contact() {
                     rows="5"
                     placeholder="Type your message here..."
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      if (fieldErrors.message) setFieldErrors({ ...fieldErrors, message: null });
+                    }}
+                    style={{ borderColor: fieldErrors.message ? '#f87171' : undefined }}
                   ></textarea>
+                  {fieldErrors.message && (
+                    <span className="text-danger mt-1 d-block" style={{ fontSize: '12.5px', color: '#f87171' }}>
+                      {fieldErrors.message}
+                    </span>
+                  )}
                 </div>
+
                 <div className="col-12 mt-4">
                   <button
                     type="submit"

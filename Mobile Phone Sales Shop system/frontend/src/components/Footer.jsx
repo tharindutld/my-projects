@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, ChevronRight, Store, Package, User, Info, FileText } from 'lucide-react';
+import { Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -110,19 +110,11 @@ export default function Footer() {
       <hr style={{ border: '0', borderTop: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '20px' }} />
 
       <div className="container" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '15px',
-        fontSize: '13.5px'
-      }} className="text-slate-400">
+        textAlign: 'center',
+        fontSize: '13.5px',
+        color: '#94a3b8'
+      }}>
         <span>&copy; {new Date().getFullYear()} MobileMart. All rights reserved.</span>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <Link to="/about" className="text-slate-400 hover:text-white" style={{ textDecoration: 'none' }}>About</Link>
-          <Link to="/contact" className="text-slate-400 hover:text-white" style={{ textDecoration: 'none' }}>Contact</Link>
-          <Link to="/terms" className="text-slate-400 hover:text-white" style={{ textDecoration: 'none' }}>Terms & Conditions</Link>
-        </div>
       </div>
     </footer>
   );
