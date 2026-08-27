@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Package, ShoppingBag, History, Search, XCircle, 
   FileText, Printer, Star, Truck, Receipt, 
-  Home, RefreshCw, ChevronLeft, ChevronRight, CheckCircle2
+  Home, RefreshCw, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ToastAlert from '../components/ToastAlert';
@@ -24,7 +24,7 @@ export default function MyOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [ratings, setRatings] = useState({}); // orderId -> rating
+  const [ratings, setRatings] = useState({});
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -143,79 +143,79 @@ export default function MyOrders() {
     return (
       <div className="container py-5 text-center my-orders-loading">
         <div className="spinner-border text-primary me-2" role="status"></div>
-        <span className="fw-semibold text-muted">Loading your orders...</span>
+        <span className="fw-semibold text-slate-300 fs-6">Loading your orders...</span>
       </div>
     );
   }
 
   return (
-    <div className="my-orders-page animate-fade-in">
+    <div className="my-orders-page-dark animate-fade-in py-3">
       <ToastAlert message={error} type="danger" onClose={() => setError('')} />
       <ToastAlert message={success} type="success" onClose={() => setSuccess('')} />
 
-      {/* Page Header */}
-      <div className="my-orders-header py-4 mb-4">
-        <div className="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+      {/* Header Banner */}
+      <div className="glass-panel p-4 mb-4 rounded-4">
+        <div className="container d-flex justify-content-between align-items-center flex-wrap gap-3 p-0">
           <div>
             <h2 className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
-              <Package size={30} /> My Orders
+              <Package size={30} className="text-primary-light" /> My Orders
             </h2>
-            <p className="text-white-50 mb-0 small">Track your active shipments and view your purchase history</p>
+            <p className="text-slate-300 mb-0 fs-6">Track active shipments and view complete purchase history</p>
           </div>
-          <button className="btn btn-outline-light btn-sm rounded-pill px-3" onClick={fetchMyOrders}>
-            <RefreshCw size={14} className="me-1" /> Refresh
+          <button className="glass-btn-secondary py-2 px-3.5 rounded-pill d-flex align-items-center gap-2 fw-semibold" onClick={fetchMyOrders}>
+            <RefreshCw size={16} /> Refresh List
           </button>
         </div>
       </div>
 
-      <div className="container mb-5">
-        {/* Navigation Tabs */}
-        <div className="d-flex justify-content-center mb-4">
-          <div className="nav nav-pills custom-pill-tabs p-1 bg-white rounded-pill shadow-sm border">
+      <div className="container mb-5 p-0">
+        {/* Responsive Navigation Tabs Container */}
+        <div className="orders-tabs-wrapper mb-4">
+          <div className="d-flex flex-wrap gap-2 p-2 glass-panel rounded-4">
             <button
-              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'current' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              className={`order-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 ${activeTab === 'current' ? 'active' : ''}`}
               onClick={() => {
                 setSearchParams({ tab: 'current' });
                 setActiveSearch('');
                 setSearchQuery('');
               }}
             >
-              <ShoppingBag className="me-2" size={18} /> Current Orders
+              <ShoppingBag size={20} /> Current Orders
             </button>
             <button
-              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'history' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              className={`order-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-bold fs-6 d-flex align-items-center justify-content-center gap-2 ${activeTab === 'history' ? 'active' : ''}`}
               onClick={() => setSearchParams({ tab: 'history' })}
             >
-              <History className="me-2" size={18} /> Order History
+              <History size={20} /> Order History
             </button>
           </div>
         </div>
 
-        {/* History Search Bar */}
+        {/* History Search Filter Bar */}
         {activeTab === 'history' && (
-          <div className="card shadow-sm border-0 mb-4 rounded-4 bg-white p-3 search-card">
+          <div className="glass-panel p-3.5 mb-4 rounded-4">
             <form onSubmit={handleSearchSubmit}>
-              <div className="row g-2 align-items-center">
+              <div className="row g-2.5 align-items-center">
                 <div className="col-md-9">
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-0 text-muted"><Search size={18} /></span>
+                  <div className="search-input-wrapper">
+                    <Search size={20} className="search-icon-dark" />
                     <input
                       type="text"
-                      className="form-control bg-light border-0"
+                      className="glass-input ps-5 w-100 fs-6 py-2.5"
                       placeholder="Search past orders by order number, product name, or brand..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="col-md-3 d-flex gap-2">
-                  <button type="submit" className="btn btn-primary w-100 py-2 rounded-pill fw-semibold">
+                <div className="col-md-3 d-flex gap-2 align-items-center">
+                  <button type="submit" className="glass-btn flex-grow-1 py-2.5 rounded-pill fw-semibold fs-6">
                     Filter
                   </button>
                   {searchQuery && (
                     <button 
                       type="button" 
-                      className="btn btn-outline-secondary py-2 rounded-pill"
+                      className="glass-btn-secondary py-2.5 px-3.5 rounded-pill fs-6"
                       onClick={handleClearSearch}
                     >
                       Clear
@@ -229,30 +229,30 @@ export default function MyOrders() {
 
         {/* Orders List / Empty State */}
         {filteredOrders.length === 0 ? (
-          <div className="card border-0 shadow-sm rounded-4 p-5 text-center bg-white empty-orders-card">
+          <div className="glass-panel p-5 text-center rounded-4">
             <div className="py-4">
-              <Receipt size={64} className="text-muted mb-3 d-block mx-auto opacity-50" />
+              <Receipt size={64} className="text-slate-400 mb-3 d-block mx-auto opacity-50" />
               {activeTab === 'current' ? (
                 <>
-                  <h4 className="fw-bold text-dark mb-2">No Current Orders</h4>
-                  <p className="text-muted mb-4">You do not have any pending or processing orders at the moment.</p>
-                  <button className="btn btn-primary rounded-pill px-4 py-2 fw-semibold" onClick={() => navigate('/products')}>
+                  <h4 className="fw-bold text-white mb-2">No Current Orders</h4>
+                  <p className="text-slate-300 fs-6 mb-4">You do not have any active or processing orders at the moment.</p>
+                  <button className="glass-btn rounded-pill px-4 py-2.5 fw-semibold fs-6" onClick={() => navigate('/products')}>
                     Start Shopping
                   </button>
                 </>
               ) : (
                 <>
-                  <h4 className="fw-bold text-dark mb-2">No Order History</h4>
-                  <p className="text-muted mb-4">
-                    {activeSearch ? `No completed orders found matching '${activeSearch}'.` : 'You do not have any completed or cancelled orders.'}
+                  <h4 className="fw-bold text-white mb-2">No Order History</h4>
+                  <p className="text-slate-300 fs-6 mb-4">
+                    {activeSearch ? `No past orders found matching '${activeSearch}'.` : 'You have no past completed or cancelled orders.'}
                   </p>
                   <div className="d-flex justify-content-center gap-2">
                     {activeSearch && (
-                      <button className="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold" onClick={handleClearSearch}>
+                      <button className="glass-btn-secondary rounded-pill px-4 py-2.5 fw-semibold fs-6" onClick={handleClearSearch}>
                         Clear Search
                       </button>
                     )}
-                    <button className="btn btn-primary rounded-pill px-4 py-2 fw-semibold" onClick={() => navigate('/products')}>
+                    <button className="glass-btn rounded-pill px-4 py-2.5 fw-semibold fs-6" onClick={() => navigate('/products')}>
                       Start Shopping
                     </button>
                   </div>
@@ -268,7 +268,6 @@ export default function MyOrders() {
                 const delStatus = order.DeliveryStatus || 'Processing';
                 const currentRating = ratings[order.ID] || 0;
 
-                // Stepper logic matching legacy PHP
                 let step1 = 'completed';
                 let step2 = '';
                 let step3 = '';
@@ -290,120 +289,150 @@ export default function MyOrders() {
                 }
 
                 return (
-                  <div key={order.ID} className="card order-card mb-4 border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                    {/* Header */}
-                    <div className="card-header bg-light border-bottom py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div key={order.ID} className="glass-panel order-dark-card mb-4 rounded-4 overflow-hidden">
+                    
+                    {/* Card Header */}
+                    <div className="order-header-dark p-3.5 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom border-slate-700">
                       <div>
-                        <span className="text-muted extra-small text-uppercase d-block fw-semibold">Order Number</span>
-                        <h6 className="fw-bold text-dark mb-0">{order.OrderNumber}</h6>
+                        <span className="text-slate-400 text-uppercase d-block fw-semibold" style={{ fontSize: '12px' }}>Order Number</span>
+                        <h5 className="fw-bold text-white mb-0" style={{ fontSize: '18px' }}>{order.OrderNumber}</h5>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
+                      <div className="d-flex align-items-center gap-4">
                         <div>
-                          <span className="text-muted extra-small text-uppercase d-block text-end fw-semibold">Order Date</span>
-                          <span className="fw-semibold text-dark small">
+                          <span className="text-slate-400 text-uppercase d-block text-end fw-semibold" style={{ fontSize: '12px' }}>Order Date</span>
+                          <span className="fw-semibold text-slate-200" style={{ fontSize: '14.5px' }}>
                             {new Date(order.OrderDate).toLocaleString(undefined, { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <span className="border-start" style={{ height: '24px' }}></span>
+                        <span className="border-start border-slate-700" style={{ height: '28px' }}></span>
                         <div>
-                          <span className="text-muted extra-small text-uppercase d-block text-end fw-semibold">Total Amount</span>
-                          <span className="fw-bold text-primary">
+                          <span className="text-slate-400 text-uppercase d-block text-end fw-semibold" style={{ fontSize: '12px' }}>Total Amount</span>
+                          <span className="fw-bold text-primary-glowing" style={{ fontSize: '19px' }}>
                             Rs. {parseFloat(order.TotalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Body */}
-                    <div className="card-body p-4">
+                    {/* Card Body */}
+                    <div className="p-4">
                       <div className="row g-4">
                         
-                        {/* Left Column: Product Items */}
-                        <div className="col-lg-7 border-end-lg pe-lg-4">
-                          <h6 className="fw-bold text-secondary mb-3 d-flex align-items-center gap-2">
-                            <Package size={18} /> Purchased Items ({order.items?.length || 0})
+                        {/* Left Column: Items & Shipping/Payment */}
+                        <div className="col-lg-7 border-end-dark pe-lg-4">
+                          <h6 className="fw-bold text-white mb-3 d-flex align-items-center gap-2 fs-6">
+                            <Package size={20} className="text-primary-light" /> Purchased Items ({order.items?.length || 0})
                           </h6>
-                          <div className="order-items-list d-flex flex-column gap-3 mb-3">
+                          
+                          <div className="order-items-list d-flex flex-column gap-3 mb-4">
                             {order.items && order.items.length > 0 ? (
                               order.items.map((item, idx) => (
-                                <div key={idx} className="order-item-row d-flex align-items-center gap-3 p-2 rounded-3 bg-light-subtle border">
+                                <div key={idx} className="dark-item-row d-flex align-items-center gap-3 p-3 rounded-3 border">
                                   <img 
                                     src={getImageSrc(item.Image1)} 
                                     alt={item.ProductName || 'Product'} 
-                                    className="order-item-img rounded-2 border"
-                                    onError={(e) => { e.target.src = 'https://via.placeholder.com/60?text=Phone'; }}
+                                    className="order-item-img-dark rounded-2"
+                                    onError={(e) => { e.target.src = 'https://via.placeholder.com/64?text=Phone'; }}
                                   />
                                   <div className="flex-grow-1 min-w-0">
-                                    <h6 className="fw-bold text-dark mb-1 text-truncate" style={{ fontSize: '14px' }}>
+                                    <h6 className="fw-bold text-white mb-1 text-truncate" style={{ fontSize: '15px' }}>
                                       {item.ProductName || 'Mobile Product'}
                                     </h6>
-                                    <div className="text-muted extra-small">
+                                    <div className="text-slate-300" style={{ fontSize: '13.5px' }}>
                                       {item.BrandName} {item.ModelNumber && `• ${item.ModelNumber}`} {item.Color && `• ${item.Color}`}
                                       {(item.ROM || item.RAM) && ` (${item.ROM || ''}${item.RAM ? ' / ' + item.RAM : ''})`}
                                     </div>
                                   </div>
                                   <div className="text-end ps-2">
-                                    <div className="fw-bold text-dark small">
+                                    <div className="fw-bold text-primary-light" style={{ fontSize: '15px' }}>
                                       Rs. {parseFloat(item.ProductPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </div>
-                                    <div className="text-muted extra-small">Qty: {item.ProductQty}</div>
+                                    <div className="text-slate-400 fw-medium" style={{ fontSize: '13px' }}>Qty: {item.ProductQty}</div>
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-muted small">Order details available via Invoice.</div>
+                              <div className="text-slate-300 fs-6">Order details available via Invoice.</div>
                             )}
                           </div>
 
-                          {/* Payment & Address details */}
-                          <div className="row g-2 mt-2 pt-3 border-top text-muted extra-small">
+                          {/* Payment & Shipping Details Section */}
+                          <div className="payment-shipping-section row g-3 pt-3 border-top border-slate-700">
+                            
+                            {/* Shipping Address */}
                             <div className="col-sm-6">
-                              <strong className="text-dark d-block mb-1"><Truck size={14} className="me-1" /> Shipping Address:</strong>
-                              <div className="text-dark fw-semibold">{order.ShippingName || user?.firstName + ' ' + user?.lastName}</div>
-                              <div>{order.ShippingAddress}</div>
+                              <div className="d-flex align-items-center gap-2 mb-2">
+                                <Truck size={18} className="text-primary-light flex-shrink-0" />
+                                <span className="fw-bold text-white fs-6">Shipping Address:</span>
+                              </div>
+                              <div className="ps-4">
+                                <div className="text-slate-100 fw-bold mb-1" style={{ fontSize: '14.5px' }}>
+                                  {order.ShippingName || (user?.firstName + ' ' + user?.lastName)}
+                                </div>
+                                <div className="text-slate-300" style={{ fontSize: '13.5px', lineHeight: '1.45' }}>
+                                  {order.ShippingAddress}
+                                </div>
+                              </div>
                             </div>
-                            <div className="col-sm-6 border-start-sm ps-sm-3">
-                              <strong className="text-dark d-block mb-1"><Receipt size={14} className="me-1" /> Payment Method:</strong>
-                              <span className="badge bg-light text-dark border me-2">{order.PaymentMethod}</span>
-                              {order.TransactionDetails && <div className="mt-1">{order.TransactionDetails}</div>}
+
+                            {/* Payment Method - Clean Gap & Alignment */}
+                            <div className="col-sm-6 border-start-dark ps-sm-4 mt-3 mt-sm-0">
+                              <div className="d-flex align-items-center gap-2 mb-2">
+                                <Receipt size={18} className="text-primary-light flex-shrink-0" />
+                                <span className="fw-bold text-white fs-6">Payment Method:</span>
+                              </div>
+                              <div className="ps-4 d-flex flex-column gap-2">
+                                <div className="d-flex align-items-center gap-2">
+                                  <span className="badge-payment-method px-3 py-1.5 rounded-pill fw-semibold">
+                                    {order.PaymentMethod || 'Online Payment'}
+                                  </span>
+                                </div>
+                                {order.TransactionDetails && (
+                                  <div className="text-slate-300" style={{ fontSize: '13.5px' }}>
+                                    <span className="text-slate-400 fw-medium me-1">Transaction Ref:</span>
+                                    <span className="text-slate-200 fw-semibold">{order.TransactionDetails}</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
+
                           </div>
                         </div>
 
-                        {/* Right Column: Tracking Stepper & Actions */}
+                        {/* Right Column: Tracking & Actions */}
                         <div className="col-lg-5 ps-lg-4 d-flex flex-column justify-content-between">
                           <div>
-                            <h6 className="fw-bold text-secondary mb-3 d-flex align-items-center justify-content-between">
+                            <h6 className="fw-bold text-white mb-3 d-flex align-items-center justify-content-between fs-6">
                               <span>Order Status Tracking</span>
-                              <span className={`badge ${status === 'Completed' ? 'bg-success' : status === 'Cancelled' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                              <span className={`status-badge-glow ${status === 'Completed' ? 'badge-completed' : status === 'Cancelled' ? 'badge-cancelled' : 'badge-pending'}`}>
                                 {status}
                               </span>
                             </h6>
 
                             {status === 'Cancelled' ? (
-                              <div className="alert alert-danger py-3 text-center small rounded-3 mb-4">
+                              <div className="dark-alert-danger py-3 text-center fs-6 rounded-3 mb-4">
                                 <XCircle className="me-2" size={20} /> This order has been Cancelled.
                               </div>
                             ) : (
-                              <div className="stepper-container mb-4 py-2">
+                              <div className="stepper-dark-container mb-4 py-2">
                                 <div className="stepper-wrapper">
-                                  <div className="progress-line-fill" style={{ width: fillWidth }}></div>
+                                  <div className="progress-line-dark-fill" style={{ width: fillWidth }}></div>
                                   
                                   <div className={`stepper-item ${step1}`}>
-                                    <div className="step-counter"><Receipt size={14} /></div>
-                                    <div className="step-name">Placed</div>
+                                    <div className="step-counter-dark"><Receipt size={15} /></div>
+                                    <div className="step-name-dark">Placed</div>
                                   </div>
                                   <div className={`stepper-item ${step2}`}>
-                                    <div className="step-counter"><RefreshCw size={14} /></div>
-                                    <div className="step-name">Processing</div>
+                                    <div className="step-counter-dark"><RefreshCw size={15} /></div>
+                                    <div className="step-name-dark">Processing</div>
                                   </div>
                                   <div className={`stepper-item ${step3}`}>
-                                    <div className="step-counter"><Truck size={14} /></div>
-                                    <div className="step-name">Shipped</div>
+                                    <div className="step-counter-dark"><Truck size={15} /></div>
+                                    <div className="step-name-dark">Shipped</div>
                                   </div>
                                   <div className={`stepper-item ${step4}`}>
-                                    <div className="step-counter"><Home size={14} /></div>
-                                    <div className="step-name">Delivered</div>
+                                    <div className="step-counter-dark"><Home size={15} /></div>
+                                    <div className="step-name-dark">Delivered</div>
                                   </div>
                                 </div>
                               </div>
@@ -412,42 +441,51 @@ export default function MyOrders() {
 
                           <div>
                             {/* Invoice Buttons */}
-                            <div className="d-flex gap-2 mb-3">
+                            <div className="d-flex gap-2 mb-3 align-items-center">
                               <button
-                                className="btn btn-outline-dark btn-sm rounded-pill px-3 flex-grow-1 d-flex align-items-center justify-content-center gap-1 py-2 fw-semibold"
+                                className="glass-btn-secondary flex-grow-1 py-2.5 px-3 rounded-pill d-flex align-items-center justify-content-center gap-2 fw-semibold fs-6"
                                 onClick={() => window.open(`/invoice/${order.ID}`, '_blank')}
                               >
-                                <FileText size={16} /> View Invoice
+                                <FileText size={18} /> View Invoice
                               </button>
                               <button
-                                className="btn btn-primary btn-sm rounded-pill px-3 flex-grow-1 d-flex align-items-center justify-content-center gap-1 py-2 fw-semibold"
+                                className="glass-btn flex-grow-1 py-2.5 px-3 rounded-pill d-flex align-items-center justify-content-center gap-2 fw-semibold fs-6"
                                 onClick={() => window.open(`/invoice/${order.ID}?print=1`, '_blank')}
                               >
-                                <Printer size={16} /> Print Invoice
+                                <Printer size={18} /> Print Invoice
                               </button>
                             </div>
 
-                            {/* Rating Widget for Completed Orders */}
-                            {status === 'Completed' && (
-                              <div className="rating-widget-box p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            {/* Rating Stars Widget for Completed / Delivered Orders */}
+                            {(status === 'Completed' || status === 'Delivered') && (
+                              <div className="dark-rating-box p-3.5 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
                                 <div>
-                                  <span className="fw-semibold text-dark small d-block">Rate Your Purchase:</span>
-                                  <span className="extra-small text-muted">How was your ordering experience?</span>
+                                  <span className="fw-bold text-white fs-6 d-block">Rate Your Purchase:</span>
+                                  <span className="text-slate-300" style={{ fontSize: '13px' }}>How was your ordering experience?</span>
                                 </div>
-                                <div className="rating-stars d-flex gap-1">
-                                  {[1, 2, 3, 4, 5].map((starVal) => (
-                                    <Star
-                                      key={starVal}
-                                      className={`rating-star ${starVal <= currentRating ? 'filled text-warning' : 'text-muted'}`}
-                                      style={{ 
-                                        cursor: 'pointer', 
-                                        width: '22px', 
-                                        height: '22px',
-                                        fill: starVal <= currentRating ? '#ffc107' : 'none' 
-                                      }}
-                                      onClick={() => handleRateOrder(order.ID, starVal)}
-                                    />
-                                  ))}
+                                <div className="rating-stars d-flex gap-1.5 align-items-center">
+                                  {[1, 2, 3, 4, 5].map((starVal) => {
+                                    const isFilled = starVal <= currentRating;
+                                    return (
+                                      <button
+                                        key={starVal}
+                                        type="button"
+                                        className="rating-star-btn bg-transparent border-0 p-1 cursor-pointer"
+                                        title={`Rate ${starVal} out of 5 stars`}
+                                        onClick={() => handleRateOrder(order.ID, starVal)}
+                                      >
+                                        <Star
+                                          className={`rating-star ${isFilled ? 'filled text-warning' : 'text-slate-400'}`}
+                                          style={{ 
+                                            width: '24px', 
+                                            height: '24px',
+                                            fill: isFilled ? '#f59e0b' : 'transparent',
+                                            stroke: isFilled ? '#f59e0b' : '#94a3b8'
+                                          }}
+                                        />
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -465,21 +503,21 @@ export default function MyOrders() {
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
                   <button
-                    className="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1"
+                    className="glass-btn-secondary px-4 py-2 rounded-pill d-flex align-items-center gap-1.5 fw-semibold fs-6"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   >
-                    <ChevronLeft size={16} /> Previous
+                    <ChevronLeft size={18} /> Previous
                   </button>
-                  <span className="fw-semibold small text-muted">
+                  <span className="fw-semibold text-slate-300 fs-6">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    className="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1"
+                    className="glass-btn-secondary px-4 py-2 rounded-pill d-flex align-items-center gap-1.5 fw-semibold fs-6"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   >
-                    Next <ChevronRight size={16} />
+                    Next <ChevronRight size={18} />
                   </button>
                 </div>
               )}
