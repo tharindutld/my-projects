@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, User, LogOut, Search, Menu, X, Settings, Package } from 'lucide-react';
+import { ShoppingCart, Heart, User, LogOut, Search, Settings, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ConfirmModal from './ConfirmModal';
@@ -10,10 +10,24 @@ export default function Navbar() {
   const { cartCount } = useCart();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+
+  // Ref to handle outside click to close dropdown
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchWishlistCount = async () => {
     if (!token || (user && user.role !== 'Customer')) {
@@ -57,7 +71,8 @@ export default function Navbar() {
       borderTop: 'none',
       borderLeft: 'none',
       borderRight: 'none',
-      background: 'rgba(15, 23, 42, 0.65)'
+      background: 'rgba(15, 23, 42, 0.75)',
+      backdropFilter: 'blur(12px)'
     }}>
       <div className="container" style={{
         display: 'flex',
@@ -129,7 +144,7 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* Wishlist */}
+              {/* Wishlist Icon */}
               <Link to="/wishlist" style={{ position: 'relative', color: 'var(--text-primary)' }} title="Wishlist">
                 <Heart size={22} style={{ transition: 'var(--transition)' }} />
                 {wishlistCount > 0 && (
@@ -151,7 +166,7 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Cart */}
+              {/* Cart Icon */}
               <Link to="/cart" style={{ position: 'relative', color: 'var(--text-primary)' }} title="Cart">
                 <ShoppingCart size={22} />
                 {cartCount > 0 && (
@@ -175,111 +190,134 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Profile Dropdown */}
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
+          {/* Profile Dropdown (With outside-click listener ref) */}
+          <div ref={dropdownRef} style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setDropdownOpen(!dropdownOpen)} 
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px',
+                borderRadius: '50%'
+              }}
+              aria-expanded={dropdownOpen}
+              title="My Account Menu"
+            >
               <User size={22} />
             </button>
 
             {dropdownOpen && (
-              <div className="glass-card" style={{
+              <div className="glass-card animate-fade-in" style={{
                 position: 'absolute',
                 right: 0,
-                top: '40px',
-                width: '200px',
-                padding: '10px',
+                top: '45px',
+                width: '210px',
+                padding: '12px',
                 zIndex: 200,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                background: 'rgba(15, 23, 42, 0.95)'
+                gap: '6px',
+                background: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '16px',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
               }}>
                 {user ? (
                   <>
                     {user.role === 'Customer' ? (
                       <>
-                        <Link to="/profile" onClick={() => setDropdownOpen(false)} style={{
-                          padding: '8px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          fontSize: '14px'
-                        }}>
-                          <User size={16} /> My Account
+                        <Link 
+                          to="/profile" 
+                          onClick={() => setDropdownOpen(false)} 
+                          className="dropdown-nav-link"
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          <User size={18} /> My Account
                         </Link>
-                        <Link to="/my-orders" onClick={() => setDropdownOpen(false)} style={{
-                          padding: '8px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          fontSize: '14px'
-                        }}>
-                          <Package size={16} /> My Orders
-                        </Link>
-                        <Link to="/wishlist" onClick={() => setDropdownOpen(false)} style={{
-                          padding: '8px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          fontSize: '14px'
-                        }}>
-                          <Heart size={16} /> Wishlist
+                        <Link 
+                          to="/my-orders" 
+                          onClick={() => setDropdownOpen(false)} 
+                          className="dropdown-nav-link"
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          <Package size={18} /> My Orders
                         </Link>
                       </>
                     ) : (
-                      <Link to="/admin" onClick={() => setDropdownOpen(false)} style={{
-                        padding: '8px',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '14px',
-                        color: 'var(--primary)'
-                      }}>
-                        <Settings size={16} /> Admin Panel
+                      <Link 
+                        to="/admin" 
+                        onClick={() => setDropdownOpen(false)} 
+                        className="dropdown-nav-link"
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#818cf8'
+                        }}
+                      >
+                        <Settings size={18} /> Admin Panel
                       </Link>
                     )}
-                    <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-                    <button onClick={() => { setDropdownOpen(false); setShowLogoutModal(true); }} style={{
-                      padding: '8px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '14px',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--danger)',
-                      width: '100%',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}>
-                      <LogOut size={16} /> Logout
+
+                    <hr style={{ border: '0', borderTop: '1px solid rgba(255,255,255,0.12)', margin: '4px 0' }} />
+
+                    <button 
+                      onClick={() => { setDropdownOpen(false); setShowLogoutModal(true); }} 
+                      className="dropdown-logout-btn"
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        border: '1px solid transparent',
+                        width: '100%',
+                        cursor: 'pointer',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <LogOut size={18} /> Logout
                     </button>
                   </>
                 ) : (
                   <>
                     <Link to="/login" onClick={() => setDropdownOpen(false)} style={{
-                      padding: '8px',
-                      borderRadius: '8px',
+                      padding: '10px',
+                      borderRadius: '10px',
                       display: 'block',
                       fontSize: '14px',
                       textAlign: 'center'
                     }} className="glass-btn">Customer Login</Link>
                     <Link to="/login?staff=true" onClick={() => setDropdownOpen(false)} style={{
-                      padding: '8px',
-                      borderRadius: '8px',
+                      padding: '10px',
+                      borderRadius: '10px',
                       display: 'block',
                       fontSize: '14px',
                       textAlign: 'center'
@@ -304,8 +342,32 @@ export default function Navbar() {
         onCancel={() => setShowLogoutModal(false)}
       />
 
-      {/* Mobile search bar style helper */}
+      {/* Dropdown & Responsive Styles */}
       <style>{`
+        .dropdown-nav-link {
+          transition: all 0.2s ease-in-out;
+          color: #cbd5e1 !important;
+        }
+
+        .dropdown-nav-link:hover {
+          background: rgba(99, 102, 241, 0.2) !important;
+          color: #ffffff !important;
+          border-color: rgba(99, 102, 241, 0.35) !important;
+        }
+
+        .dropdown-logout-btn {
+          transition: all 0.2s ease-in-out;
+          color: #f87171 !important;
+          background: transparent;
+        }
+
+        .dropdown-logout-btn:hover {
+          background: rgba(239, 68, 68, 0.25) !important;
+          color: #ffffff !important;
+          border-color: rgba(239, 68, 68, 0.5) !important;
+          box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+
         @media (min-width: 768px) {
           .md\\:flex { display: flex !important; }
         }
