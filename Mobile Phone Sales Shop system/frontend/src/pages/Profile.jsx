@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   User, MapPin, Lock, Crown, ShieldAlert, 
   CheckCircle, Eye, EyeOff, Mail, KeyRound, 
-  Save, RefreshCw
+  Save
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ToastAlert from '../components/ToastAlert';
@@ -29,9 +29,7 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // ---------------------------------------------------------------------------
   // TAB 1: PERSONAL INFO STATE
-  // ---------------------------------------------------------------------------
   const [personalData, setPersonalData] = useState({
     firstname: '',
     lastname: '',
@@ -42,9 +40,7 @@ export default function Profile() {
   });
   const [loadingPersonal, setLoadingPersonal] = useState(false);
 
-  // ---------------------------------------------------------------------------
   // TAB 2: ADDRESS STATE
-  // ---------------------------------------------------------------------------
   const [addressData, setAddressData] = useState({
     country: 'Sri Lanka',
     street_address: '',
@@ -69,9 +65,7 @@ export default function Profile() {
     'Canada', 'Singapore', 'Malaysia', 'Germany', 'France'
   ];
 
-  // ---------------------------------------------------------------------------
   // TAB 3: PASSWORD & OTP STATE
-  // ---------------------------------------------------------------------------
   const [passwordData, setPasswordData] = useState({
     current_password: '',
     new_password: '',
@@ -94,13 +88,10 @@ export default function Profile() {
     return d.toISOString().split('T')[0];
   };
 
-  // ---------------------------------------------------------------------------
-  // FETCH USER DATA & ADDRESS ON LOAD
-  // ---------------------------------------------------------------------------
+  // Fetch User Data & Address
   const fetchProfileData = async () => {
     if (!token) return;
     try {
-      // 1. Fetch Profile
       const resProf = await fetch(`${API_URL}/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -116,7 +107,6 @@ export default function Profile() {
         });
       }
 
-      // 2. Fetch Address
       const resAddr = await fetch(`${API_URL}/auth/address`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -148,15 +138,12 @@ export default function Profile() {
     fetchProfileData();
   }, [token, authLoading]);
 
-  // ---------------------------------------------------------------------------
-  // SUBMIT 1: PERSONAL INFO
-  // ---------------------------------------------------------------------------
+  // Submit Personal Info
   const handleUpdatePersonalInfo = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Front-end validations
     const { firstname, lastname, mobilenumber, email, gender, birthdate } = personalData;
 
     if (!firstname || !lastname || !mobilenumber || !email || !birthdate) {
@@ -169,7 +156,6 @@ export default function Profile() {
       return;
     }
 
-    // Age >= 12 validation
     const dob = new Date(birthdate);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -214,9 +200,7 @@ export default function Profile() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // SUBMIT 2: ADDRESS
-  // ---------------------------------------------------------------------------
+  // Submit Address
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     setError('');
@@ -224,31 +208,26 @@ export default function Profile() {
 
     const { country, street_address, city, district, postal_code, addr_mobile } = addressData;
 
-    // 1. Mobile phone validation
     if (!/^0[0-9]{9}$/.test(addr_mobile)) {
       setError('Mobile phone must be exactly 10 digits starting with 0.');
       return;
     }
 
-    // 2. District validation
     if (!sriLankaDistricts.includes(district)) {
       setError('Please select a valid district from the list.');
       return;
     }
 
-    // 3. Postal code exactly 5 digits
     if (!/^[0-9]{5}$/.test(postal_code)) {
       setError('Postal code must be exactly 5 digits.');
       return;
     }
 
-    // 4. Street address pattern
     if (!/^[a-zA-Z0-9\s,\.\-\/]+$/.test(street_address)) {
       setError('Street address contains invalid characters. Only letters, numbers, spaces, commas, periods, hyphens, and slashes are allowed.');
       return;
     }
 
-    // 5. City pattern
     if (!/^[a-zA-Z\s]+$/.test(city)) {
       setError('City name must contain only letters and spaces.');
       return;
@@ -286,9 +265,7 @@ export default function Profile() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // SUBMIT 3A: REQUEST PASSWORD CHANGE OTP
-  // ---------------------------------------------------------------------------
+  // Submit Password OTP Request
   const handleRequestPasswordOtp = async (e) => {
     e.preventDefault();
     setError('');
@@ -344,9 +321,7 @@ export default function Profile() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // SUBMIT 3B: VERIFY OTP & UPDATE PASSWORD
-  // ---------------------------------------------------------------------------
+  // Verify OTP & Update Password
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
@@ -392,85 +367,83 @@ export default function Profile() {
   };
 
   return (
-    <div className="profile-page animate-fade-in py-4 mb-5">
+    <div className="profile-page-dark animate-fade-in py-3 mb-5">
       <ToastAlert message={error} type="danger" onClose={() => setError('')} />
       <ToastAlert message={success} type="success" onClose={() => setSuccess('')} />
 
       <div className="container">
         
-        {/* Profile Hero Card */}
-        <div className="card border-0 shadow-sm rounded-4 p-4 mb-4 profile-hero-card">
+        {/* Profile Hero Glass Card */}
+        <div className="glass-panel p-4 mb-4 rounded-4">
           <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div className="d-flex align-items-center gap-3">
-              <div className="profile-avatar-circle d-flex align-items-center justify-content-center">
+              <div className="profile-avatar-glowing d-flex align-items-center justify-content-center">
                 <User size={36} className="text-white" />
               </div>
               <div>
-                <h3 className="fw-bold text-dark mb-1">
+                <h3 className="fw-bold text-white mb-1">
                   {personalData.firstname} {personalData.lastname}
                 </h3>
-                <span className="text-muted small d-block">{personalData.email}</span>
+                <span className="text-slate-300 small d-block">{personalData.email}</span>
               </div>
             </div>
 
-            {/* Loyalty Points Badge */}
-            <div className="loyalty-badge p-3 rounded-4 border d-flex align-items-center gap-3">
-              <div className="loyalty-icon-box rounded-circle p-2 bg-amber text-warning">
-                <Crown size={28} />
+            {/* Loyalty Points Glass Badge */}
+            <div className="loyalty-glass-badge p-3 rounded-4 d-flex align-items-center gap-3">
+              <div className="loyalty-icon-box rounded-circle p-2 d-flex align-items-center justify-content-center">
+                <Crown size={26} className="text-warning" />
               </div>
               <div>
-                <span className="extra-small text-uppercase text-muted fw-bold d-block">Rewards Account</span>
-                <h5 className="fw-bold text-dark mb-0">
-                  {user?.loyaltyPoints || 0} <span className="fs-6 text-primary fw-semibold">Loyalty Points</span>
+                <span className="extra-small text-uppercase text-slate-300 fw-bold d-block">Rewards Account</span>
+                <h5 className="fw-bold text-white mb-0">
+                  {user?.loyaltyPoints || 0} <span className="fs-6 text-primary-light fw-semibold">Loyalty Points</span>
                 </h5>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabbed Navigation Pills */}
-        <div className="d-flex justify-content-start mb-4">
-          <div className="nav nav-pills custom-profile-tabs p-1 bg-white rounded-pill shadow-sm border">
+        {/* Clean Responsive Glass Tabs Container */}
+        <div className="profile-tabs-wrapper mb-4">
+          <div className="d-flex flex-wrap gap-2 p-2 glass-panel rounded-4">
             <button
-              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'personal' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              className={`profile-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2 ${activeTab === 'personal' ? 'active' : ''}`}
               onClick={() => setActiveTab('personal')}
             >
-              <User size={16} className="me-2" /> Personal Info
+              <User size={18} /> Personal Info
             </button>
             <button
-              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'address' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              className={`profile-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2 ${activeTab === 'address' ? 'active' : ''}`}
               onClick={() => setActiveTab('address')}
             >
-              <MapPin size={16} className="me-2" /> Delivery Address
+              <MapPin size={18} /> Delivery Address
             </button>
             <button
-              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'password' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              className={`profile-tab-item flex-grow-1 flex-sm-grow-0 py-2.5 px-4 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2 ${activeTab === 'password' ? 'active' : ''}`}
               onClick={() => setActiveTab('password')}
             >
-              <Lock size={16} className="me-2" /> Change Password
+              <Lock size={18} /> Change Password
             </button>
           </div>
         </div>
 
-        {/* ------------------------------------------------------------------ */}
         {/* TAB 1: PERSONAL INFORMATION FORM */}
-        {/* ------------------------------------------------------------------ */}
         {activeTab === 'personal' && (
-          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
-            <div className="border-bottom pb-3 mb-4">
-              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                <User className="text-primary" size={22} /> Personal Details
+          <div className="glass-panel p-4 rounded-4 animate-fade-in">
+            <div className="border-bottom border-slate-700 pb-3 mb-4">
+              <h5 className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
+                <User className="text-primary-light" size={22} /> Personal Details
               </h5>
-              <p className="text-muted small mb-0">Manage your name, mobile contact, gender, and birthdate</p>
+              <p className="text-slate-300 small mb-0">Manage your name, mobile contact, gender, and birthdate</p>
             </div>
 
             <form onSubmit={handleUpdatePersonalInfo}>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">First Name <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">First Name <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     pattern="[a-zA-Z\s]+"
                     title="Letters only."
                     value={personalData.firstname}
@@ -480,10 +453,10 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Last Name <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Last Name <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     pattern="[a-zA-Z\s]+"
                     title="Letters only."
                     value={personalData.lastname}
@@ -493,10 +466,10 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Mobile Number <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Mobile Number <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     placeholder="07XXXXXXXX"
                     maxLength={10}
                     minLength={10}
@@ -506,13 +479,13 @@ export default function Profile() {
                     onChange={(e) => setPersonalData({ ...personalData, mobilenumber: e.target.value.replace(/[^0-9]/g, '') })}
                     required
                   />
-                  <span className="extra-small text-muted">Exactly 10 digits starting with 0 (e.g. 0719108628)</span>
+                  <span className="extra-small text-slate-400 d-block mt-1">Exactly 10 digits starting with 0 (e.g. 0719108628)</span>
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Gender <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Gender <span className="text-danger">*</span></label>
                   <select
-                    className="form-select rounded-3"
+                    className="glass-input w-100"
                     value={personalData.gender}
                     onChange={(e) => setPersonalData({ ...personalData, gender: e.target.value })}
                     required
@@ -524,23 +497,23 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Birth Date <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Birth Date <span className="text-danger">*</span></label>
                   <input
                     type="date"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     max={getMaxBirthdate()}
                     value={personalData.birthdate}
                     onChange={(e) => setPersonalData({ ...personalData, birthdate: e.target.value })}
                     required
                   />
-                  <span className="extra-small text-muted">You must be at least 12 years old</span>
+                  <span className="extra-small text-slate-400 d-block mt-1">You must be at least 12 years old</span>
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Email Address <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Email Address <span className="text-danger">*</span></label>
                   <input
                     type="email"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     value={personalData.email}
                     onChange={(e) => setPersonalData({ ...personalData, email: e.target.value })}
                     required
@@ -548,20 +521,20 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="mt-4 text-end">
+              <div className="mt-4 pt-2 d-flex justify-content-end">
                 <button
                   type="submit"
-                  className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                  className="glass-btn px-4 py-2"
                   disabled={loadingPersonal}
                 >
                   {loadingPersonal ? (
                     <>
-                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save size={18} /> Save Changes
+                      <Save size={18} /> Save Personal Info
                     </>
                   )}
                 </button>
@@ -570,24 +543,22 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ------------------------------------------------------------------ */}
         {/* TAB 2: DELIVERY ADDRESS FORM */}
-        {/* ------------------------------------------------------------------ */}
         {activeTab === 'address' && (
-          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
-            <div className="border-bottom pb-3 mb-4">
-              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                <MapPin className="text-primary" size={22} /> Default Shipping Address
+          <div className="glass-panel p-4 rounded-4 animate-fade-in">
+            <div className="border-bottom border-slate-700 pb-3 mb-4">
+              <h5 className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
+                <MapPin className="text-primary-light" size={22} /> Default Shipping Address
               </h5>
-              <p className="text-muted small mb-0">Update your primary delivery address for smooth checkout processing</p>
+              <p className="text-slate-300 small mb-0">Update your primary delivery address for smooth checkout processing</p>
             </div>
 
             <form onSubmit={handleSaveAddress}>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Country <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Country <span className="text-danger">*</span></label>
                   <select
-                    className="form-select rounded-3"
+                    className="glass-input w-100"
                     value={addressData.country}
                     onChange={(e) => setAddressData({ ...addressData, country: e.target.value })}
                     required
@@ -599,10 +570,10 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold small text-dark">Mobile Phone <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Mobile Phone <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     placeholder="07XXXXXXXX"
                     maxLength={10}
                     minLength={10}
@@ -612,14 +583,14 @@ export default function Profile() {
                     onChange={(e) => setAddressData({ ...addressData, addr_mobile: e.target.value.replace(/[^0-9]/g, '') })}
                     required
                   />
-                  <span className="extra-small text-muted">Recipient phone number (10 digits starting with 0)</span>
+                  <span className="extra-small text-slate-400 d-block mt-1">Recipient phone number (10 digits starting with 0)</span>
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label fw-semibold small text-dark">Street Address <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Street Address <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     placeholder="House No, Street Name, Locality"
                     pattern="[a-zA-Z0-9\s,\.\-\/]+"
                     title="Only alphanumeric characters, spaces, commas, periods, hyphens, and slashes are allowed"
@@ -630,10 +601,10 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold small text-dark">City <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">City <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     pattern="[a-zA-Z\s]+"
                     title="Only letters and spaces are allowed"
                     value={addressData.city}
@@ -643,9 +614,9 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold small text-dark">District <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">District <span className="text-danger">*</span></label>
                   <select
-                    className="form-select rounded-3"
+                    className="glass-input w-100"
                     value={addressData.district}
                     onChange={(e) => setAddressData({ ...addressData, district: e.target.value })}
                     required
@@ -657,10 +628,10 @@ export default function Profile() {
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold small text-dark">Postal Code <span className="text-danger">*</span></label>
+                  <label className="form-label fw-semibold small text-slate-200">Postal Code <span className="text-danger">*</span></label>
                   <input
                     type="text"
-                    className="form-control rounded-3"
+                    className="glass-input w-100"
                     placeholder="60300"
                     maxLength={5}
                     minLength={5}
@@ -673,20 +644,20 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="mt-4 text-end">
+              <div className="mt-4 pt-2 d-flex justify-content-end">
                 <button
                   type="submit"
-                  className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                  className="glass-btn px-4 py-2"
                   disabled={loadingAddress}
                 >
                   {loadingAddress ? (
                     <>
-                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save size={18} /> {hasExistingAddress ? 'Update Address' : 'Add Address'}
+                      <Save size={18} /> {hasExistingAddress ? 'Update Delivery Address' : 'Save Delivery Address'}
                     </>
                   )}
                 </button>
@@ -695,23 +666,21 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ------------------------------------------------------------------ */}
         {/* TAB 3: CHANGE PASSWORD (OTP WORKFLOW) */}
-        {/* ------------------------------------------------------------------ */}
         {activeTab === 'password' && (
-          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
-            <div className="border-bottom pb-3 mb-4">
-              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-                <Lock className="text-primary" size={22} /> Security & Password
+          <div className="glass-panel p-4 rounded-4 animate-fade-in">
+            <div className="border-bottom border-slate-700 pb-3 mb-4">
+              <h5 className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
+                <Lock className="text-primary-light" size={22} /> Security & Password
               </h5>
-              <p className="text-muted small mb-0">Change your password safely using two-step email OTP verification</p>
+              <p className="text-slate-300 small mb-0">Change your password safely using two-step email OTP verification</p>
             </div>
 
             {/* OTP Security Notice Alert */}
-            <div className="alert alert-info border-0 rounded-3 mb-4 d-flex align-items-start gap-3">
+            <div className="dark-glass-alert p-3 rounded-3 mb-4 d-flex align-items-start gap-3">
               <ShieldAlert className="text-info flex-shrink-0 mt-1" size={22} />
-              <div className="small">
-                <strong>Two-Step Security Notice:</strong> For your security, a 6-digit One-Time Password (OTP) will be sent to your registered email address (<strong>{personalData.email}</strong>) to verify your password update request.
+              <div className="small text-info-light">
+                <strong className="text-white">Two-Step Security Notice:</strong> For your security, a 6-digit One-Time Password (OTP) will be sent to your registered email address (<strong className="text-white">{personalData.email}</strong>) to verify your password update request.
               </div>
             </div>
 
@@ -722,18 +691,18 @@ export default function Profile() {
                   
                   {/* Current Password */}
                   <div className="col-12">
-                    <label className="form-label fw-semibold small text-dark">Current Password <span className="text-danger">*</span></label>
-                    <div className="input-group">
+                    <label className="form-label fw-semibold small text-slate-200">Current Password <span className="text-danger">*</span></label>
+                    <div className="input-password-wrapper">
                       <input
                         type={showCurrentPw ? 'text' : 'password'}
-                        className="form-control rounded-start-3"
+                        className="glass-input w-100"
                         value={passwordData.current_password}
                         onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
                         required
                       />
                       <button
                         type="button"
-                        className="btn btn-outline-secondary rounded-end-3"
+                        className="pw-toggle-btn"
                         onClick={() => setShowCurrentPw(!showCurrentPw)}
                       >
                         {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -743,11 +712,11 @@ export default function Profile() {
 
                   {/* New Password */}
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-dark">New Password <span className="text-danger">*</span></label>
-                    <div className="input-group">
+                    <label className="form-label fw-semibold small text-slate-200">New Password <span className="text-danger">*</span></label>
+                    <div className="input-password-wrapper">
                       <input
                         type={showNewPw ? 'text' : 'password'}
-                        className="form-control rounded-start-3"
+                        className="glass-input w-100"
                         minLength={8}
                         placeholder="At least 8 characters"
                         value={passwordData.new_password}
@@ -756,7 +725,7 @@ export default function Profile() {
                       />
                       <button
                         type="button"
-                        className="btn btn-outline-secondary rounded-end-3"
+                        className="pw-toggle-btn"
                         onClick={() => setShowNewPw(!showNewPw)}
                       >
                         {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -766,11 +735,11 @@ export default function Profile() {
 
                   {/* Confirm New Password */}
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-dark">Confirm New Password <span className="text-danger">*</span></label>
-                    <div className="input-group">
+                    <label className="form-label fw-semibold small text-slate-200">Confirm New Password <span className="text-danger">*</span></label>
+                    <div className="input-password-wrapper">
                       <input
                         type={showConfirmPw ? 'text' : 'password'}
-                        className="form-control rounded-start-3"
+                        className="glass-input w-100"
                         minLength={8}
                         value={passwordData.confirm_password}
                         onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
@@ -778,7 +747,7 @@ export default function Profile() {
                       />
                       <button
                         type="button"
-                        className="btn btn-outline-secondary rounded-end-3"
+                        className="pw-toggle-btn"
                         onClick={() => setShowConfirmPw(!showConfirmPw)}
                       >
                         {showConfirmPw ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -787,15 +756,15 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="mt-4 text-end">
+                <div className="mt-4 pt-2 d-flex justify-content-end">
                   <button
                     type="submit"
-                    className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                    className="glass-btn px-4 py-2"
                     disabled={loadingOtp}
                   >
                     {loadingOtp ? (
                       <>
-                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Sending OTP...
                       </>
                     ) : (
@@ -808,28 +777,28 @@ export default function Profile() {
               </form>
             ) : (
               /* STEP 2: VERIFY OTP FORM */
-              <div className="otp-verification-section p-4 bg-light rounded-4 border text-center my-3">
-                <div className="otp-icon-wrapper mx-auto mb-3 bg-primary-subtle text-primary rounded-circle p-3 d-inline-flex">
-                  <KeyRound size={32} />
+              <div className="otp-dark-card p-4 rounded-4 border text-center my-3">
+                <div className="otp-icon-wrapper mx-auto mb-3 rounded-circle p-3 d-inline-flex">
+                  <KeyRound size={32} className="text-primary-light" />
                 </div>
-                <h5 className="fw-bold text-dark mb-2">Enter Verification Code</h5>
-                <p className="text-muted small max-w-lg mx-auto mb-3">
+                <h5 className="fw-bold text-white mb-2">Enter Verification Code</h5>
+                <p className="text-slate-300 small max-w-lg mx-auto mb-3">
                   We have sent a 6-digit verification code (OTP) to your registered email: <br />
-                  <strong className="text-dark">{targetEmail}</strong>
+                  <strong className="text-white">{targetEmail}</strong>
                 </p>
 
                 {simulatedOtpCode && (
-                  <div className="badge bg-warning text-dark py-2 px-3 rounded-pill mb-3">
-                    Development Mode OTP: <strong>{simulatedOtpCode}</strong>
+                  <div className="dev-otp-badge py-2 px-3 rounded-pill mb-3 d-inline-block">
+                    Dev Mode OTP: <strong className="text-white">{simulatedOtpCode}</strong>
                   </div>
                 )}
 
                 <form onSubmit={handleVerifyOtp} className="max-w-xs mx-auto">
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <input
                       type="text"
-                      className="form-control form-control-lg text-center fw-bold letter-spacing-lg rounded-3"
-                      placeholder="0 0 0 0 0 0"
+                      className="glass-input text-center fw-bold letter-spacing-lg w-100"
+                      placeholder="000000"
                       maxLength={6}
                       value={otpInput}
                       onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
@@ -837,23 +806,23 @@ export default function Profile() {
                     />
                   </div>
 
-                  <div className="d-flex justify-content-center gap-2">
+                  <div className="d-flex justify-content-center align-items-center gap-3">
                     <button
                       type="button"
-                      className="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold"
+                      className="glass-btn-secondary px-4 py-2 rounded-pill"
                       onClick={handleCancelOtp}
                       disabled={loadingOtp}
                     >
-                      Cancel Request
+                      Cancel
                     </button>
                     <button
                       type="submit"
-                      className="btn btn-success rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                      className="glass-btn px-4 py-2 rounded-pill"
                       disabled={loadingOtp}
                     >
                       {loadingOtp ? (
                         <>
-                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                           Verifying...
                         </>
                       ) : (

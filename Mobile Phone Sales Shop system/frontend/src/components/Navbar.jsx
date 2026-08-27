@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, User, LogOut, Search, Menu, X, Settings } from 'lucide-react';
+import { ShoppingCart, Heart, User, LogOut, Search, Menu, X, Settings, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ConfirmModal from './ConfirmModal';
@@ -122,8 +122,15 @@ export default function Navbar() {
 
           {(!user || user.role === 'Customer') && (
             <>
+              {/* My Orders Direct Icon Link */}
+              {user && user.role === 'Customer' && (
+                <Link to="/my-orders" style={{ position: 'relative', color: 'var(--text-primary)' }} title="My Orders">
+                  <Package size={22} style={{ transition: 'var(--transition)' }} />
+                </Link>
+              )}
+
               {/* Wishlist */}
-              <Link to="/wishlist" style={{ position: 'relative', color: 'var(--text-primary)' }}>
+              <Link to="/wishlist" style={{ position: 'relative', color: 'var(--text-primary)' }} title="Wishlist">
                 <Heart size={22} style={{ transition: 'var(--transition)' }} />
                 {wishlistCount > 0 && (
                   <span style={{
@@ -145,7 +152,7 @@ export default function Navbar() {
               </Link>
 
               {/* Cart */}
-              <Link to="/cart" style={{ position: 'relative', color: 'var(--text-primary)' }}>
+              <Link to="/cart" style={{ position: 'relative', color: 'var(--text-primary)' }} title="Cart">
                 <ShoppingCart size={22} />
                 {cartCount > 0 && (
                   <span style={{
@@ -208,6 +215,16 @@ export default function Navbar() {
                           fontSize: '14px'
                         }}>
                           <User size={16} /> My Account
+                        </Link>
+                        <Link to="/my-orders" onClick={() => setDropdownOpen(false)} style={{
+                          padding: '8px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          fontSize: '14px'
+                        }}>
+                          <Package size={16} /> My Orders
                         </Link>
                         <Link to="/wishlist" onClick={() => setDropdownOpen(false)} style={{
                           padding: '8px',
