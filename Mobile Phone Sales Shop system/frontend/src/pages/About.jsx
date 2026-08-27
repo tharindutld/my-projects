@@ -1,81 +1,96 @@
 import React from 'react';
-import { Shield, Truck, Award, Info } from 'lucide-react';
+import { ShieldCheck, Truck, Crown, Info, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export default function About() {
   return (
-    <div className="container animate-fade-in text-center" style={{ paddingBottom: '60px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
       
-      {/* Title Bar */}
-      <div className="glass-panel" style={{
-        padding: '40px',
-        textAlign: 'left',
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%)'
+      {/* Title Bar Banner */}
+      <div className="glass-panel p-4 p-md-5 mb-5 rounded-4" style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(99, 102, 241, 0.2) 100%)',
+        border: '1px solid rgba(255, 255, 255, 0.12)'
       }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Info size={32} className="text-primary" /> About Us
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '6px' }}>
-          Learn more about Antigravity Phones, our mission, and our dedication to premium mobile technology.
+        <h2 className="fw-bold text-white mb-2 d-flex align-items-center gap-3 fs-2">
+          <Info size={32} className="text-primary-light" /> About Us
+        </h2>
+        <p className="text-slate-300 mb-0 fs-6">
+          Learn more about Mobile Mart, our mission, and our dedication to providing quality mobile devices.
         </p>
       </div>
 
-      {/* Main Content */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '40px',
-        alignItems: 'center',
-        textAlign: 'left'
-      }}>
-        <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>Our Story & Mission</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.8', marginBottom: '15px' }}>
-            Founded in 2026, <strong>Antigravity Phones</strong> was established with a singular vision: to make the latest mobile technologies accessible, affordable, and transparent for everyone. We believe that a smartphone is more than just a gadget—it is an essential gateway to communication, work, learning, and self-expression.
-          </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.8' }}>
-            We bridge the gap between premium brands and smart buyers. By curating a catalog of verified high-performance devices from top global manufacturers, we guarantee authenticity, warranty support, and stellar customer service with every checkout.
-          </p>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '10px' }}>Why Choose Us?</h3>
-          
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-            <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '10px', borderRadius: '50%', color: 'var(--primary)' }}>
-              <Shield size={20} />
-            </div>
+      {/* Story & Why Choose Us Grid */}
+      <div className="row g-4 align-items-stretch">
+        
+        {/* Left Column: Our Story & Mission */}
+        <div className="col-lg-6">
+          <div className="glass-panel p-4 p-md-5 h-100 rounded-4 d-flex flex-column justify-content-between">
             <div>
-              <h4 style={{ fontSize: '15px', fontWeight: '700' }}>100% Genuine Products</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                We work directly with manufacturer representatives to deliver authentic smartphones and accessories with official warranties.
+              <h3 className="fw-bold text-white mb-4 d-flex align-items-center gap-2 fs-3">
+                <Sparkles size={24} className="text-primary-light" /> Our Story & Mission
+              </h3>
+              <p className="text-slate-200 mb-4 fs-6" style={{ lineHeight: '1.85' }}>
+                Founded in 2026, <strong className="text-white">Mobile Mart</strong> was established with a singular vision: to make the latest mobile technologies accessible, affordable, and transparent for everyone. We believe that a smartphone is more than just a gadget—it is an essential gateway to communication, work, learning, and self-expression.
+              </p>
+              <p className="text-slate-300 mb-4 fs-6" style={{ lineHeight: '1.85' }}>
+                We bridge the gap between premium brands and smart buyers. By curating a catalog of verified high-performance devices from top global manufacturers, we guarantee authenticity, official warranty support, and stellar customer service with every checkout.
               </p>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-            <div style={{ background: 'rgba(6, 182, 212, 0.15)', padding: '10px', borderRadius: '50%', color: 'var(--secondary)' }}>
-              <Truck size={20} />
-            </div>
-            <div>
-              <h4 style={{ fontSize: '15px', fontWeight: '700' }}>Swift & Secure Delivery</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Your package is handled with care and shipped securely using our trusted delivery partners straight to your doorstep.
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-            <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '10px', borderRadius: '50%', color: 'var(--success)' }}>
-              <Award size={20} />
-            </div>
-            <div>
-              <h4 style={{ fontSize: '15px', fontWeight: '700' }}>Exclusive Loyalty Perks</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                We believe in rewarding our community. Earn points on every purchase and redeem points to unlock exclusive store benefits.
+            <div className="p-3.5 rounded-3" style={{ background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.25)' }}>
+              <div className="d-flex align-items-center gap-2 text-primary-light fw-bold mb-1 fs-6">
+                <CheckCircle2 size={18} /> Verified Quality Assurance
+              </div>
+              <p className="text-slate-300 mb-0" style={{ fontSize: '13.5px' }}>
+                Every device in our inventory undergoes rigorous quality verification before listing.
               </p>
             </div>
           </div>
         </div>
+
+        {/* Right Column: Why Choose Us Cards */}
+        <div className="col-lg-6">
+          <div className="glass-panel p-4 p-md-5 h-100 rounded-4">
+            <h3 className="fw-bold text-white mb-4 fs-3">Why Choose Us?</h3>
+            
+            <div className="d-flex align-items-start mb-4 p-3 rounded-3" style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="p-3 rounded-circle me-3 flex-shrink-0" style={{ background: 'rgba(99, 102, 241, 0.18)', color: '#818cf8' }}>
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <h5 className="fw-bold text-white mb-1 fs-6">100% Genuine Products</h5>
+                <p className="text-slate-300 mb-0" style={{ fontSize: '13.5px', lineHeight: '1.5' }}>
+                  We work directly with official manufacturer representatives to deliver authentic smartphones and accessories with official warranties.
+                </p>
+              </div>
+            </div>
+
+            <div className="d-flex align-items-start mb-4 p-3 rounded-3" style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="p-3 rounded-circle me-3 flex-shrink-0" style={{ background: 'rgba(6, 182, 212, 0.18)', color: '#22d3ee' }}>
+                <Truck size={24} />
+              </div>
+              <div>
+                <h5 className="fw-bold text-white mb-1 fs-6">Swift & Secure Delivery</h5>
+                <p className="text-slate-300 mb-0" style={{ fontSize: '13.5px', lineHeight: '1.5' }}>
+                  Your package is handled with care and shipped securely using our trusted delivery partners straight to your doorstep.
+                </p>
+              </div>
+            </div>
+
+            <div className="d-flex align-items-start p-3 rounded-3" style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div className="p-3 rounded-circle me-3 flex-shrink-0" style={{ background: 'rgba(245, 158, 11, 0.18)', color: '#fbbf24' }}>
+                <Crown size={24} />
+              </div>
+              <div>
+                <h5 className="fw-bold text-white mb-1 fs-6">Exclusive Loyalty Perks</h5>
+                <p className="text-slate-300 mb-0" style={{ fontSize: '13.5px', lineHeight: '1.5' }}>
+                  We believe in rewarding our community. Earn 1 loyalty point for every Rs. 100 spent and unlock exclusive discounts.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
     </div>

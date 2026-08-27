@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Search, Flame, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Flame, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
@@ -37,6 +37,10 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
+
   useEffect(() => {
     setSearchVal(urlSearch);
   }, [urlSearch]);
@@ -72,6 +76,11 @@ export default function Products() {
     loadCatalog();
   }, []);
 
+  // Reset pagination when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBrand, selectedCategory, sortBy, searchVal]);
+
   // Client-side filter + sort
   let filteredProducts = products.filter(p => {
     const matchesBrand = selectedBrand ? p.BrandName === selectedBrand : true;
@@ -93,6 +102,18 @@ export default function Products() {
   } else if (sortBy === 'name_asc') {
     filteredProducts = [...filteredProducts].sort((a, b) => (a.ProductName || '').localeCompare(b.ProductName || ''));
   }
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
 
   const clearFilters = () => {
     setSelectedBrand('');
@@ -220,74 +241,142 @@ export default function Products() {
         ) : filteredProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)' }}>No catalog items found matching your criteria.</div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: '30px'
-          }}>
-            {filteredProducts.map(p => {
-              const isPromo = p.discountActive;
-              const price = parseFloat(p.MinPrice || p.minPrice || 0);
-              const discountedPrice = parseFloat(p.MinPriceDiscounted || p.minPriceDiscounted || price);
-              return (
-                <div key={p.ID} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                  
-                  {/* Image wrapper */}
-                  <div style={{ position: 'relative', height: '200px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {isPromo && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '12px',
-                        left: '12px',
-                        background: 'linear-gradient(45deg, #ef4444, #ec4899)',
-                        color: '#fff',
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '30px'
+            }}>
+              {paginatedProducts.map(p => {
+                const isPromo = p.discountActive;
+                const price = parseFloat(p.MinPrice || p.minPrice || 0);
+                const discountedPrice = parseFloat(p.MinPriceDiscounted || p.minPriceDiscounted || price);
+                return (
+                  <div key={p.ID} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                    
+                    {/* Image wrapper */}
+                    <div style={{ position: 'relative', height: '200px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {isPromo && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          background: 'linear-gradient(45deg, #ef4444, #ec4899)',
+                          color: '#fff',
+                          padding: '4px 10px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <Flame size={12} /> {p.DiscountPercent}% OFF
+                        </div>
+                      )}
+                      <ProductImage src={p.Image1} alt={p.ProductName} />
+                    </div>
+
+                    {/* Details body */}
+                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>
+                        {p.BrandName} &bull; {p.CategoryName}
+                      </span>
+                      <h3 style={{ fontSize: '18px', fontWeight: '700' }}>{p.ProductName}</h3>
+                      
+                      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        {isPromo ? (
+                          <>
+                            <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>
+                              Rs. {discountedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span style={{ fontSize: '13px', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
+                              Rs. {price.toLocaleString('en-US')}
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '18px', fontWeight: '800' }}>
+                            {price > 0 ? `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Price on request'}
+                          </span>
+                        )}
+                      </div>
+
+                      <Link to={`/product/${p.ID}`} className="glass-btn" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', fontSize: '14px' }}>
+                        View Configuration
+                      </Link>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Catalog Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '30px' }}>
+                <button
+                  onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="glass-btn-secondary"
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <ChevronLeft size={16} /> Previous
+                </button>
+
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={currentPage === pageNum ? 'glass-btn' : 'glass-btn-secondary'}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        fontSize: '14px',
                         fontWeight: '700',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <Flame size={12} /> {p.DiscountPercent}% OFF
-                      </div>
-                    )}
-                    <ProductImage src={p.Image1} alt={p.ProductName} />
-                  </div>
-
-                  {/* Details body */}
-                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '10px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>
-                      {p.BrandName} &bull; {p.CategoryName}
-                    </span>
-                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>{p.ProductName}</h3>
-                    
-                    <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                      {isPromo ? (
-                        <>
-                          <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>
-                            Rs. {discountedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                          <span style={{ fontSize: '13px', textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                            Rs. {price.toLocaleString('en-US')}
-                          </span>
-                        </>
-                      ) : (
-                        <span style={{ fontSize: '18px', fontWeight: '800' }}>
-                          {price > 0 ? `Rs. ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Price on request'}
-                        </span>
-                      )}
-                    </div>
-
-                    <Link to={`/product/${p.ID}`} className="glass-btn" style={{ width: '100%', marginTop: '15px', borderRadius: '12px', fontSize: '14px' }}>
-                      View Configuration
-                    </Link>
-                  </div>
-
+                        justifyContent: 'center',
+                        padding: 0
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+
+                <button
+                  onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="glass-btn-secondary"
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>

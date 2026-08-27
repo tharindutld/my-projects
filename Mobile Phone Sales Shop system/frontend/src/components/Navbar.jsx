@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, User, LogOut, Search, Settings, Package } from 'lucide-react';
+import { ShoppingCart, Heart, User, LogOut, Search, Settings, Package, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ConfirmModal from './ConfirmModal';
@@ -127,7 +127,21 @@ export default function Navbar() {
         </form>
 
         {/* Nav Links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Shop Link (Home Storefront) */}
+          <Link to="/" className="glass-btn-secondary" style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontSize: '14px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Store size={16} /> Shop
+          </Link>
+
+          {/* Browse Catalog Link */}
           <Link to="/products" className="glass-btn-secondary" style={{
             padding: '8px 16px',
             borderRadius: '20px',
