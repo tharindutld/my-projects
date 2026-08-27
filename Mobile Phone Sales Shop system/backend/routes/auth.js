@@ -179,7 +179,7 @@ router.get('/profile', verifyToken, async (req, res) => {
   try {
     if (role === 'Customer') {
       const [rows] = await pool.query(
-        'SELECT ID, FirstName, LastName, MobileNumber, Email, LoyaltyPoints, RegDate FROM tbluser WHERE ID = ?',
+        'SELECT ID, FirstName, LastName, MobileNumber, Gender, BirthDate, Email, LoyaltyPoints, RegDate FROM tbluser WHERE ID = ?',
         [id]
       );
       if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
@@ -198,36 +198,230 @@ router.get('/profile', verifyToken, async (req, res) => {
   }
 });
 
-// 5. Update Customer Profile
+// 5. Update Customer Profile (Personal Info)
 router.put('/profile', verifyToken, async (req, res) => {
   const { id, role } = req.user;
   if (role !== 'Customer') {
     return res.status(403).json({ message: 'Only customers can update profile here' });
   }
 
-  const { FirstName, LastName, MobileNumber, Password } = req.body;
-  if (!FirstName || !LastName || !MobileNumber) {
-    return res.status(400).json({ message: 'First name, last name, and mobile number are required' });
+  const { FirstName, LastName, MobileNumber, Email, Gender, BirthDate } = req.body;
+  
+  const fname = (FirstName || '').trim();
+  const lname = (LastName || '').trim();
+  const mobno = (MobileNumber || '').trim();
+  const email = (Email || '').trim();
+  const gender = Gender || 'Male';
+  const birthdate = BirthDate;
+
+  if (!fname || !lname || !mobno || !email || !birthdate) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  // 1. Mobile number validation (exactly 10 digits starting with 0)
+  if (!/^0[0-9]{9}$/.test(mobno)) {
+    return res.status(400).json({ message: 'Mobile number must be exactly 10 digits starting with 0.' });
+  }
+
+  // 2. Birthdate validation (must be 12 years or older)
+  const dob = new Date(birthdate);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  if (age < 12) {
+    return res.status(400).json({ message: 'You must be 12 years or older to register/update profile.' });
   }
 
   try {
-    if (Password) {
-      const hashedPassword = await bcrypt.hash(Password, 10);
-      await pool.query(
-        'UPDATE tbluser SET FirstName = ?, LastName = ?, MobileNumber = ?, Password = ? WHERE ID = ?',
-        [FirstName, LastName, MobileNumber, hashedPassword, id]
-      );
-    } else {
-      await pool.query(
-        'UPDATE tbluser SET FirstName = ?, LastName = ?, MobileNumber = ? WHERE ID = ?',
-        [FirstName, LastName, MobileNumber, id]
-      );
+    // 3. Email unique check
+    const [emailRes] = await pool.query(
+      'SELECT ID FROM tbluser WHERE Email = ? AND ID != ?',
+      [email, id]
+    );
+    if (emailRes.length > 0) {
+      return res.status(400).json({ message: 'This email is already in use by another account.' });
     }
+
+    // 4. Mobile number unique check
+    const [mobileRes] = await pool.query(
+      'SELECT ID FROM tbluser WHERE MobileNumber = ? AND ID != ?',
+      [mobno, id]
+    );
+    if (mobileRes.length > 0) {
+      return res.status(400).json({ message: 'This mobile number is already in use by another account.' });
+    }
+
+    await pool.query(
+      'UPDATE tbluser SET FirstName = ?, LastName = ?, MobileNumber = ?, Email = ?, Gender = ?, BirthDate = ? WHERE ID = ?',
+      [fname, lname, mobno, email, gender, birthdate, id]
+    );
 
     res.json({ message: 'Profile updated successfully!' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
+});
+
+// 5b. Delivery Address Endpoints
+router.get('/address', verifyToken, async (req, res) => {
+  const { id } = req.user;
+  try {
+    const [rows] = await pool.query(
+      'SELECT Country, StreetAddress, City, District, PostalCode, MobilePhone FROM tbluseraddress WHERE UserId = ? ORDER BY CreationDate DESC LIMIT 1',
+      [id]
+    );
+    res.json(rows[0] || null);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error fetching address' });
+  }
+});
+
+router.post('/address', verifyToken, async (req, res) => {
+  const { id, role } = req.user;
+  if (role !== 'Customer') {
+    return res.status(403).json({ message: 'Only customers can manage address' });
+  }
+
+  const { Country, StreetAddress, City, District, PostalCode, MobilePhone } = req.body;
+  const country = (Country || '').trim();
+  const street = (StreetAddress || '').trim();
+  const city = (City || '').trim();
+  const district = (District || '').trim();
+  const postal = (PostalCode || '').trim();
+  const addrMob = (MobilePhone || '').trim();
+
+  // Validations matching legacy PHP:
+  // 1. Mobile phone starts with 0 and has 10 digits
+  if (!/^0[0-9]{9}$/.test(addrMob)) {
+    return res.status(400).json({ message: 'Mobile phone must be exactly 10 digits starting with 0.' });
+  }
+
+  // 2. District validation (Sri Lanka 25 districts)
+  const districts = ['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee', 'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle'];
+  if (!districts.includes(district)) {
+    return res.status(400).json({ message: 'Please select a valid district from the list.' });
+  }
+
+  // 3. Postal code exactly 5 numbers
+  if (!/^[0-9]{5}$/.test(postal)) {
+    return res.status(400).json({ message: 'Postal code must be exactly 5 digits.' });
+  }
+
+  // 4. Street Address alphanumeric + space comma period hyphen slash
+  if (!/^[a-zA-Z0-9\s,\.\-\/]+$/.test(street)) {
+    return res.status(400).json({ message: 'Street address contains invalid characters. Only letters, numbers, spaces, commas, periods, hyphens, and slashes are allowed.' });
+  }
+
+  // 5. City must contain only letters and spaces
+  if (!/^[a-zA-Z\s]+$/.test(city)) {
+    return res.status(400).json({ message: 'City name must contain only letters and spaces.' });
+  }
+
+  try {
+    const [checkRes] = await pool.query('SELECT ID FROM tbluseraddress WHERE UserId = ?', [id]);
+    if (checkRes.length > 0) {
+      await pool.query(
+        'UPDATE tbluseraddress SET Country = ?, StreetAddress = ?, City = ?, District = ?, PostalCode = ?, MobilePhone = ? WHERE UserId = ?',
+        [country, street, city, district, postal, addrMob, id]
+      );
+    } else {
+      await pool.query(
+        'INSERT INTO tbluseraddress (UserId, Country, StreetAddress, City, District, PostalCode, MobilePhone) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [id, country, street, city, district, postal, addrMob]
+      );
+    }
+    res.json({ message: 'Delivery address saved successfully!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to save address. Please try again.' });
+  }
+});
+
+// In-memory OTP storage for change password
+const pwdOtpStore = new Map();
+
+// 5c. Change Password - Request OTP
+router.post('/change-password/request-otp', verifyToken, async (req, res) => {
+  const { id } = req.user;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT Password, Email FROM tbluser WHERE ID = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+
+    const user = rows[0];
+    const isMatch = await comparePassword(currentPassword, user.Password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New passwords do not match.' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters.' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    pwdOtpStore.set(id, {
+      otp,
+      newPasswordHash,
+      expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+    });
+
+    console.log(`[OTP DEBUG] Generated OTP ${otp} for User ${id} (${user.Email})`);
+
+    res.json({
+      success: true,
+      message: `A 6-digit OTP code has been sent to your registered email (${user.Email}). Please enter it below to confirm.`,
+      email: user.Email,
+      simulatedOtp: otp
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error requesting password change.' });
+  }
+});
+
+// 5d. Change Password - Verify OTP
+router.post('/change-password/verify-otp', verifyToken, async (req, res) => {
+  const { id } = req.user;
+  const { otp } = req.body;
+
+  if (!otp) {
+    return res.status(400).json({ message: 'OTP code is required.' });
+  }
+
+  const storedData = pwdOtpStore.get(id);
+  if (!storedData || Date.now() > storedData.expiresAt) {
+    pwdOtpStore.delete(id);
+    return res.status(400).json({ message: 'OTP has expired. Please request a new password change.' });
+  }
+
+  if (storedData.otp !== otp.trim()) {
+    return res.status(400).json({ message: 'Invalid OTP code. Please try again.' });
+  }
+
+  try {
+    await pool.query('UPDATE tbluser SET Password = ? WHERE ID = ?', [storedData.newPasswordHash, id]);
+    pwdOtpStore.delete(id);
+    res.json({ success: true, message: 'Password changed successfully!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update password. Please try again.' });
   }
 });
 

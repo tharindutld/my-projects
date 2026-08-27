@@ -1,0 +1,46 @@
+.profile-hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.profile-avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.loyalty-badge {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fde68a !important;
+}
+
+.loyalty-icon-box {
+  background-color: #fef3c7;
+}
+
+.custom-profile-tabs {
+  max-width: 550px;
+  width: 100%;
+}
+
+.custom-profile-tabs .nav-link {
+  transition: all 0.2s ease;
+}
+
+.letter-spacing-lg {
+  letter-spacing: 8px;
+  font-size: 24px;
+}
+
+.max-w-xs {
+  max-width: 320px;
+}
+
+.max-w-lg {
+  max-width: 500px;
+}
+
+.extra-small {
+  font-size: 11.5px;
+}

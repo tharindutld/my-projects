@@ -1,242 +1,874 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Award, User, ShoppingBag, Eye, Calendar, Settings } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  User, MapPin, Lock, Crown, ShieldAlert, 
+  CheckCircle, Eye, EyeOff, Mail, KeyRound, 
+  Save, RefreshCw
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ToastAlert from '../components/ToastAlert';
+import './Profile.css';
 
 export default function Profile() {
-  const { user, token, loading: authLoading, updateProfile, API_URL } = useAuth();
+  const { user, token, loading: authLoading, API_URL } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Edit Profile States
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
-  
-  // States
-  const [orders, setOrders] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [loadingOrders, setLoadingOrders] = useState(true);
+  // Tab State: 'personal' | 'address' | 'password'
+  const [activeTab, setActiveTab] = useState('personal');
+
+  // Sync hash or search param to tab
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    if (['personal', 'address', 'password'].includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, [location]);
+
+  // Global Alerts
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // ---------------------------------------------------------------------------
+  // TAB 1: PERSONAL INFO STATE
+  // ---------------------------------------------------------------------------
+  const [personalData, setPersonalData] = useState({
+    firstname: '',
+    lastname: '',
+    mobilenumber: '',
+    email: '',
+    gender: 'Male',
+    birthdate: ''
+  });
+  const [loadingPersonal, setLoadingPersonal] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // TAB 2: ADDRESS STATE
+  // ---------------------------------------------------------------------------
+  const [addressData, setAddressData] = useState({
+    country: 'Sri Lanka',
+    street_address: '',
+    city: '',
+    district: 'Colombo',
+    postal_code: '',
+    addr_mobile: ''
+  });
+  const [hasExistingAddress, setHasExistingAddress] = useState(false);
+  const [loadingAddress, setLoadingAddress] = useState(false);
+
+  const sriLankaDistricts = [
+    'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+    'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
+    'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
+    'Moneragala', 'Ratnapura', 'Kegalle'
+  ];
+
+  const countries = [
+    'Sri Lanka', 'India', 'Australia', 'United Kingdom', 'United States',
+    'Canada', 'Singapore', 'Malaysia', 'Germany', 'France'
+  ];
+
+  // ---------------------------------------------------------------------------
+  // TAB 3: PASSWORD & OTP STATE
+  // ---------------------------------------------------------------------------
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [targetEmail, setTargetEmail] = useState('');
+  const [simulatedOtpCode, setSimulatedOtpCode] = useState('');
+  const [loadingOtp, setLoadingOtp] = useState(false);
+
+  // Calculate 12 years ago max date string for birthdate input
+  const getMaxBirthdate = () => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 12);
+    return d.toISOString().split('T')[0];
+  };
+
+  // ---------------------------------------------------------------------------
+  // FETCH USER DATA & ADDRESS ON LOAD
+  // ---------------------------------------------------------------------------
+  const fetchProfileData = async () => {
+    if (!token) return;
+    try {
+      // 1. Fetch Profile
+      const resProf = await fetch(`${API_URL}/auth/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resProf.ok) {
+        const p = await resProf.json();
+        setPersonalData({
+          firstname: p.FirstName || '',
+          lastname: p.LastName || '',
+          mobilenumber: p.MobileNumber || '',
+          email: p.Email || '',
+          gender: p.Gender || 'Male',
+          birthdate: p.BirthDate ? p.BirthDate.split('T')[0] : ''
+        });
+      }
+
+      // 2. Fetch Address
+      const resAddr = await fetch(`${API_URL}/auth/address`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resAddr.ok) {
+        const a = await resAddr.json();
+        if (a) {
+          setHasExistingAddress(true);
+          setAddressData({
+            country: a.Country || 'Sri Lanka',
+            street_address: a.StreetAddress || '',
+            city: a.City || '',
+            district: a.District || 'Colombo',
+            postal_code: a.PostalCode || '',
+            addr_mobile: a.MobilePhone || ''
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error loading profile data:', err);
+    }
+  };
+
   useEffect(() => {
     if (authLoading) return;
-
     if (!token) {
       navigate('/login');
       return;
     }
+    fetchProfileData();
+  }, [token, authLoading]);
 
-    if (user) {
-      setFirstName(user.firstName || '');
-      setLastName(user.lastName || '');
-      setMobileNumber(user.mobileNumber || '');
-    }
-
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(`${API_URL}/orders`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingOrders(false);
-      }
-    };
-    fetchOrders();
-  }, [token, user, authLoading]);
-
-  const handleUpdateProfile = async (e) => {
+  // ---------------------------------------------------------------------------
+  // SUBMIT 1: PERSONAL INFO
+  // ---------------------------------------------------------------------------
+  const handleUpdatePersonalInfo = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!firstName || !lastName || !mobileNumber) {
-      setError('Please fill in all profile fields.');
+    // Front-end validations
+    const { firstname, lastname, mobilenumber, email, gender, birthdate } = personalData;
+
+    if (!firstname || !lastname || !mobilenumber || !email || !birthdate) {
+      setError('Please fill in all personal information fields.');
       return;
     }
 
-    if (!/^0[0-9]{9}$/.test(mobileNumber)) {
+    if (!/^0[0-9]{9}$/.test(mobilenumber)) {
       setError('Mobile number must be exactly 10 digits starting with 0.');
       return;
     }
 
-    try {
-      const msg = await updateProfile({ firstname: firstName, lastname: lastName, mobilenumber: mobileNumber });
-      setSuccess(msg);
-    } catch (err) {
-      setError(err.message);
+    // Age >= 12 validation
+    const dob = new Date(birthdate);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
     }
-  };
+    if (age < 12) {
+      setError('You must be 12 years or older to register/update profile.');
+      return;
+    }
 
-  const handleViewOrderDetails = async (orderId) => {
+    setLoadingPersonal(true);
     try {
-      const res = await fetch(`${API_URL}/orders/${orderId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          FirstName: firstname,
+          LastName: lastname,
+          MobileNumber: mobilenumber,
+          Email: email,
+          Gender: gender,
+          BirthDate: birthdate
+        })
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
-        setSelectedOrder(data);
+        setSuccess(data.message || 'Profile updated successfully!');
+        fetchProfileData();
+      } else {
+        setError(data.message || 'Failed to update profile.');
       }
     } catch (err) {
       console.error(err);
+      setError('Connection error updating profile.');
+    } finally {
+      setLoadingPersonal(false);
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // SUBMIT 2: ADDRESS
+  // ---------------------------------------------------------------------------
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const { country, street_address, city, district, postal_code, addr_mobile } = addressData;
+
+    // 1. Mobile phone validation
+    if (!/^0[0-9]{9}$/.test(addr_mobile)) {
+      setError('Mobile phone must be exactly 10 digits starting with 0.');
+      return;
+    }
+
+    // 2. District validation
+    if (!sriLankaDistricts.includes(district)) {
+      setError('Please select a valid district from the list.');
+      return;
+    }
+
+    // 3. Postal code exactly 5 digits
+    if (!/^[0-9]{5}$/.test(postal_code)) {
+      setError('Postal code must be exactly 5 digits.');
+      return;
+    }
+
+    // 4. Street address pattern
+    if (!/^[a-zA-Z0-9\s,\.\-\/]+$/.test(street_address)) {
+      setError('Street address contains invalid characters. Only letters, numbers, spaces, commas, periods, hyphens, and slashes are allowed.');
+      return;
+    }
+
+    // 5. City pattern
+    if (!/^[a-zA-Z\s]+$/.test(city)) {
+      setError('City name must contain only letters and spaces.');
+      return;
+    }
+
+    setLoadingAddress(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/address`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          Country: country,
+          StreetAddress: street_address,
+          City: city,
+          District: district,
+          PostalCode: postal_code,
+          MobilePhone: addr_mobile
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess(data.message || 'Delivery address saved successfully!');
+        setHasExistingAddress(true);
+      } else {
+        setError(data.message || 'Failed to save address.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Connection error saving address.');
+    } finally {
+      setLoadingAddress(false);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // SUBMIT 3A: REQUEST PASSWORD CHANGE OTP
+  // ---------------------------------------------------------------------------
+  const handleRequestPasswordOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const { current_password, new_password, confirm_password } = passwordData;
+
+    if (!current_password || !new_password || !confirm_password) {
+      setError('All password fields are required.');
+      return;
+    }
+
+    if (new_password !== confirm_password) {
+      setError('New passwords do not match.');
+      return;
+    }
+
+    if (new_password.length < 8) {
+      setError('New password must be at least 8 characters.');
+      return;
+    }
+
+    setLoadingOtp(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/change-password/request-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: current_password,
+          newPassword: new_password,
+          confirmPassword: confirm_password
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOtpRequested(true);
+        setTargetEmail(data.email || personalData.email);
+        if (data.simulatedOtp) {
+          setSimulatedOtpCode(data.simulatedOtp);
+        }
+        setSuccess(data.message);
+      } else {
+        setError(data.message || 'Failed to initiate password change.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Connection error requesting OTP.');
+    } finally {
+      setLoadingOtp(false);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // SUBMIT 3B: VERIFY OTP & UPDATE PASSWORD
+  // ---------------------------------------------------------------------------
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!otpInput || otpInput.trim().length !== 6) {
+      setError('Please enter a valid 6-digit OTP code.');
+      return;
+    }
+
+    setLoadingOtp(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/change-password/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ otp: otpInput.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccess(data.message || 'Password changed successfully!');
+        setOtpRequested(false);
+        setOtpInput('');
+        setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+      } else {
+        setError(data.message || 'Invalid OTP code.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Connection error verifying OTP.');
+    } finally {
+      setLoadingOtp(false);
+    }
+  };
+
+  const handleCancelOtp = () => {
+    setOtpRequested(false);
+    setOtpInput('');
+    setError('');
+    setSuccess('');
+  };
+
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
-      <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '30px' }}>My Account</h1>
+    <div className="profile-page animate-fade-in py-4 mb-5">
+      <ToastAlert message={error} type="danger" onClose={() => setError('')} />
+      <ToastAlert message={success} type="success" onClose={() => setSuccess('')} />
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '40px',
-        alignItems: 'flex-start'
-      }}>
+      <div className="container">
         
-        {/* Left Side: Profile Specs & Edit form */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
-          {/* Points Card */}
-          <div className="glass-panel" style={{
-            padding: '30px',
-            background: 'radial-gradient(circle at top left, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.5))',
-            borderLeft: '4px solid var(--warning)'
-          }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Award className="text-warning" /> Loyalty Rewards Points
-            </h3>
-            <div style={{ fontSize: '48px', fontWeight: '800', margin: '15px 0' }}>
-              {user?.loyaltyPoints || 0} <span style={{ fontSize: '18px', color: 'var(--text-muted)', fontWeight: '500' }}>Points</span>
+        {/* Profile Hero Card */}
+        <div className="card border-0 shadow-sm rounded-4 p-4 mb-4 profile-hero-card">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div className="d-flex align-items-center gap-3">
+              <div className="profile-avatar-circle d-flex align-items-center justify-content-center">
+                <User size={36} className="text-white" />
+              </div>
+              <div>
+                <h3 className="fw-bold text-dark mb-1">
+                  {personalData.firstname} {personalData.lastname}
+                </h3>
+                <span className="text-muted small d-block">{personalData.email}</span>
+              </div>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-              Earn 1 point for every Rs. 1000 spent. Redeem points at checkout for direct discounts on your order (1 point = Rs. 1.00 discount).
-            </p>
-          </div>
 
-          {/* Edit Profile Form */}
-          <div className="glass-panel" style={{ padding: '30px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Settings size={20} className="text-primary" /> Update Account Details
-            </h2>
-
-            <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>First Name</label>
-                  <input type="text" className="glass-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '600' }}>Last Name</label>
-                  <input type="text" className="glass-input" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                </div>
+            {/* Loyalty Points Badge */}
+            <div className="loyalty-badge p-3 rounded-4 border d-flex align-items-center gap-3">
+              <div className="loyalty-icon-box rounded-circle p-2 bg-amber text-warning">
+                <Crown size={28} />
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600' }}>Mobile Phone</label>
-                <input type="text" className="glass-input" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} required />
+              <div>
+                <span className="extra-small text-uppercase text-muted fw-bold d-block">Rewards Account</span>
+                <h5 className="fw-bold text-dark mb-0">
+                  {user?.loyaltyPoints || 0} <span className="fs-6 text-primary fw-semibold">Loyalty Points</span>
+                </h5>
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600' }}>Email Address (read-only)</label>
-                <input type="email" className="glass-input" value={user?.email || ''} readOnly style={{ opacity: 0.6 }} />
-              </div>
-
-              {error && <div style={{ color: 'var(--danger)', fontSize: '13px' }}>{error}</div>}
-              {success && <div style={{ color: 'var(--success)', fontSize: '13px' }}>{success}</div>}
-
-              <button type="submit" className="glass-btn" style={{ borderRadius: '8px', marginTop: '10px' }}>
-                Save Profile Changes
-              </button>
-            </form>
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Order history */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
-          <div className="glass-panel" style={{ padding: '30px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShoppingBag size={20} className="text-secondary" /> Purchase History
-            </h2>
+        {/* Tabbed Navigation Pills */}
+        <div className="d-flex justify-content-start mb-4">
+          <div className="nav nav-pills custom-profile-tabs p-1 bg-white rounded-pill shadow-sm border">
+            <button
+              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'personal' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              onClick={() => setActiveTab('personal')}
+            >
+              <User size={16} className="me-2" /> Personal Info
+            </button>
+            <button
+              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'address' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              onClick={() => setActiveTab('address')}
+            >
+              <MapPin size={16} className="me-2" /> Delivery Address
+            </button>
+            <button
+              className={`nav-link rounded-pill py-2 px-4 fw-semibold ${activeTab === 'password' ? 'active bg-primary text-white shadow-sm' : 'text-secondary'}`}
+              onClick={() => setActiveTab('password')}
+            >
+              <Lock size={16} className="me-2" /> Change Password
+            </button>
+          </div>
+        </div>
 
-            {loadingOrders ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading purchase list...</div>
-            ) : orders.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>You haven't placed any orders yet.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {orders.map(order => (
-                  <div key={order.ID} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-                    <div>
-                      <strong style={{ fontSize: '14px', display: 'block' }}>Order #{order.OrderNumber}</strong>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                        Placed: {new Date(order.OrderDate).toLocaleDateString()} &bull; {order.TotalItems} item(s)
-                      </span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        Status: <span style={{
-                          color: order.OrderStatus === 'Completed' ? 'var(--success)' : order.OrderStatus === 'Cancelled' ? 'var(--danger)' : 'var(--warning)',
-                          fontWeight: '700'
-                        }}>{order.OrderStatus}</span>
-                      </span>
-                    </div>
+        {/* ------------------------------------------------------------------ */}
+        {/* TAB 1: PERSONAL INFORMATION FORM */}
+        {/* ------------------------------------------------------------------ */}
+        {activeTab === 'personal' && (
+          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
+            <div className="border-bottom pb-3 mb-4">
+              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <User className="text-primary" size={22} /> Personal Details
+              </h5>
+              <p className="text-muted small mb-0">Manage your name, mobile contact, gender, and birthdate</p>
+            </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <strong style={{ fontSize: '15px' }}>Rs. {parseFloat(order.TotalAmount).toLocaleString('en-US')}</strong>
-                      <button onClick={() => handleViewOrderDetails(order.ID)} className="glass-btn glass-btn-secondary" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
-                        <Eye size={14} /> Detail
+            <form onSubmit={handleUpdatePersonalInfo}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">First Name <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    pattern="[a-zA-Z\s]+"
+                    title="Letters only."
+                    value={personalData.firstname}
+                    onChange={(e) => setPersonalData({ ...personalData, firstname: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Last Name <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    pattern="[a-zA-Z\s]+"
+                    title="Letters only."
+                    value={personalData.lastname}
+                    onChange={(e) => setPersonalData({ ...personalData, lastname: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Mobile Number <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    placeholder="07XXXXXXXX"
+                    maxLength={10}
+                    minLength={10}
+                    pattern="0[0-9]{9}"
+                    title="Must be exactly 10 digits starting with 0"
+                    value={personalData.mobilenumber}
+                    onChange={(e) => setPersonalData({ ...personalData, mobilenumber: e.target.value.replace(/[^0-9]/g, '') })}
+                    required
+                  />
+                  <span className="extra-small text-muted">Exactly 10 digits starting with 0 (e.g. 0719108628)</span>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Gender <span className="text-danger">*</span></label>
+                  <select
+                    className="form-select rounded-3"
+                    value={personalData.gender}
+                    onChange={(e) => setPersonalData({ ...personalData, gender: e.target.value })}
+                    required
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Birth Date <span className="text-danger">*</span></label>
+                  <input
+                    type="date"
+                    className="form-control rounded-3"
+                    max={getMaxBirthdate()}
+                    value={personalData.birthdate}
+                    onChange={(e) => setPersonalData({ ...personalData, birthdate: e.target.value })}
+                    required
+                  />
+                  <span className="extra-small text-muted">You must be at least 12 years old</span>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Email Address <span className="text-danger">*</span></label>
+                  <input
+                    type="email"
+                    className="form-control rounded-3"
+                    value={personalData.email}
+                    onChange={(e) => setPersonalData({ ...personalData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 text-end">
+                <button
+                  type="submit"
+                  className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                  disabled={loadingPersonal}
+                >
+                  {loadingPersonal ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} /> Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/* TAB 2: DELIVERY ADDRESS FORM */}
+        {/* ------------------------------------------------------------------ */}
+        {activeTab === 'address' && (
+          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
+            <div className="border-bottom pb-3 mb-4">
+              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <MapPin className="text-primary" size={22} /> Default Shipping Address
+              </h5>
+              <p className="text-muted small mb-0">Update your primary delivery address for smooth checkout processing</p>
+            </div>
+
+            <form onSubmit={handleSaveAddress}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Country <span className="text-danger">*</span></label>
+                  <select
+                    className="form-select rounded-3"
+                    value={addressData.country}
+                    onChange={(e) => setAddressData({ ...addressData, country: e.target.value })}
+                    required
+                  >
+                    {countries.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold small text-dark">Mobile Phone <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    placeholder="07XXXXXXXX"
+                    maxLength={10}
+                    minLength={10}
+                    pattern="0[0-9]{9}"
+                    title="Must be exactly 10 digits starting with 0"
+                    value={addressData.addr_mobile}
+                    onChange={(e) => setAddressData({ ...addressData, addr_mobile: e.target.value.replace(/[^0-9]/g, '') })}
+                    required
+                  />
+                  <span className="extra-small text-muted">Recipient phone number (10 digits starting with 0)</span>
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label fw-semibold small text-dark">Street Address <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    placeholder="House No, Street Name, Locality"
+                    pattern="[a-zA-Z0-9\s,\.\-\/]+"
+                    title="Only alphanumeric characters, spaces, commas, periods, hyphens, and slashes are allowed"
+                    value={addressData.street_address}
+                    onChange={(e) => setAddressData({ ...addressData, street_address: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold small text-dark">City <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    pattern="[a-zA-Z\s]+"
+                    title="Only letters and spaces are allowed"
+                    value={addressData.city}
+                    onChange={(e) => setAddressData({ ...addressData, city: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold small text-dark">District <span className="text-danger">*</span></label>
+                  <select
+                    className="form-select rounded-3"
+                    value={addressData.district}
+                    onChange={(e) => setAddressData({ ...addressData, district: e.target.value })}
+                    required
+                  >
+                    {sriLankaDistricts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold small text-dark">Postal Code <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control rounded-3"
+                    placeholder="60300"
+                    maxLength={5}
+                    minLength={5}
+                    pattern="[0-9]{5}"
+                    title="Postal code must be exactly 5 digits"
+                    value={addressData.postal_code}
+                    onChange={(e) => setAddressData({ ...addressData, postal_code: e.target.value.replace(/[^0-9]/g, '') })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 text-end">
+                <button
+                  type="submit"
+                  className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                  disabled={loadingAddress}
+                >
+                  {loadingAddress ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} /> {hasExistingAddress ? 'Update Address' : 'Add Address'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/* TAB 3: CHANGE PASSWORD (OTP WORKFLOW) */}
+        {/* ------------------------------------------------------------------ */}
+        {activeTab === 'password' && (
+          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white animate-fade-in">
+            <div className="border-bottom pb-3 mb-4">
+              <h5 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <Lock className="text-primary" size={22} /> Security & Password
+              </h5>
+              <p className="text-muted small mb-0">Change your password safely using two-step email OTP verification</p>
+            </div>
+
+            {/* OTP Security Notice Alert */}
+            <div className="alert alert-info border-0 rounded-3 mb-4 d-flex align-items-start gap-3">
+              <ShieldAlert className="text-info flex-shrink-0 mt-1" size={22} />
+              <div className="small">
+                <strong>Two-Step Security Notice:</strong> For your security, a 6-digit One-Time Password (OTP) will be sent to your registered email address (<strong>{personalData.email}</strong>) to verify your password update request.
+              </div>
+            </div>
+
+            {!otpRequested ? (
+              /* STEP 1: REQUEST OTP FORM */
+              <form onSubmit={handleRequestPasswordOtp}>
+                <div className="row g-3">
+                  
+                  {/* Current Password */}
+                  <div className="col-12">
+                    <label className="form-label fw-semibold small text-dark">Current Password <span className="text-danger">*</span></label>
+                    <div className="input-group">
+                      <input
+                        type={showCurrentPw ? 'text' : 'password'}
+                        className="form-control rounded-start-3"
+                        value={passwordData.current_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary rounded-end-3"
+                        onClick={() => setShowCurrentPw(!showCurrentPw)}
+                      >
+                        {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Detailed Selected Order Modal-like popup */}
-          {selectedOrder && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '30px', border: '1px solid var(--primary-light)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>Order Details: #{selectedOrder.OrderNumber}</h3>
-                <div>
-                  <button onClick={() => navigate(`/invoice/${selectedOrder.ID}`)} className="glass-btn" style={{ padding: '4px 10px', fontSize: '12px', marginRight: '8px' }}>Invoice</button>
-                  <button onClick={() => setSelectedOrder(null)} className="glass-btn glass-btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }}>Close</button>
-                </div>
-              </div>
+                  {/* New Password */}
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold small text-dark">New Password <span className="text-danger">*</span></label>
+                    <div className="input-group">
+                      <input
+                        type={showNewPw ? 'text' : 'password'}
+                        className="form-control rounded-start-3"
+                        minLength={8}
+                        placeholder="At least 8 characters"
+                        value={passwordData.new_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary rounded-end-3"
+                        onClick={() => setShowNewPw(!showNewPw)}
+                      >
+                        {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '13px' }}>
-                <div>
-                  <strong>Order Date:</strong> {new Date(selectedOrder.OrderDate).toLocaleString()}<br />
-                  <strong>Delivery Status:</strong> <span style={{ fontWeight: '600', color: 'var(--primary)' }}>{selectedOrder.DeliveryStatus}</span><br />
-                  <strong>Payment Method:</strong> {selectedOrder.PaymentMethod}
-                </div>
-
-                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '8px' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '10px' }}>Items Purchased:</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {selectedOrder.items?.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{item.ProductName} ({item.Color}, {item.ROM}/{item.RAM} RAM) x{item.ProductQty}</span>
-                        <strong>Rs. {(parseFloat(item.ProductPrice) * item.ProductQty).toLocaleString('en-US')}</strong>
-                      </div>
-                    ))}
+                  {/* Confirm New Password */}
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold small text-dark">Confirm New Password <span className="text-danger">*</span></label>
+                    <div className="input-group">
+                      <input
+                        type={showConfirmPw ? 'text' : 'password'}
+                        className="form-control rounded-start-3"
+                        minLength={8}
+                        value={passwordData.confirm_password}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary rounded-end-3"
+                        onClick={() => setShowConfirmPw(!showConfirmPw)}
+                      >
+                        {showConfirmPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '800', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
-                  <span>Total Amount Paid</span>
-                  <span>Rs. {parseFloat(selectedOrder.TotalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <div className="mt-4 text-end">
+                  <button
+                    type="submit"
+                    className="btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                    disabled={loadingOtp}
+                  >
+                    {loadingOtp ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Sending OTP...
+                      </>
+                    ) : (
+                      <>
+                        <Mail size={18} /> Get OTP & Change Password
+                      </>
+                    )}
+                  </button>
                 </div>
-              </div>
-            </div>
-          )}
+              </form>
+            ) : (
+              /* STEP 2: VERIFY OTP FORM */
+              <div className="otp-verification-section p-4 bg-light rounded-4 border text-center my-3">
+                <div className="otp-icon-wrapper mx-auto mb-3 bg-primary-subtle text-primary rounded-circle p-3 d-inline-flex">
+                  <KeyRound size={32} />
+                </div>
+                <h5 className="fw-bold text-dark mb-2">Enter Verification Code</h5>
+                <p className="text-muted small max-w-lg mx-auto mb-3">
+                  We have sent a 6-digit verification code (OTP) to your registered email: <br />
+                  <strong className="text-dark">{targetEmail}</strong>
+                </p>
 
-        </div>
+                {simulatedOtpCode && (
+                  <div className="badge bg-warning text-dark py-2 px-3 rounded-pill mb-3">
+                    Development Mode OTP: <strong>{simulatedOtpCode}</strong>
+                  </div>
+                )}
+
+                <form onSubmit={handleVerifyOtp} className="max-w-xs mx-auto">
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      className="form-control form-control-lg text-center fw-bold letter-spacing-lg rounded-3"
+                      placeholder="0 0 0 0 0 0"
+                      maxLength={6}
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                      required
+                    />
+                  </div>
+
+                  <div className="d-flex justify-content-center gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold"
+                      onClick={handleCancelOtp}
+                      disabled={loadingOtp}
+                    >
+                      Cancel Request
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-success rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2"
+                      disabled={loadingOtp}
+                    >
+                      {loadingOtp ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={18} /> Verify & Update Password
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   );

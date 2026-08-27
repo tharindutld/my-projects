@@ -237,6 +237,19 @@ router.get('/', verifyToken, async (req, res) => {
       [userid]
     );
 
+    // Fetch order items for each order
+    for (let order of orders) {
+      const [items] = await pool.query(
+        `SELECT oi.ProductQty, oi.ProductPrice, v.Color, v.RAM, v.ROM, p.ProductName, p.BrandName, p.ModelNumber, p.Image1
+         FROM tbl_order_items oi
+         LEFT JOIN tblproduct_variants v ON oi.VariantId = v.ID
+         LEFT JOIN tblproducts p ON v.ProductId = p.ID
+         WHERE oi.OrderMasterId = ?`,
+        [order.ID]
+      );
+      order.items = items;
+    }
+
     res.json(orders);
   } catch (error) {
     console.error(error);
