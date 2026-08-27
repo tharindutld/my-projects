@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,9 @@ export default function Wishlist() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const successTimerRef = useRef(null);
+  const errorTimerRef = useRef(null);
 
   // Confirmation Modal state
   const [confirmModal, setConfirmModal] = useState({
@@ -52,16 +55,25 @@ export default function Wishlist() {
     fetchWishlist();
   }, [token, authLoading]);
 
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
+
   const showSuccessMsg = (msg) => {
     setSuccess(msg);
-    setTimeout(() => {
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => {
       setSuccess('');
     }, 2500);
   };
 
   const showErrorMsg = (msg) => {
     setError(msg);
-    setTimeout(() => {
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => {
       setError('');
     }, 3000);
   };
@@ -112,7 +124,7 @@ export default function Wishlist() {
       const msg = await addToCart(variantId, 1);
       showSuccessMsg(msg || 'Added to cart successfully!');
     } catch (err) {
-      showErrorMsg(err.message);
+      showErrorMsg(err.message || 'Error adding to cart');
     }
   };
 

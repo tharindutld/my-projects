@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart, Flame, Shield, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,11 @@ const IMAGE_BASE = 'http://localhost:5000/uploads/products/';
 
 function ProductImage({ src, alt }) {
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
   if (!src || imgError) {
     return <span style={{ fontSize: '120px' }}>📱</span>;
   }
@@ -30,11 +35,38 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [variants, setVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [activeImage, setActiveImage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [wishlisted, setWishlisted] = useState(false);
+
+  const successTimerRef = useRef(null);
+  const errorTimerRef = useRef(null);
+
+  const showSuccessMsg = (msg) => {
+    setSuccess(msg);
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    successTimerRef.current = setTimeout(() => {
+      setSuccess('');
+    }, 3000);
+  };
+
+  const showErrorMsg = (msg) => {
+    setError(msg);
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => {
+      setError('');
+    }, 3500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -45,6 +77,7 @@ export default function ProductDetail() {
         }
         const data = await res.json();
         setProduct(data);
+        setActiveImage(data.Image1 || '');
         setVariants(data.variants || []);
         if (data.variants && data.variants.length > 0) {
           setSelectedVariant(data.variants[0]);
@@ -68,7 +101,7 @@ export default function ProductDetail() {
       }
     };
     fetchProductDetails();
-  }, [id, token]);
+  }, [id, token, API_URL]);
 
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
@@ -76,15 +109,15 @@ export default function ProductDetail() {
     setSuccess('');
     try {
       const msg = await addToCart(selectedVariant.ID, quantity);
-      setSuccess(msg);
+      showSuccessMsg(msg || 'Added to cart successfully!');
     } catch (err) {
-      setError(err.message);
+      showErrorMsg(err.message || 'Failed to add item to cart.');
     }
   };
 
   const handleToggleWishlist = async () => {
     if (!token) {
-      setError('Please login to add items to your wishlist.');
+      showErrorMsg('Please login to add items to your wishlist.');
       return;
     }
     setError('');
@@ -98,7 +131,9 @@ export default function ProductDetail() {
         });
         if (res.ok) {
           setWishlisted(false);
-          setSuccess('Removed from wishlist.');
+          showSuccessMsg('Removed from wishlist.');
+        } else {
+          showErrorMsg('Failed to remove from wishlist.');
         }
       } else {
         // Add to wishlist
@@ -112,11 +147,13 @@ export default function ProductDetail() {
         });
         if (res.ok) {
           setWishlisted(true);
-          setSuccess('Added to wishlist.');
+          showSuccessMsg('Added to wishlist successfully!');
+        } else {
+          showErrorMsg('Failed to add to wishlist.');
         }
       }
     } catch (err) {
-      setError('Error updating wishlist.');
+      showErrorMsg('Error updating wishlist.');
     }
   };
 
@@ -138,6 +175,11 @@ export default function ProductDetail() {
   const originalPrice = selectedVariant ? parseFloat(selectedVariant.Price) : 0;
   const discountedPrice = isPromo ? originalPrice * (1 - parseFloat(product.DiscountPercent) / 100) : originalPrice;
 
+  // Build array of valid images for the 3-image gallery
+  const productImages = [product.Image1, product.Image2, product.Image3].filter(
+    img => img && typeof img === 'string' && img.trim() !== ''
+  );
+
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
       <button onClick={() => navigate(-1)} className="glass-btn glass-btn-secondary" style={{ marginBottom: '30px', borderRadius: '20px' }}>
@@ -149,34 +191,79 @@ export default function ProductDetail() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
         gap: '40px'
       }}>
-        {/* Gallery/Display Panel */}
-        <div className="glass-panel" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '400px',
-          background: 'rgba(255,255,255,0.01)',
-          position: 'relative'
-        }}>
-          {isPromo && (
-            <div style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              background: 'linear-gradient(45deg, #ef4444, #ec4899)',
-              color: '#fff',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '13px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
-              <Flame size={14} /> {product.DiscountPercent}% OFF PROMO
+        {/* Gallery / 3-Image Display Panel */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="glass-panel" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '360px',
+            background: 'rgba(255,255,255,0.01)',
+            position: 'relative',
+            borderRadius: '20px',
+            padding: '20px'
+          }}>
+            {isPromo && (
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                background: 'linear-gradient(45deg, #ef4444, #ec4899)',
+                color: '#fff',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                zIndex: 2
+              }}>
+                <Flame size={14} /> {product.DiscountPercent}% OFF PROMO
+              </div>
+            )}
+            <ProductImage src={activeImage || product.Image1} alt={product.ProductName} />
+          </div>
+
+          {/* 3 Thumbnails Selector Row */}
+          {productImages.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '14px' }}>
+              {productImages.map((img, idx) => {
+                const isActive = (activeImage || product.Image1) === img;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImage(img)}
+                    style={{
+                      width: '82px',
+                      height: '82px',
+                      borderRadius: '14px',
+                      border: isActive ? '2.5px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.15)',
+                      background: 'rgba(15, 23, 42, 0.65)',
+                      padding: '6px',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.25s ease',
+                      boxShadow: isActive ? '0 0 16px rgba(99, 102, 241, 0.6)' : 'none',
+                      transform: isActive ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                    title={`View photo ${idx + 1}`}
+                  >
+                    <img
+                      src={IMAGE_BASE + img}
+                      alt={`${product.ProductName} photo ${idx + 1}`}
+                      style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </button>
+                );
+              })}
             </div>
           )}
-          <ProductImage src={product.Image1} alt={product.ProductName} />
         </div>
 
         {/* Configurations Details */}
@@ -231,7 +318,7 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Pricing & Stock */}
+          {/* Pricing & Stock (With Vibrant High-Contrast Stock Badge) */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
@@ -252,14 +339,20 @@ export default function ProductDetail() {
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <span className={`badge ${selectedVariant?.Stock > 0 ? 'bg-success' : 'bg-danger'}`} style={{
-                padding: '6px 12px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: '700',
-                background: selectedVariant?.Stock > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                color: selectedVariant?.Stock > 0 ? 'var(--success)' : 'var(--danger)',
-                border: `1px solid ${selectedVariant?.Stock > 0 ? 'var(--success)' : 'var(--danger)'}`
+              <span style={{
+                padding: '8px 16px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: '800',
+                letterSpacing: '0.3px',
+                background: selectedVariant?.Stock > 0 
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: '#ffffff',
+                boxShadow: selectedVariant?.Stock > 0 
+                  ? '0 4px 12px rgba(16, 185, 129, 0.4)' 
+                  : '0 4px 12px rgba(239, 68, 68, 0.4)',
+                display: 'inline-block'
               }}>
                 {selectedVariant?.Stock > 0 ? `In Stock (${selectedVariant.Stock} units)` : 'Out of Stock'}
               </span>
