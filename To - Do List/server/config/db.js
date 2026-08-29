@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise';
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_USER = process.env.DB_USER || 'root';
 const DB_PASS = process.env.DB_PASS || '';
-const DB_NAME = process.env.DB_NAME || 'todo_app';
+const DB_NAME = process.env.DB_NAME || 'defaultdb';
 const DB_PORT = parseInt(process.env.DB_PORT || '3306', 10);
 
 const sslConfig = (process.env.DB_SSL === 'true' || (DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1'))
@@ -15,38 +15,48 @@ let pool = null;
 export async function getPool() {
   if (pool) return pool;
 
-  const dbToUse = DB_NAME || 'defaultdb';
+  let dbToUse = DB_NAME || 'defaultdb';
 
   try {
-    // Attempt temp connection to create database if permitted by host
     try {
-      const tempConnection = await mysql.createConnection({
+      pool = mysql.createPool({
         host: DB_HOST,
         user: DB_USER,
         password: DB_PASS,
+        database: dbToUse,
         port: DB_PORT,
         ssl: sslConfig,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
         connectTimeout: 10000
       });
-      await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbToUse}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
-      await tempConnection.end();
-    } catch (createDbErr) {
-      console.warn(`[MySQL] Notice: Could not run CREATE DATABASE query (cloud DB restricted): ${createDbErr.message}`);
-    }
 
-    // Create pool directly connecting to the database
-    pool = mysql.createPool({
-      host: DB_HOST,
-      user: DB_USER,
-      password: DB_PASS,
-      database: dbToUse,
-      port: DB_PORT,
-      ssl: sslConfig,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      connectTimeout: 10000
-    });
+      // Test connection
+      await pool.query('SELECT 1');
+    } catch (dbErr) {
+      pool = null;
+      // Fallback: If specified database does not exist on cloud DB (e.g. Aiven), try 'defaultdb'
+      if (dbErr.code === 'ER_BAD_DB_ERROR' && dbToUse !== 'defaultdb') {
+        console.warn(`[MySQL] Database "${dbToUse}" not found. Trying fallback to "defaultdb"...`);
+        dbToUse = 'defaultdb';
+        pool = mysql.createPool({
+          host: DB_HOST,
+          user: DB_USER,
+          password: DB_PASS,
+          database: dbToUse,
+          port: DB_PORT,
+          ssl: sslConfig,
+          waitForConnections: true,
+          connectionLimit: 10,
+          queueLimit: 0,
+          connectTimeout: 10000
+        });
+        await pool.query('SELECT 1');
+      } else {
+        throw dbErr;
+      }
+    }
 
     // Initialize tables if needed
     await initDB(pool);
@@ -54,6 +64,7 @@ export async function getPool() {
     return pool;
   } catch (error) {
     console.error(`[MySQL] Connection failed: ${error.message}`);
+    pool = null;
     throw error;
   }
 }
