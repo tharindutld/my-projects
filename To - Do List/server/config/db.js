@@ -1,10 +1,23 @@
 import mysql from 'mysql2/promise';
 
-const DB_HOST = (process.env.DB_HOST || 'localhost').trim();
+let rawHost = (process.env.DB_HOST || 'localhost').trim();
+rawHost = rawHost.replace(/^(mysql:\/\/|https?:\/\/)/i, '');
+rawHost = rawHost.split('/')[0];
+
+let parsedPort = parseInt((process.env.DB_PORT || '3306').trim(), 10);
+if (rawHost.includes(':')) {
+  const parts = rawHost.split(':');
+  rawHost = parts[0];
+  if (parts[1] && !isNaN(parseInt(parts[1], 10))) {
+    parsedPort = parseInt(parts[1], 10);
+  }
+}
+
+const DB_HOST = rawHost;
+const DB_PORT = parsedPort;
 const DB_USER = (process.env.DB_USER || 'root').trim();
 const DB_PASS = (process.env.DB_PASS || '').trim();
 const DB_NAME = (process.env.DB_NAME || 'defaultdb').trim();
-const DB_PORT = parseInt((process.env.DB_PORT || '3306').trim(), 10);
 
 const sslConfig = (process.env.DB_SSL === 'true' || (DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1'))
   ? { rejectUnauthorized: false }
